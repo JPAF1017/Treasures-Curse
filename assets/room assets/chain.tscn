@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://jv4d5j6mwgil"]
+
+[ext_resource type="PackedScene" uid="uid://dts5p6li5l1hu" path="res://assets/PSX_Dungeon/Models/Chain.fbx" id="1_grrt7"]
+[ext_resource type="Texture2D" uid="uid://b05wn48jk0aff" path="res://assets/PSX_Dungeon/Textures/TEX_Chain_02.png" id="2_3um17"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a0vaf"]
+cull_mode = 2
+albedo_texture = ExtResource("2_3um17")
+texture_filter = 0
+
+[node name="Chain" instance=ExtResource("1_grrt7")]
+
+[node name="Cylinder_026" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_a0vaf")

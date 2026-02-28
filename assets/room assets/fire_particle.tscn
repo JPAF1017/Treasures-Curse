@@ -1,0 +1,64 @@
+[gd_scene load_steps=9 format=3 uid="uid://cvp45jmoq8e5j"]
+
+[ext_resource type="Texture2D" uid="uid://cglkgqjnadm8" path="res://assets/base assets/fire_01.png" id="1_gc3kh"]
+[ext_resource type="Texture2D" uid="uid://di6sbcly2wvmy" path="res://assets/base assets/smoke_01.png" id="2_hemht"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hemht"]
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_gc3kh")
+emission_enabled = true
+emission = Color(1, 0.564706, 0, 1)
+emission_energy_multiplier = 5.0
+texture_filter = 0
+billboard_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_61q3k"]
+offsets = PackedFloat32Array(0, 0.503401, 1)
+colors = PackedColorArray(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_30m62"]
+gradient = SubResource("Gradient_61q3k")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_02gcw"]
+emission_shape_scale = Vector3(0.2, 0.2, 0.2)
+emission_shape = 1
+emission_sphere_radius = 1.0
+gravity = Vector3(0, 2, 0)
+scale_min = 279.62
+scale_max = 279.62
+color_ramp = SubResource("GradientTexture1D_30m62")
+
+[sub_resource type="QuadMesh" id="QuadMesh_02gcw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mct8v"]
+render_priority = -1
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.537011, 0.537011, 0.537011, 1)
+albedo_texture = ExtResource("2_hemht")
+emission = Color(1, 0.564706, 0, 1)
+emission_energy_multiplier = 5.0
+texture_filter = 0
+billboard_mode = 1
+
+[node name="fire_particle" type="Node3D"]
+
+[node name="Fire" type="GPUParticles3D" parent="."]
+material_override = SubResource("StandardMaterial3D_hemht")
+lifetime = 1.1
+process_material = SubResource("ParticleProcessMaterial_02gcw")
+draw_pass_1 = SubResource("QuadMesh_02gcw")
+
+[node name="Smoke" type="GPUParticles3D" parent="."]
+material_override = SubResource("StandardMaterial3D_mct8v")
+lifetime = 1.6
+process_material = SubResource("ParticleProcessMaterial_02gcw")
+draw_pass_1 = SubResource("QuadMesh_02gcw")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(0.855485, 0.46624, 0, 1)
+light_energy = 3.736
+shadow_enabled = true
+shadow_bias = 0.5
+omni_range = 5.55549

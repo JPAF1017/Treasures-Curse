@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cafppl76aqwpm"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_gxb75"]
+
+[node name="SpawnBoss" type="Node3D"]
+script = ExtResource("1_gxb75")
+metadata/_custom_type_script = "uid://c801ki3oghumx"

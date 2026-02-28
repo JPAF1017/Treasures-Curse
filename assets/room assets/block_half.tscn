@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://dp6j0b5dhrjx8"]
+
+[ext_resource type="PackedScene" uid="uid://bu5lc7fuysmee" path="res://assets/PSX_Dungeon/Models/Block_Half.fbx" id="1_ky23q"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_5t6d4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jtmvj"]
+albedo_texture = ExtResource("2_5t6d4")
+texture_filter = 0
+
+[node name="Block_Half" instance=ExtResource("1_ky23q")]
+
+[node name="Cube_043" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_jtmvj")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+visible = false
+use_collision = true
+size = Vector3(20, 10, 20)

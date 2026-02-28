@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://dd248ait0464c"]
+
+[ext_resource type="Script" uid="uid://xpn4iswxe4os" path="res://scripts/charger.gd" id="1_n2dv8"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8l3l5"]
+radius = 0.3305664
+height = 1.8477783
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_n2dv8"]
+radius = 14.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_n2dv8"]
+
+[node name="Charger" type="CharacterBody3D"]
+script = ExtResource("1_n2dv8")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, -0.13699949, 0)
+shape = SubResource("CapsuleShape3D_8l3l5")
+debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)
+
+[node name="Detector" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="DetectorShape" type="CollisionShape3D" parent="Detector"]
+shape = SubResource("CylinderShape3D_n2dv8")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0.64210844, 0)
+mesh = SubResource("BoxMesh_n2dv8")

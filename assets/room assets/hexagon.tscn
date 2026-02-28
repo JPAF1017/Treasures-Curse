@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://dkkfirmv0b6g6"]
+
+[ext_resource type="PackedScene" uid="uid://cagirn3o0gj2d" path="res://assets/PSX_Dungeon/Models/Hexagon.fbx" id="1_g0ab1"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_tkcp3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sxs6q"]
+albedo_texture = ExtResource("2_tkcp3")
+texture_filter = 0
+
+[node name="Hexagon" instance=ExtResource("1_g0ab1")]
+
+[node name="Cylinder_018" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_sxs6q")

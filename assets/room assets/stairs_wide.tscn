@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://ompowc6lqjyo"]
+
+[ext_resource type="PackedScene" uid="uid://ig8hlklqfdd6" path="res://assets/PSX_Dungeon/Models/Stairs_Wide.fbx" id="1_s6ff8"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_bobne"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y21m8"]
+albedo_texture = ExtResource("2_bobne")
+texture_filter = 0
+
+[node name="Stairs_Wide" instance=ExtResource("1_s6ff8")]
+
+[node name="Cube_065" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_y21m8")

@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://cn8tdho748v85"]
+
+[ext_resource type="PackedScene" uid="uid://dxew4m62lpp64" path="res://assets/PSX_Dungeon/Models/Wall_Narrowing.fbx" id="1_34k8d"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_nnl27"]
+[ext_resource type="ArrayMesh" uid="uid://cwo77dcwop337" path="res://assets/PSX_Dungeon/Models OBJ/Wall_Narrowing.obj" id="3_nnl27"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nihpy"]
+albedo_texture = ExtResource("2_nnl27")
+texture_filter = 0
+
+[node name="Wall_Narrowing" instance=ExtResource("1_34k8d")]
+
+[node name="Cube_055" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_nihpy")
+
+[node name="Colision" type="Node3D" parent="Cube_055" index="0"]
+visible = false
+
+[node name="CSGMesh3D" type="CSGMesh3D" parent="Cube_055/Colision" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -90, 0, -45)
+use_collision = true
+mesh = ExtResource("3_nnl27")

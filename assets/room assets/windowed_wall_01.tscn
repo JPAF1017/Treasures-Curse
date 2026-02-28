@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://bsxh7a20tjc2i"]
+
+[ext_resource type="PackedScene" uid="uid://diwqb1obx4n84" path="res://assets/PSX_Dungeon/Models/Windowed_Wall_01.fbx" id="1_p01ua"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_waln1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u2sq3"]
+albedo_texture = ExtResource("2_waln1")
+texture_filter = 0
+
+[node name="Windowed_Wall_01" instance=ExtResource("1_p01ua")]
+
+[node name="Cube_022" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_u2sq3")

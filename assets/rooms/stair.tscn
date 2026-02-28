@@ -1,0 +1,81 @@
+[gd_scene load_steps=7 format=3 uid="uid://bw0184ufe88px"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_xwt1m"]
+[ext_resource type="PackedScene" uid="uid://drc5sh8egqajx" path="res://assets/room assets/stairs.tscn" id="2_hro07"]
+[ext_resource type="PackedScene" uid="uid://c5tachymoo3s2" path="res://assets/room assets/wall_01.tscn" id="3_dle73"]
+[ext_resource type="PackedScene" uid="uid://covmwn16vmv06" path="res://assets/room assets/door_frame_02.tscn" id="4_vxy31"]
+[ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="6_nkpcl"]
+[ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="7_dle73"]
+
+[node name="Stair" type="Node3D"]
+script = ExtResource("1_xwt1m")
+size_in_voxels = Vector3i(2, 2, 1)
+max_count = 50
+is_stair_room = true
+metadata/_custom_type_script = "uid://c801ki3oghumx"
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+visible = false
+use_collision = true
+size = Vector3(20, 20, 10)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGBox3D"]
+operation = 2
+size = Vector3(19.5, 19.5, 9.5)
+
+[node name="DOOR_B" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -6.10114, -0.0137634)
+operation = 2
+size = Vector3(0.5, 7.29773, 5.1308)
+
+[node name="DOOR_U" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.99612, 0.0580139)
+operation = 2
+size = Vector3(0.5, 7.49225, 5.13312)
+
+[node name="Models" type="Node3D" parent="."]
+
+[node name="Stairs" parent="Models" instance=ExtResource("2_hro07")]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.5, 2, -9.69, 0)
+
+[node name="Wall_01" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, -5, -10, 4.65)
+
+[node name="Wall_02" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, 5, -10, 4.65)
+
+[node name="Wall_03" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, 5, 0, 4.65)
+
+[node name="Wall_04" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, -5, 0, 4.65)
+
+[node name="Wall_05" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, -5, -10, -4.65)
+
+[node name="Wall_06" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, 5, -10, -4.65)
+
+[node name="Wall_07" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, 5, 0, -4.65)
+
+[node name="Wall_08" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.13, -5, 0, -4.65)
+
+[node name="Wall_09" parent="Models" instance=ExtResource("3_dle73")]
+transform = Transform3D(-2.18557e-08, 0, 0.5, 0, 0.5, 0, -0.5, 0, -2.18557e-08, -9, 0, 0)
+
+[node name="Door_Frame_02" parent="Models" instance=ExtResource("4_vxy31")]
+transform = Transform3D(-2.18557e-08, 0, 0.5, 0, 0.5, 0, -0.5, 0, -2.18557e-08, -9, -10, 0)
+
+[node name="Door_Frame_03" parent="Models" instance=ExtResource("4_vxy31")]
+transform = Transform3D(-2.18557e-08, 0, 0.5, 0, 0.5, 0, -0.5, 0, -2.18557e-08, 11, 0, 0)
+
+[node name="Block" parent="Models" instance=ExtResource("6_nkpcl")]
+transform = Transform3D(0.5, 0, 0, 0, -0.05, 7.54979e-08, 0, -7.54979e-09, -0.5, -5, 10.1533, 0)
+
+[node name="Block2" parent="Models" instance=ExtResource("6_nkpcl")]
+transform = Transform3D(0.5, 0, 0, 0, -0.05, 7.54979e-08, 0, -7.54979e-09, -0.5, 5, 10.1533, 0)
+
+[node name="Floor_Tiles" parent="Models" instance=ExtResource("7_dle73")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -5, -9.75, 0)

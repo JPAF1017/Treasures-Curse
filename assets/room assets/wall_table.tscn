@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://btd51cm5mogg5"]
+
+[ext_resource type="PackedScene" uid="uid://b5gqms30p52g2" path="res://assets/PSX_Dungeon/wall_table.glb" id="1_hxv2v"]
+
+[node name="wall_table" instance=ExtResource("1_hxv2v")]

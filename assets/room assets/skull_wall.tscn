@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4b5hb4e4emkt"]
+
+[ext_resource type="PackedScene" uid="uid://cnjeg6f1d7nxw" path="res://assets/PSX_Dungeon/Models/Skull_Wall.fbx" id="1_o30y0"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_b4grd"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fmdxe"]
+albedo_texture = ExtResource("2_b4grd")
+texture_filter = 0
+
+[node name="Skull_Wall" instance=ExtResource("1_o30y0")]
+
+[node name="Cube_057" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_fmdxe")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+visible = false
+use_collision = true
+size = Vector3(20, 20, 5)

@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://csonqfg2rm078"]
+
+[ext_resource type="PackedScene" uid="uid://bis87cex1pfrq" path="res://assets/PSX_Dungeon/Models/Wall_Decor_01.fbx" id="1_bfceo"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_7k5em"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_avjxh"]
+albedo_texture = ExtResource("2_7k5em")
+texture_filter = 0
+
+[node name="Wall_Decor_01" instance=ExtResource("1_bfceo")]
+
+[node name="Torus" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_avjxh")

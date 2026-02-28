@@ -1,0 +1,98 @@
+[gd_scene load_steps=7 format=3 uid="uid://djgwx2fo8gck3"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_siwru"]
+[ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_k4byu"]
+[ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="3_f52fy"]
+[ext_resource type="PackedScene" uid="uid://covmwn16vmv06" path="res://assets/room assets/door_frame_02.tscn" id="4_fixdu"]
+[ext_resource type="PackedScene" uid="uid://d4b5hb4e4emkt" path="res://assets/room assets/skull_wall.tscn" id="5_fixdu"]
+[ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="6_6bi4w"]
+
+[node name="LShapeRoom" type="Node3D"]
+script = ExtResource("1_siwru")
+size_in_voxels = Vector3i(2, 1, 2)
+metadata/_custom_type_script = "uid://c801ki3oghumx"
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+visible = false
+use_collision = true
+size = Vector3(20, 10, 20)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 5)
+operation = 2
+size = Vector3(10, 10, 10)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+operation = 2
+size = Vector3(9.5, 9.5, 19.5)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.75, 0, -5)
+operation = 2
+size = Vector3(10, 9.5, 9.5)
+
+[node name="DOOR_F_CUT" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 10)
+operation = 2
+size = Vector3(9.5, 9.5, 1)
+
+[node name="DOOR_R_CUT" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -5)
+operation = 2
+size = Vector3(1, 9.5, 9.5)
+
+[node name="Floor" type="Node3D" parent="."]
+
+[node name="Floor_Tiles" parent="Floor" instance=ExtResource("2_k4byu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -5, -4.75, -5)
+
+[node name="Floor_Tiles2" parent="Floor" instance=ExtResource("2_k4byu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 5, -4.75, -5)
+
+[node name="Floor_Tiles3" parent="Floor" instance=ExtResource("2_k4byu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 5, -4.75, 5)
+
+[node name="Ceiling" type="Node3D" parent="."]
+
+[node name="Block" parent="Ceiling" instance=ExtResource("3_f52fy")]
+transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, -5, 5, -5)
+
+[node name="Block2" parent="Ceiling" instance=ExtResource("3_f52fy")]
+transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, 5, 5, -5)
+
+[node name="Block3" parent="Ceiling" instance=ExtResource("3_f52fy")]
+transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, 5, 5, 5)
+
+[node name="Doorway" type="Node3D" parent="."]
+
+[node name="Door_Frame_02" parent="Doorway" instance=ExtResource("4_fixdu")]
+transform = Transform3D(-2.1855694e-08, 0, 0.3, 0, 0.5, 0, -0.5, 0, -1.3113417e-08, -10, -5, -5)
+
+[node name="Door_Frame_03" parent="Doorway" instance=ExtResource("4_fixdu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.3, 5, -5, 10)
+
+[node name="Walls" type="Node3D" parent="."]
+
+[node name="Skull_Wall" parent="Walls" instance=ExtResource("5_fixdu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.2, -5, -5, -9.5)
+
+[node name="Skull_Wall2" parent="Walls" instance=ExtResource("5_fixdu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.2, 5, -5, -9.5)
+
+[node name="Skull_Wall3" parent="Walls" instance=ExtResource("5_fixdu")]
+transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, 9.5, -5, -5)
+
+[node name="Skull_Wall4" parent="Walls" instance=ExtResource("5_fixdu")]
+transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, 9.5, -5, 5)
+
+[node name="Skull_Wall5" parent="Walls" instance=ExtResource("5_fixdu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.2, -5, -5, -0.5)
+
+[node name="Skull_Wall6" parent="Walls" instance=ExtResource("5_fixdu")]
+transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, 0.5, -5, 5)
+
+[node name="Pillar" type="Node3D" parent="."]
+
+[node name="Pillar" parent="Pillar" instance=ExtResource("6_6bi4w")]
+transform = Transform3D(0.4, 0, 0, 0, 0.33, 0, 0, 0, 0.4, 0.6, -5, -0.6)

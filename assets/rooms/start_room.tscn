@@ -1,0 +1,57 @@
+[gd_scene load_steps=7 format=3 uid="uid://cjnmq8wqhrf84"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_oe4ut"]
+[ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_gwcsm"]
+[ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="3_sxl33"]
+[ext_resource type="PackedScene" uid="uid://covmwn16vmv06" path="res://assets/room assets/door_frame_02.tscn" id="4_r0kki"]
+[ext_resource type="PackedScene" uid="uid://cs4tf1k5iewuj" path="res://assets/room assets/door_01.tscn" id="5_gnk4p"]
+[ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="6_nq55u"]
+
+[node name="StartRoom" type="Node3D"]
+script = ExtResource("1_oe4ut")
+metadata/_custom_type_script = "uid://c801ki3oghumx"
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
+visible = false
+use_collision = true
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(0.95, 0, 0, 0, 0.95, 0, 0, 0, 0.95, 0, 0, 0)
+operation = 2
+
+[node name="DOOR_R_CUT" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(0.05, 0, 0, 0, 0.95, 0, 0, 0, 0.95, -0.5, 0, 0)
+operation = 2
+
+[node name="DOOR_L_CUT" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(0.05, 0, 0, 0, 0.95, 0, 0, 0, 0.95, 0.5, 0, 0)
+operation = 2
+
+[node name="DOOR_F_CUT" type="CSGBox3D" parent="CSGBox3D"]
+transform = Transform3D(-2.1855695e-09, 0, 0.95, 0, 0.95, 0, -0.05, 0, -4.152582e-08, 0, 0, 0.48610267)
+operation = 2
+
+[node name="Models" type="Node3D" parent="."]
+
+[node name="Floor_Tiles" parent="Models" instance=ExtResource("2_gwcsm")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -4.75, 0)
+
+[node name="Block" parent="Models" instance=ExtResource("3_sxl33")]
+transform = Transform3D(0.5, 0, 0, 0, -0.01, 4.371139e-08, 0, -8.7422775e-10, -0.5, 0, 5, 0)
+
+[node name="Door Frames" type="Node3D" parent="Models"]
+
+[node name="Door_Frame_02" parent="Models/Door Frames" instance=ExtResource("4_r0kki")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -5, -6)
+
+[node name="Door_01" parent="Models/Door Frames" instance=ExtResource("5_gnk4p")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 2.5, -5, -5.5)
+
+[node name="Pillars" type="Node3D" parent="Models"]
+
+[node name="Pillar3" parent="Models/Pillars" instance=ExtResource("6_nq55u")]
+transform = Transform3D(0.325, 0, 0, 0, 0.325, 0, 0, 0, 0.325, -4, -4.95, -4)
+
+[node name="Pillar4" parent="Models/Pillars" instance=ExtResource("6_nq55u")]
+transform = Transform3D(0.325, 0, 0, 0, 0.325, 0, 0, 0, 0.325, 4, -4.95, -4)

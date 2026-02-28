@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://dd8iupbgnjxjg"]
+
+[ext_resource type="PackedScene" uid="uid://b623qh4jvt676" path="res://assets/PSX_Dungeon/chandelier.glb" id="1_38fla"]
+
+[node name="chandelier" instance=ExtResource("1_38fla")]

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://e2sx85vwc5ma"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_fhhmp"]
+
+[node name="Maze" type="Node3D"]
+script = ExtResource("1_fhhmp")
+metadata/_custom_type_script = "uid://c801ki3oghumx"

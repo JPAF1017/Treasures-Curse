@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://b8cavm2dkku01"]
+
+[ext_resource type="PackedScene" uid="uid://cmxcpg8va6asf" path="res://assets/PSX_Dungeon/Models/Door_02.fbx" id="1_old16"]
+[ext_resource type="Texture2D" uid="uid://dwameh3joewtv" path="res://assets/PSX_Dungeon/Textures/Doors_Map.png" id="2_old16"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h741h"]
+albedo_texture = ExtResource("2_old16")
+texture_filter = 0
+
+[node name="Door_02" instance=ExtResource("1_old16")]
+
+[node name="Cube_061" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_h741h")

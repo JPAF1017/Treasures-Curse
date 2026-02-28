@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://bpu1dhhn2jf1v"]
+
+[ext_resource type="PackedScene" uid="uid://dp7pf0ss44t1c" path="res://assets/PSX_Dungeon/Models/Wall_Border_01.fbx" id="1_w5ar1"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_lm3mr"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1i41e"]
+albedo_texture = ExtResource("2_lm3mr")
+texture_filter = 0
+
+[node name="Wall_Border_01" instance=ExtResource("1_w5ar1")]
+
+[node name="Cube_063" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_1i41e")
+
+[node name="Collision" type="Node3D" parent="." index="1"]
+visible = false
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Collision" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000439644, 5.0396, 0)
+size = Vector3(19.95, 9.95, 5)

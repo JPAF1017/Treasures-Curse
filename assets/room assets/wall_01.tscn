@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://c5tachymoo3s2"]
+
+[ext_resource type="PackedScene" uid="uid://b738jshrdxwpn" path="res://assets/PSX_Dungeon/Models/Wall_01.fbx" id="1_5lnab"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_17lgi"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y6af6"]
+cull_mode = 2
+albedo_texture = ExtResource("2_17lgi")
+texture_filter = 0
+
+[node name="Wall_01" instance=ExtResource("1_5lnab")]
+
+[node name="Cube_038" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_y6af6")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+visible = false
+use_collision = true
+size = Vector3(20, 20, 5)

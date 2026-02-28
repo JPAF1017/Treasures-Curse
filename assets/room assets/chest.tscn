@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://tml4ayda8oy6"]
+
+[ext_resource type="PackedScene" uid="uid://d35be5rgthqii" path="res://assets/PSX_Dungeon/Models/Chest.fbx" id="1_7hj6u"]
+[ext_resource type="Texture2D" uid="uid://4mpexkxrgilf" path="res://assets/PSX_Dungeon/Textures/CratesAndBarrels_Map.png" id="2_soppu"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0geqe"]
+albedo_texture = ExtResource("2_soppu")
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ryjrd"]
+albedo_texture = ExtResource("2_soppu")
+texture_filter = 0
+
+[node name="Chest" instance=ExtResource("1_7hj6u")]
+
+[node name="Cube_045" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_0geqe")
+
+[node name="Cube_085" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -4)
+material_override = SubResource("StandardMaterial3D_ryjrd")

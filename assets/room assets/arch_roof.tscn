@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3 uid="uid://defgp8i1a5vem"]
+
+[ext_resource type="PackedScene" uid="uid://couwofv6ejwvj" path="res://assets/PSX_Dungeon/Models/Arch_Roof.fbx" id="1_i0bwj"]
+[ext_resource type="Texture2D" uid="uid://df6gshi7kwkie" path="res://assets/PSX_Dungeon/Textures/TEX_Wall_03.png" id="2_lrxy1"]
+[ext_resource type="ArrayMesh" uid="uid://bpsxfvr1euf8g" path="res://assets/PSX_Dungeon/Models OBJ/Arch_Roof.obj" id="3_lrxy1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fdmmt"]
+albedo_texture = ExtResource("2_lrxy1")
+texture_filter = 0
+
+[node name="Arch_Roof" instance=ExtResource("1_i0bwj")]
+
+[node name="Cylinder_022" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_fdmmt")
+
+[node name="CSGMesh3D" type="CSGMesh3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -24, 60)
+visible = false
+use_collision = true
+mesh = ExtResource("3_lrxy1")

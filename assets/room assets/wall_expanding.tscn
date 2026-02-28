@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://4a2dxlilytu1"]
+
+[ext_resource type="PackedScene" uid="uid://cmnbs8vc6u85q" path="res://assets/PSX_Dungeon/Models/Wall_Expanding.fbx" id="1_5f8ci"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_tpvum"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8hkhu"]
+albedo_texture = ExtResource("2_tpvum")
+texture_filter = 0
+
+[node name="Wall_Expanding" instance=ExtResource("1_5f8ci")]
+
+[node name="Cube_056" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_8hkhu")

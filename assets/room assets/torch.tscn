@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://d1e1ffdtkokq8"]
+
+[ext_resource type="PackedScene" uid="uid://3adgm2lodnwe" path="res://assets/base assets/ps1psx_wooden_torch.glb" id="1_v2r5t"]
+[ext_resource type="PackedScene" uid="uid://cvp45jmoq8e5j" path="res://assets/room assets/fire_particle.tscn" id="2_vd3pf"]
+
+[node name="Torch" instance=ExtResource("1_v2r5t")]
+transform = Transform3D(1, 0, 0, 0, 0.94177, 0.336257, 0, -0.336257, 0.94177, 0, 0, 0)
+
+[node name="Cylinder_Material_0" parent="Sketchfab_model/Wooden Torch_fbx/RootNode/Cylinder" index="0"]
+cast_shadow = 0
+
+[node name="fire_particle" parent="." index="1" instance=ExtResource("2_vd3pf")]
+transform = Transform3D(1, 0, 0, 0, 1, 2.98023e-08, 0, -2.98023e-08, 1, 0, 1.66834, 0.0318469)

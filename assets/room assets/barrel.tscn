@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://dyce2eifprojb"]
+
+[ext_resource type="PackedScene" uid="uid://bmk2dhg4ed30s" path="res://assets/PSX_Dungeon/Models/Barrel.fbx" id="1_yttry"]
+[ext_resource type="Texture2D" uid="uid://4mpexkxrgilf" path="res://assets/PSX_Dungeon/Textures/CratesAndBarrels_Map.png" id="2_halvq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yttry"]
+albedo_texture = ExtResource("2_halvq")
+texture_filter = 0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_yttry"]
+radial_segments = 6
+
+[node name="Barrel" instance=ExtResource("1_yttry")]
+
+[node name="Cylinder_021" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_yttry")
+
+[node name="CSGMesh3D" type="CSGMesh3D" parent="." index="1"]
+transform = Transform3D(6.5, 0, 0, 0, 4, 0, 0, 0, 6.5, 0, 0, 0)
+visible = false
+use_collision = true
+mesh = SubResource("CylinderMesh_yttry")

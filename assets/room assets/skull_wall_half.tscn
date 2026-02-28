@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://d167a7g2xgfjm"]
+
+[ext_resource type="PackedScene" uid="uid://dpvi8vdtqtpgo" path="res://assets/PSX_Dungeon/Models/Skull_Wall_Half.fbx" id="1_whbx3"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_7l4kx"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cv17e"]
+albedo_texture = ExtResource("2_7l4kx")
+texture_filter = 0
+
+[node name="Skull_Wall_Half" instance=ExtResource("1_whbx3")]
+
+[node name="Cube_059" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_cv17e")

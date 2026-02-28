@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://drc5sh8egqajx"]
+
+[ext_resource type="PackedScene" uid="uid://uiv575h0csxs" path="res://assets/PSX_Dungeon/Models/Stairs.fbx" id="1_w5h6u"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_ok0s2"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_76n7y"]
+albedo_texture = ExtResource("2_ok0s2")
+texture_filter = 0
+
+[sub_resource type="PrismMesh" id="PrismMesh_w5h6u"]
+left_to_right = 1.0
+
+[node name="Stairs" instance=ExtResource("1_w5h6u")]
+
+[node name="Cube_037" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_76n7y")
+
+[node name="CSGMesh3D" type="CSGMesh3D" parent="." index="1"]
+transform = Transform3D(20, 0, 0, 0, 10, 0, 0, 0, 20, 0, 5, 0)
+visible = false
+use_collision = true
+mesh = SubResource("PrismMesh_w5h6u")

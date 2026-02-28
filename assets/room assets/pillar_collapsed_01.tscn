@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://6chv37vnq2ot"]
+
+[ext_resource type="PackedScene" uid="uid://dtckhpaet44em" path="res://assets/PSX_Dungeon/Models/Pillar_Collapsed_01.fbx" id="1_6eiah"]
+[ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_irov1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c335t"]
+albedo_texture = ExtResource("2_irov1")
+texture_filter = 0
+
+[node name="Pillar_Collapsed_01" instance=ExtResource("1_6eiah")]
+
+[node name="Cylinder_020" parent="." index="0"]
+transform = Transform3D(5.96046e-08, 0, 1, 0, 1, 0, -1, 0, 5.96046e-08, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_c335t")

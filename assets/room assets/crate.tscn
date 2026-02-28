@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://brta7m5puqnyt"]
+
+[ext_resource type="PackedScene" uid="uid://dwh1ivhjbgi5f" path="res://assets/PSX_Dungeon/Models/Box.fbx" id="1_emhv4"]
+[ext_resource type="Texture2D" uid="uid://4mpexkxrgilf" path="res://assets/PSX_Dungeon/Textures/CratesAndBarrels_Map.png" id="2_al6i3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3fiuf"]
+albedo_texture = ExtResource("2_al6i3")
+texture_filter = 0
+
+[node name="Box" instance=ExtResource("1_emhv4")]
+
+[node name="Cube_044" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_3fiuf")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." index="1"]
+visible = false
+use_collision = true
+size = Vector3(8, 8, 8)
