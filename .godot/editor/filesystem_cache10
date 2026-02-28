@@ -1,6 +1,7 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1772239422
+::res://::1772239639
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1762067671::1762067671::1::::<><><>0<>0<>4ef53fe4fa71720005a197a89e551d5b<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
 ::res://addons/::1762181518
 ::res://addons/SimpleDungeons/::1762182093
 DungeonGenerator3D.gd::GDScript::3518972659074577659::1762067671::0::1::::DungeonGenerator3D<>Node3D<><>0<>1<><>::
@@ -82,7 +83,9 @@ fire_02.png::CompressedTexture2D/CompressedTexture2D::2940537590448648598::17620
 ps1psx_wooden_torch.glb::PackedScene/PackedScene::1965481160115188540::1762067671::1762067671::1::::<><><>0<>0<>fa39426897184bee810c5a71eb5ccd56<>res://.godot/imported/ps1psx_wooden_torch.glb-099d97abd433793515bd830a34e12388.scn::uid://b4kbwtqu2anvy::::res://assets/base assets/ps1psx_wooden_torch_0.png
 ps1psx_wooden_torch_0.png::CompressedTexture2D/CompressedTexture2D::4442641954800640838::1762067671::1762067671::1::::<><><>0<>0<>bc7da9497175eab9e1a94139811ca010<>res://.godot/imported/ps1psx_wooden_torch_0.png-7b9539dd62044b960706fa170ff85b1e.s3tc.ctex::
 smoke_01.png::CompressedTexture2D/CompressedTexture2D::7785863325390086052::1762067671::1762067671::1::::<><><>0<>0<>e5ffb9a0b6d22a137129ca626efd2817<>res://.godot/imported/smoke_01.png-cc45e353adc23c4523e4c0ad14e73ba5.s3tc.ctex::
-::res://assets/entities/::1771747524
+::res://assets/entities/::1772244139
+dog.glb::PackedScene::4946372045281680869::1772244139::1772244140::1::::<><><>0<>0<>05692dccdf6346e5716686872436d2d1<>res://.godot/imported/dog.glb-eb62290ba32e48b5d3f6b430f29834f5.scn::uid://cbgamh16rmeuk::::res://assets/entities/dog_Image_0.png
+dog_Image_0.png::CompressedTexture2D::4855438316335510546::1772244140::1772244140::1::::<><><>0<>0<>38659e67c730e1476ba02f6e99f37532<>res://.godot/imported/dog_Image_0.png-3eee14dd9efc689b2523736206d5a770.s3tc.ctex::
 statue.glb::PackedScene::1510593441703868854::1771731956::1771731956::1::::<><><>0<>0<>5dd412a273fd5c932fa7aa0da5bca03c<>res://.godot/imported/statue.glb-6b76dd46a8db68f4ff4ee3a5e41af431.scn::uid://ctiqsadfr5e2q::::res://assets/entities/statue_Character_Monster.png
 statue_asset.tscn::PackedScene::5388983664721488496::1771747524::0::1::::<><><>0<>0<><>::uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb
 statue_Character_Monster.png::CompressedTexture2D::6123948039601339926::1771731956::1771731956::1::::<><><>0<>0<>4cc58f44abd0c873683c7bc5d154a863<>res://.godot/imported/statue_Character_Monster.png-921413577eb5e2972b1f59aab82df13b.s3tc.ctex::
