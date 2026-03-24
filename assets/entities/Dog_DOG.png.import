@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbgamh16rmeuk"
-path.s3tc="res://.godot/imported/dog_Image_0.png-3eee14dd9efc689b2523736206d5a770.s3tc.ctex"
+uid="uid://cjrpv3vvfg0tw"
+path.s3tc="res://.godot/imported/Dog_DOG.png-a9930ad1d9cc1c5eed6e0b7676498189.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "3d784078b838d98924b94c8cb10cd2b6"
+"md5": "29cab5681e1caadf0d8e14b6a1ed9e5a"
 }
 
 [deps]
 
-source_file="res://assets/entities/dog_Image_0.png"
-dest_files=["res://.godot/imported/dog_Image_0.png-3eee14dd9efc689b2523736206d5a770.s3tc.ctex"]
+source_file="res://assets/entities/Dog_DOG.png"
+dest_files=["res://.godot/imported/Dog_DOG.png-a9930ad1d9cc1c5eed6e0b7676498189.s3tc.ctex"]
 
 [params]
 

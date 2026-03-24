@@ -2,15 +2,17 @@ extends CharacterBody3D
 
 # Movement constants
 const WALK_SPEED = 10.0
-const JUMP_VELOCITY = 6.0
 const GRAVITY = 20.0
 const DETECTION_RANGE = 50.0
 const VIEW_CONE_ANGLE = 60.0
-const STUCK_THRESHOLD = 0.3  # If moved less than this, consider stuck
-const STUCK_TIME_BEFORE_JUMP = 0.5  # Seconds stuck before jumping
 const RAYCAST_DISTANCE = 3.0  # How far to check for obstacles
 const SIDE_RAYCAST_DISTANCE = 2.0  # Shorter side checks
 const CORNER_DETECT_DISTANCE = 1.5  # Distance to detect corners
+const WALK_IDLE_FRAME_TIME = 1.0 / 30.0  # Frame 1 at 30 FPS to avoid T-pose while idle
+const BUMP_STEP_VELOCITY = 2.0
+const BUMP_STEP_COOLDOWN = 0.15
+const LOS_MEMORY_TIME = 10
+const SENSE_RAY_HEIGHT = 0.8
 
 # References
 var player: CharacterBody3D = null
@@ -22,11 +24,12 @@ var head_bone_id: int = -1
 var is_moving = false
 
 # Stuck detection and pathfinding
-var last_position: Vector3 = Vector3.ZERO
-var stuck_timer: float = 0.0
 var was_trying_to_move: bool = false
 var preferred_direction: Vector3 = Vector3.ZERO  # Remember which way we're trying to go
 var wall_follow_mode: int = 0  # 0 = none, 1 = left, -1 = right
+var bump_step_timer: float = 0.0
+var los_memory_timer: float = 0.0
+var last_visible_player_position: Vector3 = Vector3.ZERO
 
 func _ready():
 	call_deferred("_setup_player_reference")
@@ -36,7 +39,7 @@ func _ready():
 	
 	# Configure CharacterBody3D for better corner and slope handling
 	floor_max_angle = deg_to_rad(46)  # Allow steeper slopes
-	floor_snap_length = 0.5  # Better slope adhesion
+	floor_snap_length = 0.7  # Better slope adhesion
 	wall_min_slide_angle = deg_to_rad(15)  # Slide along walls more easily
 
 func _setup_player_reference():
@@ -72,6 +75,7 @@ func _setup_animation_player():
 	animation_player = _find_animation_player(self)
 	if animation_player:
 		print("Statue found AnimationPlayer")
+		_set_idle_pose()
 	else:
 		print("WARNING: Could not find AnimationPlayer in statue!")
 
@@ -251,34 +255,24 @@ func _find_best_direction(target_direction: Vector3) -> Vector3:
 	return best_direction
 
 func _physics_process(delta):
+	bump_step_timer = max(bump_step_timer - delta, 0.0)
+	los_memory_timer = max(los_memory_timer - delta, 0.0)
+
 	# Apply gravity
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	else:
 		velocity.y = 0
-	
-	# Track if we're stuck
-	var current_position = global_position
-	var distance_moved = current_position.distance_to(last_position)
-	
-	if was_trying_to_move and is_on_floor():
-		if distance_moved < STUCK_THRESHOLD * delta:
-			stuck_timer += delta
-			if stuck_timer >= STUCK_TIME_BEFORE_JUMP:
-				# We're stuck, try jumping!
-				velocity.y = JUMP_VELOCITY
-				stuck_timer = 0.0
-		else:
-			stuck_timer = 0.0
-	else:
-		stuck_timer = 0.0
-	
-	last_position = current_position
+
 	was_trying_to_move = false
 	
 	# Chase player if found and in range
 	if player and is_instance_valid(player):
 		var distance_to_player = global_position.distance_to(player.global_position)
+		var has_line_of_sight = _has_line_of_sight_to(player.global_position + Vector3(0, 1.0, 0))
+		if has_line_of_sight:
+			last_visible_player_position = player.global_position
+			los_memory_timer = LOS_MEMORY_TIME
 		
 		# Weeping Angel behavior - freeze if player is looking at statue
 		if _is_player_looking_at_statue():
@@ -289,8 +283,19 @@ func _physics_process(delta):
 			is_moving = false
 		elif distance_to_player <= DETECTION_RANGE and distance_to_player > 1.5:
 			# Player NOT looking and in range - move toward player
-			# Get direction to player
-			var direction_to_player = (player.global_position - global_position)
+			var pursuit_target = player.global_position
+			if not has_line_of_sight and los_memory_timer > 0.0:
+				pursuit_target = last_visible_player_position
+			elif not has_line_of_sight:
+				velocity.x = 0
+				velocity.z = 0
+				_set_idle_pose()
+				is_moving = false
+				move_and_slide()
+				return
+
+			# Get direction to current pursuit target
+			var direction_to_player = (pursuit_target - global_position)
 			direction_to_player.y = 0
 			direction_to_player = direction_to_player.normalized()
 			
@@ -312,27 +317,39 @@ func _physics_process(delta):
 				var target_rotation = atan2(move_direction.x, move_direction.z)
 				rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
 			else:
-				# If pathfinding blocked, still try to move toward player at reduced speed
-				# This helps slide past corners using move_and_slide's collision response
-				was_trying_to_move = true
-				velocity.x = direction_to_player.x * WALK_SPEED * 0.5
-				velocity.z = direction_to_player.z * WALK_SPEED * 0.5
-				_set_animation("walking")
-				is_moving = true
+				# Fully blocked: stop instead of pushing forever into a wall.
+				velocity.x = 0
+				velocity.z = 0
+				_set_idle_pose()
+				is_moving = false
 		else:
 			# Player too close or out of range, stop moving
 			velocity.x = 0
 			velocity.z = 0
-			_stop_animation()
+			_set_idle_pose()
 			is_moving = false
 	else:
 		# No player, stop moving
 		velocity.x = 0
 		velocity.z = 0
-		_stop_animation()
+		_set_idle_pose()
 		is_moving = false
+
+	# Step up tiny bumps while moving so statue keeps advancing on uneven ground.
+	var horizontal_speed = Vector2(velocity.x, velocity.z).length()
+	if horizontal_speed > 0.2 and is_on_floor() and is_on_wall() and velocity.y <= 0.0 and bump_step_timer <= 0.0:
+		velocity.y = BUMP_STEP_VELOCITY
+		bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	move_and_slide()
+
+func _has_line_of_sight_to(target_position: Vector3) -> bool:
+	var space_state = get_world_3d().direct_space_state
+	var query = PhysicsRayQueryParameters3D.create(global_position + Vector3(0, SENSE_RAY_HEIGHT, 0), target_position)
+	query.exclude = [self, player]
+	query.collision_mask = 1
+	var result = space_state.intersect_ray(query)
+	return result.is_empty()
 
 func _process(_delta):
 	# Head tracking runs in _process AFTER animations update
@@ -409,3 +426,14 @@ func _stop_animation():
 	if animation_player:
 		animation_player.stop()
 		animation_player.speed_scale = 1.0
+
+func _set_idle_pose():
+	# Keep a non-T-pose idle by holding walking animation on frame 1.
+	if not animation_player or not animation_player.has_animation("walking"):
+		return
+
+	if animation_player.current_animation != "walking" or not animation_player.is_playing():
+		animation_player.play("walking")
+
+	animation_player.seek(WALK_IDLE_FRAME_TIME, true)
+	animation_player.speed_scale = 0.0

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://dvdly7xo8rxig"]
+[gd_scene format=3 uid="uid://dvdly7xo8rxig"]
 
 [ext_resource type="Script" uid="uid://bjcyiq2tg4mj0" path="res://assets/rooms/corridor.gd" id="1_sogev"]
 [ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_jwa8w"]
@@ -7,86 +7,86 @@
 [ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="5_c3q6i"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="5_nymqs"]
 
-[node name="Corridor" type="Node3D"]
+[node name="Corridor" type="Node3D" unique_id=338039733]
 script = ExtResource("1_sogev")
 
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=2047972908]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -5.68248e-07, 0, 0)
 visible = false
 use_collision = true
 size = Vector3(10, 10, 10)
 
-[node name="CSGBox3D2" type="CSGBox3D" parent="CSGBox3D"]
+[node name="CSGBox3D2" type="CSGBox3D" parent="CSGBox3D" unique_id=1099090540]
 operation = 2
 size = Vector3(9.5, 9.5, 9.5)
 
-[node name="DOOR?_F_CUT" type="CSGBox3D" parent="CSGBox3D"]
+[node name="DOOR?_F_CUT" type="CSGBox3D" parent="CSGBox3D" unique_id=1137797315]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.32411e-07, 0, -4.94621)
 operation = 2
 size = Vector3(10, 9.5, 0.5)
 
-[node name="DOOR?_B_CUT" type="CSGBox3D" parent="CSGBox3D"]
+[node name="DOOR?_B_CUT" type="CSGBox3D" parent="CSGBox3D" unique_id=1349600116]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.35927e-07, 0, 4.98643)
 operation = 2
 size = Vector3(10, 9.5, 0.5)
 
-[node name="DOOR?_L_CUT" type="CSGBox3D" parent="CSGBox3D"]
+[node name="DOOR?_L_CUT" type="CSGBox3D" parent="CSGBox3D" unique_id=750845963]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.86331, 0, -4.25164e-07)
 operation = 2
 size = Vector3(0.5, 9.5, 10)
 
-[node name="DOOR?_R_CUT" type="CSGBox3D" parent="CSGBox3D"]
+[node name="DOOR?_R_CUT" type="CSGBox3D" parent="CSGBox3D" unique_id=569935292]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.87393, 0, 4.26093e-07)
 operation = 2
 size = Vector3(0.5, 9.5, 10)
 
-[node name="Models" type="Node3D" parent="."]
+[node name="Models" type="Node3D" parent="." unique_id=2009575779]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 
-[node name="F_WALL" parent="Models" instance=ExtResource("4_nymqs")]
+[node name="F_WALL" parent="Models" unique_id=1375022710 instance=ExtResource("4_nymqs")]
 transform = Transform3D(1.01, 0, 0, 0, 1, 0, 0, 0, 0.07, 0, -10.013, 9.81086)
 
-[node name="Torch" parent="Models/F_WALL" instance=ExtResource("4_y5t7e")]
+[node name="Torch" parent="Models/F_WALL" unique_id=1012974945 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(0.990099, 0, 0, 0, 0.9292742, 0.3693898, 0, -5.276997, 13.275346, 0, 10.013, -9.635712)
-
-[node name="B_WALL" parent="Models" instance=ExtResource("4_nymqs")]
-transform = Transform3D(1.01, 0, 0, 0, 1, 0, 0, 0, 0.07, 0, -10.013, -9.8259)
-
-[node name="Torch" parent="Models/B_WALL" instance=ExtResource("4_y5t7e")]
-transform = Transform3D(0.990099, 0, 0, 0, 0.94466287, -0.3280424, 0, 4.68632, 13.495184, 0, 10.013, 7.728256)
 visible = false
 
-[node name="L_WALL" parent="Models" instance=ExtResource("4_nymqs")]
+[node name="B_WALL" parent="Models" unique_id=334974362 instance=ExtResource("4_nymqs")]
+transform = Transform3D(1.01, 0, 0, 0, 1, 0, 0, 0, 0.07, 0, -10.013, -9.8259)
+
+[node name="Torch" parent="Models/B_WALL" unique_id=1870127561 instance=ExtResource("4_y5t7e")]
+transform = Transform3D(0.990099, 0, 0, 0, 0.94466287, -0.3280424, 0, 4.68632, 13.495184, 0, 10.013, 7.728256)
+
+[node name="L_WALL" parent="Models" unique_id=54437670 instance=ExtResource("4_nymqs")]
 transform = Transform3D(-4.41485e-08, 0, 0.07, 0, 1, 0, -1.01, 0, -3.0598e-09, 9.82296, -10.013, -0.0209608)
 
-[node name="Torch" parent="Models/L_WALL" instance=ExtResource("4_y5t7e")]
+[node name="Torch" parent="Models/L_WALL" unique_id=403587094 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(-3.9838202e-08, 1.691031e-08, -0.9900988, 0.39073113, 0.9205046, 0, 13.150069, -5.581872, -6.244482e-07, -0.020753244, 10.013, -8.142883)
 
-[node name="R_WALL" parent="Models" instance=ExtResource("4_nymqs")]
+[node name="R_WALL" parent="Models" unique_id=2025305536 instance=ExtResource("4_nymqs")]
 transform = Transform3D(-4.41485e-08, 0, 0.07, 0, 1, 0, -1.01, 0, -3.0598e-09, -9.79688, -10.013, -0.0209608)
 
-[node name="Torch" parent="Models/R_WALL" instance=ExtResource("4_y5t7e")]
+[node name="Torch" parent="Models/R_WALL" unique_id=1152558419 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(-3.98382e-08, -1.6910308e-08, -0.9900988, -0.3907311, 0.92050457, 0, 13.150068, 5.5818715, -6.244482e-07, -0.020753294, 10.013, 8.191269)
 visible = false
 
-[node name="Pillars" type="Node3D" parent="Models"]
+[node name="Pillars" type="Node3D" parent="Models" unique_id=438006589]
 
-[node name="Pillar" parent="Models/Pillars" instance=ExtResource("5_c3q6i")]
+[node name="Pillar" parent="Models/Pillars" unique_id=672010152 instance=ExtResource("5_c3q6i")]
 transform = Transform3D(0.45, 0, 0, 0, 0.63, 0, 0, 0, 0.45, 10, -10, 10)
 
-[node name="Pillar2" parent="Models/Pillars" instance=ExtResource("5_c3q6i")]
+[node name="Pillar2" parent="Models/Pillars" unique_id=1174689274 instance=ExtResource("5_c3q6i")]
 transform = Transform3D(0.45, 0, 0, 0, 0.63, 0, 0, 0, 0.45, -10, -10, 10)
 
-[node name="Pillar3" parent="Models/Pillars" instance=ExtResource("5_c3q6i")]
+[node name="Pillar3" parent="Models/Pillars" unique_id=1426877436 instance=ExtResource("5_c3q6i")]
 transform = Transform3D(0.45, 0, 0, 0, 0.63, 0, 0, 0, 0.45, -10, -10, -10)
 
-[node name="Pillar4" parent="Models/Pillars" instance=ExtResource("5_c3q6i")]
+[node name="Pillar4" parent="Models/Pillars" unique_id=1807063004 instance=ExtResource("5_c3q6i")]
 transform = Transform3D(0.45, 0, 0, 0, 0.63, 0, 0, 0, 0.45, 10, -10, -10)
 
-[node name="Floor and Ceiling" type="Node3D" parent="Models"]
+[node name="Floor and Ceiling" type="Node3D" parent="Models" unique_id=834857750]
 
-[node name="Floor_Tiles" parent="Models/Floor and Ceiling" instance=ExtResource("2_jwa8w")]
+[node name="Floor_Tiles" parent="Models/Floor and Ceiling" unique_id=256768094 instance=ExtResource("2_jwa8w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -9.5, 0)
 
-[node name="Block" parent="Models/Floor and Ceiling" instance=ExtResource("5_nymqs")]
+[node name="Block" parent="Models/Floor and Ceiling" unique_id=1798335009 instance=ExtResource("5_nymqs")]
 transform = Transform3D(1, 0, 0, 0, -0.05, 1.50996e-07, 0, -7.54979e-09, -1, 0, 10, 0)

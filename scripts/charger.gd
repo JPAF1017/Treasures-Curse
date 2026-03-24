@@ -13,6 +13,15 @@ const LUNGE_DURATION = 0.5  # Maximum duration of a lunge in seconds
 const LUNGE_DECEL_TIME = 0.75  # Time to decelerate after lunge ends (seconds)
 const CIRCLE_RADIUS = 3.0  # Radius of the circle to walk in when idle
 const CIRCLE_SPEED = 1.0  # Speed of rotation around the circle (radians per second)
+const BUMP_STEP_VELOCITY = 2.0
+const BUMP_STEP_COOLDOWN = 0.15
+const PATH_RAYCAST_DISTANCE = 3.5
+const SIDE_PROBE_DISTANCE = 2.5
+const SENSE_RAY_HEIGHT = 0.8
+const LOS_MEMORY_TIME = 10.0
+const DEBUG_LOG_INTERVAL = 0.35
+
+@export var debug_navigation_logs: bool = false
 
 var player: CharacterBody3D = null
 var is_player_in_range: bool = false
@@ -34,6 +43,13 @@ var decel_timer: float = 0.0  # Time spent decelerating
 var circle_angle: float = 0.0  # Current angle in the circle (in radians)
 var circle_center: Vector3 = Vector3.ZERO  # Center point of the circle
 var last_known_player_position: Vector3 = Vector3.ZERO  # Last known player position for lunging
+var bump_step_timer: float = 0.0
+var wall_follow_mode: int = 0  # 0 = none, 1 = left, -1 = right
+var los_memory_timer: float = 0.0
+var last_visible_player_position: Vector3 = Vector3.ZERO
+var debug_log_timer: float = 0.0
+var debug_los_initialized: bool = false
+var debug_previous_los: bool = false
 
 # Slope alignment
 var ground_normal: Vector3 = Vector3.UP  # Smoothed ground normal
@@ -44,7 +60,7 @@ const SLOPE_ALIGN_SPEED = 10.0  # How fast to tilt toward the slope
 func _ready():
 	# Configure slope handling
 	floor_stop_on_slope = true
-	floor_snap_length = 0.5
+	floor_snap_length = 0.7
 	
 	# Connect the detector signals
 	$Detector.body_entered.connect(_on_detector_body_entered)
@@ -182,6 +198,10 @@ func _execute_lunge(direction: Vector3):
 			print("No lunge animation, using walk at 2x speed")
 
 func _physics_process(delta):
+	bump_step_timer = max(bump_step_timer - delta, 0.0)
+	los_memory_timer = max(los_memory_timer - delta, 0.0)
+	debug_log_timer = max(debug_log_timer - delta, 0.0)
+
 	# Apply gravity
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -282,11 +302,24 @@ func _physics_process(delta):
 	
 	# Follow the player if in range
 	if is_player_in_range and player and is_instance_valid(player):
-		# Track last known player position
-		last_known_player_position = player.global_position
+		var has_line_of_sight = _has_line_of_sight_to(player.global_position + Vector3(0, 1.0, 0))
+		if not debug_los_initialized or has_line_of_sight != debug_previous_los:
+			_debug_nav_log("LOS changed -> %s (memory %.2f)" % [str(has_line_of_sight), los_memory_timer], true)
+			debug_los_initialized = true
+			debug_previous_los = has_line_of_sight
+
+		if has_line_of_sight:
+			last_visible_player_position = player.global_position
+			los_memory_timer = LOS_MEMORY_TIME
+			# Track last known player position for lunge logic
+			last_known_player_position = player.global_position
+
+		var pursuit_target = player.global_position
+		if not has_line_of_sight and los_memory_timer > 0.0:
+			pursuit_target = last_visible_player_position
 		
 		# Calculate direction to player (horizontal only)
-		var direction_to_player = (player.global_position - global_position)
+		var direction_to_player = (pursuit_target - global_position)
 		direction_to_player.y = 0  # Ignore vertical difference
 		var distance_to_player = direction_to_player.length()  # Horizontal distance only
 		direction_to_player = direction_to_player.normalized()
@@ -313,7 +346,7 @@ func _physics_process(delta):
 				velocity.x = lunge_direction.x * LUNGE_SPEED
 				velocity.z = lunge_direction.z * LUNGE_SPEED
 			# Check if player is in lunge range and lunge is ready (start wind-up)
-			elif is_player_in_lunge_range and can_lunge:
+			elif is_player_in_lunge_range and can_lunge and has_line_of_sight:
 				# Start wind-up phase
 				_start_lunge_windup()
 			elif is_player_in_lunge_range and not can_lunge:
@@ -328,8 +361,17 @@ func _physics_process(delta):
 						animation_player.speed_scale = 1.0
 			else:
 				# Regular walking speed (outside lunge range)
-				velocity.x = direction_to_player.x * SPEED
-				velocity.z = direction_to_player.z * SPEED
+				var path_direction = _find_path_direction(direction_to_player)
+				if path_direction.length_squared() > 0.001:
+					_debug_nav_log("Path dir chosen | dist %.2f | wall_follow %d" % [distance_to_player, wall_follow_mode])
+					velocity.x = path_direction.x * SPEED
+					velocity.z = path_direction.z * SPEED
+					var target_rotation = atan2(path_direction.x, path_direction.z)
+					rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
+				else:
+					_debug_nav_log("No path dir | LOS %s | on_wall %s | slides %d | dist %.2f" % [str(has_line_of_sight), str(is_on_wall()), get_slide_collision_count(), distance_to_player], true)
+					velocity.x = direction_to_player.x * SPEED * 0.4
+					velocity.z = direction_to_player.z * SPEED * 0.4
 				
 				# Play walk animation at normal speed
 				if animation_player:
@@ -363,6 +405,25 @@ func _physics_process(delta):
 			velocity.z = lunge_direction.z * LUNGE_SPEED
 		elif is_decelerating:
 			pass  # Deceleration is handled above
+		elif los_memory_timer > 0.0:
+			# Keep pushing toward last seen point for a short time, even after detector exit.
+			var to_memory = last_visible_player_position - global_position
+			to_memory.y = 0
+			if to_memory.length() > 0.4:
+				var memory_dir = _find_path_direction(to_memory.normalized())
+				if memory_dir.length_squared() > 0.001:
+					_debug_nav_log("Memory chase | remaining %.2f" % [los_memory_timer])
+					velocity.x = memory_dir.x * SPEED
+					velocity.z = memory_dir.z * SPEED
+					var memory_rot = atan2(memory_dir.x, memory_dir.z)
+					rotation.y = lerp_angle(rotation.y, memory_rot, delta * 5.0)
+				else:
+					_debug_nav_log("Memory blocked | remaining %.2f" % [los_memory_timer], true)
+					velocity.x = 0
+					velocity.z = 0
+			else:
+				velocity.x = 0
+				velocity.z = 0
 		else:
 			# Idle — walk in circles
 			# Update circle angle
@@ -399,12 +460,26 @@ func _physics_process(delta):
 					if not animation_player.is_playing() or animation_player.current_animation != "walk":
 						animation_player.play("walk")
 					animation_player.speed_scale = 0.5  # Slower animation for slower movement
+
+	# Step up tiny bumps while moving instead of getting stuck on their edges.
+	var horizontal_speed = Vector2(velocity.x, velocity.z).length()
+	if horizontal_speed > 0.2 and is_on_floor() and is_on_wall() and velocity.y <= 0.0 and bump_step_timer <= 0.0:
+		velocity.y = BUMP_STEP_VELOCITY
+		bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	# Apply physics movement
 	move_and_slide()
 	
 	# Align visuals and collision to slope
 	_align_to_slope(delta)
+
+func _debug_nav_log(message: String, force: bool = false) -> void:
+	if not debug_navigation_logs:
+		return
+	if not force and debug_log_timer > 0.0:
+		return
+	print("[ChargerNav] ", message)
+	debug_log_timer = DEBUG_LOG_INTERVAL
 
 func _align_to_slope(delta: float):
 	"""Tilt the Dog visual and CollisionShape3D to match the ground slope."""
@@ -434,6 +509,64 @@ func _align_to_slope(delta: float):
 		# No tilt needed (flat ground or perfectly upright)
 		$Dog.transform = original_dog_transform
 		$CollisionShape3D.transform = original_collision_transform
+
+func _has_line_of_sight_to(target_position: Vector3) -> bool:
+	var from_pos = global_position + Vector3(0, SENSE_RAY_HEIGHT, 0)
+	return not _raycast_blocked(from_pos, target_position, [self, player])
+
+func _raycast_blocked(from_pos: Vector3, to_pos: Vector3, excluded_bodies: Array) -> bool:
+	var space_state = get_world_3d().direct_space_state
+	var query = PhysicsRayQueryParameters3D.create(from_pos, to_pos)
+	query.exclude = excluded_bodies
+	query.collision_mask = 1
+	var result = space_state.intersect_ray(query)
+	return not result.is_empty()
+
+func _is_direction_clear(direction: Vector3, distance: float = PATH_RAYCAST_DISTANCE) -> bool:
+	if direction.length_squared() <= 0.001:
+		return false
+	var start = global_position + Vector3(0, SENSE_RAY_HEIGHT, 0)
+	var end = start + direction.normalized() * distance
+	return not _raycast_blocked(start, end, [self])
+
+func _find_path_direction(target_direction: Vector3) -> Vector3:
+	target_direction.y = 0
+	if target_direction.length_squared() <= 0.001:
+		return Vector3.ZERO
+	target_direction = target_direction.normalized()
+
+	if _is_direction_clear(target_direction):
+		wall_follow_mode = 0
+		_debug_nav_log("Direct path clear")
+		return target_direction
+
+	var angles_to_try = [20.0, -20.0, 35.0, -35.0, 50.0, -50.0, 70.0, -70.0, 90.0, -90.0, 120.0, -120.0, 145.0, -145.0]
+	var best_direction = Vector3.ZERO
+	var best_score = -999.0
+	var best_angle = 0.0
+
+	for angle_deg in angles_to_try:
+		var angle_rad = deg_to_rad(angle_deg)
+		var test_direction = target_direction.rotated(Vector3.UP, angle_rad)
+		if _is_direction_clear(test_direction, SIDE_PROBE_DISTANCE):
+			var score = test_direction.dot(target_direction)
+			if wall_follow_mode != 0 and signf(angle_deg) == float(wall_follow_mode):
+				score += 0.2
+			if score > best_score:
+				best_score = score
+				best_direction = test_direction
+				best_angle = angle_deg
+				if angle_deg > 0.0:
+					wall_follow_mode = 1
+				elif angle_deg < 0.0:
+					wall_follow_mode = -1
+
+	if best_direction.length_squared() > 0.001:
+		_debug_nav_log("Probe detour angle %.0f deg" % [best_angle])
+	else:
+		_debug_nav_log("All probes blocked", true)
+
+	return best_direction
 
 func _enable_shadows(node: Node):
 	# Recursively enable shadow casting on all MeshInstance3D nodes

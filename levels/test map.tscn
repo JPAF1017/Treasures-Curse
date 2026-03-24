@@ -2,8 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://ds38umkop3txm" path="res://entities/player.tscn" id="1_yyqp4"]
 [ext_resource type="Script" uid="uid://bqeu73gvoygbb" path="res://addons/SimpleDungeons/DungeonGenerator3D.gd" id="2_rasb4"]
-[ext_resource type="PackedScene" uid="uid://wxbfj11sq1id" path="res://assets/rooms/spawn_charger.tscn" id="5_003he"]
 [ext_resource type="PackedScene" uid="uid://bw0184ufe88px" path="res://assets/rooms/stair.tscn" id="6_4d616"]
+[ext_resource type="PackedScene" uid="uid://dfh2o4rqmfxq8" path="res://assets/rooms/spawn_gnome.tscn" id="6_lh33e"]
 [ext_resource type="PackedScene" uid="uid://cjnmq8wqhrf84" path="res://assets/rooms/start_room.tscn" id="7_yyqp4"]
 [ext_resource type="PackedScene" uid="uid://dvdly7xo8rxig" path="res://assets/rooms/corridor.tscn" id="9_73k1s"]
 
@@ -43,8 +43,17 @@ metadata/_custom_type_script = "uid://bqeu73gvoygbb"
 [node name="StartRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2057079214 instance=ExtResource("7_yyqp4")]
 transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 20, -5, 0)
 
-[node name="SpawnCharger" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1752392559 instance=ExtResource("5_003he")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20, -5, 0)
+[node name="Corridor" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=237343406 instance=ExtResource("9_73k1s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -5, 0)
+
+[node name="Corridor2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1877544022 instance=ExtResource("9_73k1s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0)
+
+[node name="Corridor3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1044300545 instance=ExtResource("9_73k1s")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, -5, 0)
+
+[node name="SpawnGnome" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1980513556 instance=ExtResource("6_lh33e")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -5, -10)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)

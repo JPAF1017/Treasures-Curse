@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ccqca32erx74d"
-path="res://.godot/imported/dog.glb-eb62290ba32e48b5d3f6b430f29834f5.scn"
+uid="uid://crxg8ido3i1el"
+path="res://.godot/imported/Dog.glb-9c053877ff64e92896e37b1e6753eb47.scn"
 
 [deps]
 
-source_file="res://assets/entities/dog.glb"
-dest_files=["res://.godot/imported/dog.glb-eb62290ba32e48b5d3f6b430f29834f5.scn"]
+source_file="res://assets/entities/Dog.glb"
+dest_files=["res://.godot/imported/Dog.glb-9c053877ff64e92896e37b1e6753eb47.scn"]
 
 [params]
 

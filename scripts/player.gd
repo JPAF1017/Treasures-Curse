@@ -4,25 +4,34 @@ extends CharacterBody3D
 const WALK_SPEED = 7.0
 const SPRINT_SPEED = 11.0
 const JUMP_VELOCITY = 8
+const BUMP_STEP_VELOCITY = 2.2
+const BUMP_STEP_COOLDOWN = 0.12
 const SENSITIVITY = 0.003
 const BOB_FREQ = 2.0
 const BOB_AMP = 0.08
 const BASE_FOV = 75.0
 const FOV_CHANGE = 1.5
+@export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
+@export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 #------------------------------------------------------
 var speed
 var t_bob = 0.0
 var gravity = 20
+var bump_step_timer = 0.0
+var movement_lock_sources: Array[Node] = []
 #------------------------------------------------------
 @onready var head = $Head
 @onready var camera = $Head/playerCamera
 @onready var player_model = $PlayerModel
 @onready var animation_player = $PlayerModel/AnimationPlayer
+@onready var vision_collision_shape: CollisionShape3D = $Head/playerCamera/Vision/CollisionShape3D
 
 #function on startup
 func _ready():
 	#detects mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	floor_snap_length = 0.7
+	_configure_vision_area()
 	
 	# Initialize model rotation
 	if player_model:
@@ -33,6 +42,23 @@ func _ready():
 		camera.cull_mask = camera.cull_mask & ~2  # Exclude layer 2 from camera
 	else:
 		print("WARNING: Player model not found!")
+
+func _configure_vision_area():
+	if vision_collision_shape == null:
+		print("WARNING: Vision collision shape not found!")
+		return
+
+	var vision_shape = vision_collision_shape.shape as CapsuleShape3D
+	if vision_shape == null:
+		print("WARNING: Vision shape is not CapsuleShape3D")
+		return
+
+	vision_shape.radius = vision_radius
+	vision_shape.height = max(vision_distance - (vision_radius * 2.0), 0.1)
+
+	# Rotate the capsule forward and place its center halfway into view distance.
+	vision_collision_shape.rotation = Vector3(deg_to_rad(90.0), 0.0, 0.0)
+	vision_collision_shape.position = Vector3(0.0, 0.0, -vision_distance * 0.5)
 
 #camera function
 func _unhandled_input(event):
@@ -46,21 +72,26 @@ func _unhandled_input(event):
 
 #movement function
 func _physics_process(delta):
+	bump_step_timer = max(bump_step_timer - delta, 0.0)
+	var is_movement_locked := _is_movement_locked()
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 #------------------------------------------------------
 #jump input
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
+	if not is_movement_locked and Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
 #------------------------------------------------------
 #sprint input
-	if Input.is_action_pressed("shift"):
+	if not is_movement_locked and Input.is_action_pressed("shift"):
 		speed = SPRINT_SPEED
 	else:
 		speed = WALK_SPEED
 #------------------------------------------------------
 #wasd direction input and other physics
-	var input_dir = Input.get_vector("a", "d", "w", "s")
+	var input_dir := Vector2.ZERO
+	if not is_movement_locked:
+		input_dir = Input.get_vector("a", "d", "w", "s")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	
 	# Animation handling
@@ -104,8 +135,32 @@ func _physics_process(delta):
 	# Update player model rotation to match head
 	if player_model:
 		player_model.rotation.y = head.rotation.y
+
+	# Step up tiny bumps while moving so movement stays smooth on uneven floors.
+	if input_dir != Vector2.ZERO and is_on_floor() and is_on_wall() and velocity.y <= 0.0 and bump_step_timer <= 0.0:
+		velocity.y = BUMP_STEP_VELOCITY
+		bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	move_and_slide()
+
+func set_movement_locked_by(locker: Node, locked: bool) -> void:
+	if locker == null:
+		return
+
+	if locked:
+		if not movement_lock_sources.has(locker):
+			movement_lock_sources.append(locker)
+	else:
+		movement_lock_sources.erase(locker)
+
+func _is_movement_locked() -> bool:
+	return movement_lock_sources.size() > 0
+
+func is_movement_locked_by_other(locker: Node) -> bool:
+	for source in movement_lock_sources:
+		if source != locker:
+			return true
+	return false
 
 #function for head bob
 func _headbob(time) -> Vector3:

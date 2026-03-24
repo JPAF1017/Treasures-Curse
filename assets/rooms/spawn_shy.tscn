@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bko4nt0nuijj0"]
+[gd_scene format=3 uid="uid://bko4nt0nuijj0"]
 
 [ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_vtwm5"]
 [ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_2vbjh"]
@@ -6,52 +6,56 @@
 [ext_resource type="PackedScene" uid="uid://o7in1t7fk86v" path="res://assets/room assets/door_frame_01.tscn" id="4_48tbb"]
 [ext_resource type="PackedScene" uid="uid://bh6l5evgdyhpq" path="res://assets/room assets/door_03.tscn" id="5_6o5e3"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="6_6o5e3"]
+[ext_resource type="PackedScene" uid="uid://b84dvtkhuaktk" path="res://entities/shy.tscn" id="7_gjqfq"]
 
-[node name="SpawnEye" type="Node3D"]
+[node name="SpawnShy" type="Node3D" unique_id=2127839915]
 script = ExtResource("1_vtwm5")
 metadata/_custom_type_script = "uid://c801ki3oghumx"
 
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=1312366977]
 visible = false
 use_collision = true
 size = Vector3(10, 10, 10)
 
-[node name="CSGBox3D" type="CSGBox3D" parent="CSGBox3D"]
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGBox3D" unique_id=1350658520]
 operation = 2
 use_collision = true
 size = Vector3(9.5, 9.5, 9.5)
 
-[node name="DOOR_F_CUT" type="CSGBox3D" parent="CSGBox3D"]
+[node name="DOOR_F_CUT" type="CSGBox3D" parent="CSGBox3D" unique_id=1996634760]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
 operation = 2
 use_collision = true
 size = Vector3(9.5, 9.5, 0.5)
 
-[node name="Floor" type="Node3D" parent="."]
+[node name="Floor" type="Node3D" parent="." unique_id=300273091]
 
-[node name="Floor_Tiles" parent="Floor" instance=ExtResource("2_2vbjh")]
+[node name="Floor_Tiles" parent="Floor" unique_id=1691347253 instance=ExtResource("2_2vbjh")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -4.75, 0)
 
-[node name="Wall" type="Node3D" parent="."]
+[node name="Wall" type="Node3D" parent="." unique_id=522273196]
 
-[node name="Skull_Wall" parent="Wall" instance=ExtResource("3_kwx3w")]
+[node name="Skull_Wall" parent="Wall" unique_id=992559349 instance=ExtResource("3_kwx3w")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.2, 0, -5, -4.5)
 
-[node name="Skull_Wall2" parent="Wall" instance=ExtResource("3_kwx3w")]
+[node name="Skull_Wall2" parent="Wall" unique_id=565355818 instance=ExtResource("3_kwx3w")]
 transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, -4.5, -5, 0)
 
-[node name="Skull_Wall3" parent="Wall" instance=ExtResource("3_kwx3w")]
+[node name="Skull_Wall3" parent="Wall" unique_id=1995462264 instance=ExtResource("3_kwx3w")]
 transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, 4.5, -5, 0)
 
-[node name="Entrance" type="Node3D" parent="."]
+[node name="Entrance" type="Node3D" parent="." unique_id=952747066]
 
-[node name="Door_Frame_01" parent="Entrance" instance=ExtResource("4_48tbb")]
+[node name="Door_Frame_01" parent="Entrance" unique_id=538357057 instance=ExtResource("4_48tbb")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -5, 4)
 
-[node name="Door_03" parent="Entrance" instance=ExtResource("5_6o5e3")]
+[node name="Door_03" parent="Entrance" unique_id=688243463 instance=ExtResource("5_6o5e3")]
 transform = Transform3D(2.9802322e-08, 0, 0.49999994, 0, 0.5, 0, -0.49999994, 0, 2.9802322e-08, 2.5, -5, 4)
 
-[node name="Ceiling" type="Node3D" parent="."]
+[node name="Ceiling" type="Node3D" parent="." unique_id=1370654604]
 
-[node name="Block" parent="Ceiling" instance=ExtResource("6_6o5e3")]
+[node name="Block" parent="Ceiling" unique_id=235015554 instance=ExtResource("6_6o5e3")]
 transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, 0, 5, 0)
+
+[node name="Shy" parent="." unique_id=109265478 instance=ExtResource("7_gjqfq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)

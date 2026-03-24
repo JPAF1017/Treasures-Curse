@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://dfh2o4rqmfxq8"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_0dnbq"]
+[ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_pmkgr"]
+[ext_resource type="PackedScene" uid="uid://d4b5hb4e4emkt" path="res://assets/room assets/skull_wall.tscn" id="3_qpba6"]
+[ext_resource type="PackedScene" uid="uid://o7in1t7fk86v" path="res://assets/room assets/door_frame_01.tscn" id="4_t6m5w"]
+[ext_resource type="PackedScene" uid="uid://bh6l5evgdyhpq" path="res://assets/room assets/door_03.tscn" id="5_d55ql"]
+[ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="6_jiyvh"]
+[ext_resource type="PackedScene" uid="uid://by4mn7s5qkd6o" path="res://entities/gnome.tscn" id="7_0dnbq"]
+
+[node name="SpawnCharger" type="Node3D" unique_id=1980513556]
+script = ExtResource("1_0dnbq")
+metadata/_custom_type_script = "uid://c801ki3oghumx"
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=845216783]
+visible = false
+use_collision = true
+size = Vector3(10, 10, 10)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGBox3D" unique_id=1995925140]
+operation = 2
+use_collision = true
+size = Vector3(9.5, 9.5, 9.5)
+
+[node name="DOOR_F_CUT" type="CSGBox3D" parent="CSGBox3D" unique_id=257279935]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+operation = 2
+use_collision = true
+size = Vector3(9.5, 9.5, 0.5)
+
+[node name="Floor" type="Node3D" parent="." unique_id=1953892172]
+
+[node name="Floor_Tiles" parent="Floor" unique_id=1863465754 instance=ExtResource("2_pmkgr")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -4.75, 0)
+
+[node name="Wall" type="Node3D" parent="." unique_id=1110449005]
+
+[node name="Skull_Wall" parent="Wall" unique_id=1106680847 instance=ExtResource("3_qpba6")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.2, 0, -5, -4.5)
+
+[node name="Skull_Wall2" parent="Wall" unique_id=1067692841 instance=ExtResource("3_qpba6")]
+transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, -4.5, -5, 0)
+
+[node name="Skull_Wall3" parent="Wall" unique_id=1053278433 instance=ExtResource("3_qpba6")]
+transform = Transform3D(-2.1855694e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.742278e-09, 4.5, -5, 0)
+
+[node name="Entrance" type="Node3D" parent="." unique_id=1904088888]
+
+[node name="Door_Frame_01" parent="Entrance" unique_id=1961742864 instance=ExtResource("4_t6m5w")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -5, 4)
+
+[node name="Door_03" parent="Entrance" unique_id=238121446 instance=ExtResource("5_d55ql")]
+transform = Transform3D(2.9802322e-08, 0, 0.49999994, 0, 0.5, 0, -0.49999994, 0, 2.9802322e-08, 2.5, -5, 4)
+
+[node name="Ceiling" type="Node3D" parent="." unique_id=1162041439]
+
+[node name="Block" parent="Ceiling" unique_id=652233483 instance=ExtResource("6_jiyvh")]
+transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, 0, 5, 0)
+
+[node name="Gnome" parent="." unique_id=1695650251 instance=ExtResource("7_0dnbq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.0338502)
+
+[node name="Gnome2" parent="." unique_id=1732186055 instance=ExtResource("7_0dnbq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.0953519)

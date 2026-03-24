@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://ci68ejmir8osg"]
+
+[ext_resource type="PackedScene" uid="uid://byivpt6rwp7bd" path="res://assets/entities/gnome.glb" id="1_0jwil"]
+[ext_resource type="Texture2D" uid="uid://dl647merhjexu" path="res://assets/entities/gnome_CLD4.png" id="2_k1aer"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g2kvj"]
+albedo_texture = ExtResource("2_k1aer")
+metallic = 0.66
+
+[node name="gnome" unique_id=299579382 instance=ExtResource("1_0jwil")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 34, 0)
+
+[node name="Skeleton3D" parent="CLD4_skeleton" parent_id_path=PackedInt32Array(1809528329) index="0" unique_id=459077769]
+bones/1/rotation = Quaternion(1.7763568e-15, -5.0732288e-24, -1.4999395e-23, 1)
+bones/2/position = Vector3(-1.193861e-39, 4.5918e-41, -1.9475004e-30)
+bones/2/rotation = Quaternion(-3.5527137e-15, -1.7645024e-24, 2.1396554e-23, 1)
+bones/3/position = Vector3(-2.0679512e-25, -7.888609e-31, -1.9475004e-30)
+bones/3/rotation = Quaternion(-7.1054274e-15, -2.4925562e-23, -3.816045e-23, 1)
+bones/4/position = Vector3(2.0679518e-25, -7.888609e-31, -1.9475004e-30)
+bones/4/rotation = Quaternion(-7.1054274e-15, 8.1616646e-24, 1.1470388e-23, 1)
+bones/5/position = Vector3(-2.0521047e-25, 0.0010000002, -2.7755569e-17)
+bones/6/position = Vector3(-1.193861e-39, 4.5918e-41, -1.9475004e-30)
+bones/6/rotation = Quaternion(-3.5527137e-15, -5.0732244e-24, 2.1396554e-23, 1)
+bones/7/position = Vector3(-2.0679518e-25, 4.5918e-41, -1.9475004e-30)
+bones/7/rotation = Quaternion(-3.5527137e-15, -1.830812e-23, -2.8234282e-23, 1)
+bones/8/position = Vector3(2.0679515e-25, -7.888609e-31, -1.9475004e-30)
+bones/8/rotation = Quaternion(-7.1054274e-15, 4.8529413e-24, 8.161662e-24, 1)
+bones/9/position = Vector3(-1.7936107e-25, 0.0010000002, -4.1633357e-17)
+bones/10/rotation = Quaternion(1.7763568e-15, -1.7645067e-24, -1.4999395e-23, 1)
+bones/11/position = Vector3(2.75506e-40, 4.5918e-41, -1.9475004e-30)
+bones/11/rotation = Quaternion(0, 1.5442189e-24, 2.1396554e-23, 1)
+bones/12/position = Vector3(1.584706e-27, 0.0010000002, 0)
+bones/13/position = Vector3(2.75506e-40, 4.5918e-41, -1.9475004e-30)
+bones/13/rotation = Quaternion(0, -1.764504e-24, 2.1396552e-23, 1)
+bones/14/position = Vector3(-2.0679518e-25, 4.5918e-41, -1.9475004e-30)
+bones/14/rotation = Quaternion(0, -1.16906764e-23, -2.8234285e-23, 1)
+bones/15/position = Vector3(2.0679515e-25, -7.888609e-31, -1.9475004e-30)
+bones/15/rotation = Quaternion(-1.0658141e-14, 4.8529398e-24, 1.808783e-23, 1)
+bones/16/position = Vector3(-2.0521045e-25, 0.0010000002, -2.7755569e-17)
+bones/17/position = Vector3(2.75506e-40, 4.5918e-41, -1.9475004e-30)
+bones/17/rotation = Quaternion(0, -1.7645032e-24, 2.139655e-23, 1)
+bones/18/position = Vector3(-2.0679518e-25, 4.5918e-41, -1.9475004e-30)
+bones/18/rotation = Quaternion(0, -1.4999398e-23, -1.16906725e-23, 1)
+bones/19/position = Vector3(2.0679513e-25, 9.1835e-41, -1.9475004e-30)
+bones/19/rotation = Quaternion(0, 8.161666e-24, 2.1396549e-23, 1)
+bones/20/position = Vector3(-1.7936106e-25, 0.0010000002, -2.7755562e-17)
+
+[node name="CLD4" parent="CLD4_skeleton/Skeleton3D" index="0" unique_id=700103602]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -64, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_g2kvj")
