@@ -5,14 +5,18 @@ const WALK_SPEED = 10.0
 const GRAVITY = 20.0
 const DETECTION_RANGE = 50.0
 const VIEW_CONE_ANGLE = 60.0
-const RAYCAST_DISTANCE = 3.0  # How far to check for obstacles
-const SIDE_RAYCAST_DISTANCE = 2.0  # Shorter side checks
-const CORNER_DETECT_DISTANCE = 1.5  # Distance to detect corners
 const WALK_IDLE_FRAME_TIME = 1.0 / 30.0  # Frame 1 at 30 FPS to avoid T-pose while idle
 const BUMP_STEP_VELOCITY = 2.0
 const BUMP_STEP_COOLDOWN = 0.15
 const LOS_MEMORY_TIME = 10
 const SENSE_RAY_HEIGHT = 0.8
+const TRAIL_MEMORY_TIME = 5.0
+const TRAIL_SAMPLE_INTERVAL = 0.2
+const TRAIL_POINT_SPACING = 0.7
+const TRAIL_REACHED_DISTANCE = 0.8
+const TRAIL_MAX_POINTS = 28
+const MEMORY_LOG_INTERVAL = 0.25
+@export var debug_memory_logs: bool = false
 
 # References
 var player: CharacterBody3D = null
@@ -30,6 +34,12 @@ var wall_follow_mode: int = 0  # 0 = none, 1 = left, -1 = right
 var bump_step_timer: float = 0.0
 var los_memory_timer: float = 0.0
 var last_visible_player_position: Vector3 = Vector3.ZERO
+var trail_memory_timer: float = 0.0
+var trail_sample_timer: float = 0.0
+var memorized_target_trail: Array[Vector3] = []
+var memory_log_timer: float = 0.0
+var los_state_initialized: bool = false
+var previous_has_line_of_sight: bool = false
 
 func _ready():
 	call_deferred("_setup_player_reference")
@@ -186,77 +196,12 @@ func _is_player_looking_at_statue() -> bool:
 	
 	return false
 
-func _raycast_check(from: Vector3, to: Vector3) -> bool:
-	"""Returns true if there's an obstacle between from and to"""
-	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(from, to)
-	query.exclude = [self]
-	query.collision_mask = 1  # Only check walls/obstacles
-	
-	var result = space_state.intersect_ray(query)
-	return not result.is_empty()
-
-func _check_direction_clear(direction: Vector3, distance: float = RAYCAST_DISTANCE) -> bool:
-	"""Check if a direction is clear using raycasting"""
-	var check_heights = [0.5, 1.0, 1.5]  # Low, middle, high
-	
-	for height in check_heights:
-		var start = global_position + Vector3(0, height, 0)
-		var end = start + direction.normalized() * distance
-		if _raycast_check(start, end):
-			return false
-	
-	return true
-
-func _find_best_direction(target_direction: Vector3) -> Vector3:
-	"""Smart pathfinding that finds the best direction around obstacles"""
-	target_direction.y = 0
-	target_direction = target_direction.normalized()
-	
-	# Check if direct path is clear
-	if _check_direction_clear(target_direction):
-		wall_follow_mode = 0  # Not following a wall
-		return target_direction
-	
-	# Direct path blocked - try multiple angles
-	var angles_to_try = [
-		15, -15, 30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 
-		105, -105, 120, -120, 135, -135, 150, -150
-	]
-	
-	var best_direction = Vector3.ZERO
-	var best_score = -999.0
-	
-	for angle_deg in angles_to_try:
-		var angle_rad = deg_to_rad(angle_deg)
-		var test_direction = target_direction.rotated(Vector3.UP, angle_rad)
-		
-		# Check if this direction is clear
-		if _check_direction_clear(test_direction, SIDE_RAYCAST_DISTANCE):
-			# Score based on how close to target direction
-			var dot = test_direction.dot(target_direction)
-			var score = dot
-			
-			# Prefer continuing in wall follow direction if we were following a wall
-			if wall_follow_mode != 0:
-				var follow_bonus = sign(angle_deg) == wall_follow_mode
-				if follow_bonus:
-					score += 0.3
-			
-			if score > best_score:
-				best_score = score
-				best_direction = test_direction
-				# Remember which side we're going around
-				if angle_deg > 0:
-					wall_follow_mode = 1  # Following left
-				elif angle_deg < 0:
-					wall_follow_mode = -1  # Following right
-	
-	return best_direction
-
 func _physics_process(delta):
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	los_memory_timer = max(los_memory_timer - delta, 0.0)
+	trail_memory_timer = max(trail_memory_timer - delta, 0.0)
+	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
+	memory_log_timer = max(memory_log_timer - delta, 0.0)
 
 	# Apply gravity
 	if not is_on_floor():
@@ -269,10 +214,31 @@ func _physics_process(delta):
 	# Chase player if found and in range
 	if player and is_instance_valid(player):
 		var distance_to_player = global_position.distance_to(player.global_position)
-		var has_line_of_sight = _has_line_of_sight_to(player.global_position + Vector3(0, 1.0, 0))
+		var space_state := get_world_3d().direct_space_state
+		var has_line_of_sight = NavigationUtils.has_line_of_sight_to(self, player.global_position + Vector3(0, 1.0, 0), space_state, [self, player])
+		var los_state := NavigationUtils.update_los_trail_state(
+			has_line_of_sight,
+			los_state_initialized,
+			previous_has_line_of_sight,
+			trail_memory_timer,
+			trail_sample_timer,
+			memorized_target_trail,
+			last_visible_player_position,
+			TRAIL_MEMORY_TIME,
+			TRAIL_POINT_SPACING,
+			TRAIL_MAX_POINTS
+		)
+		los_state_initialized = bool(los_state.get("los_state_initialized", los_state_initialized))
+		previous_has_line_of_sight = bool(los_state.get("previous_has_line_of_sight", previous_has_line_of_sight))
+		trail_memory_timer = float(los_state.get("trail_memory_timer", trail_memory_timer))
+		trail_sample_timer = float(los_state.get("trail_sample_timer", trail_sample_timer))
 		if has_line_of_sight:
 			last_visible_player_position = player.global_position
 			los_memory_timer = LOS_MEMORY_TIME
+			trail_memory_timer = TRAIL_MEMORY_TIME
+			if trail_sample_timer <= 0.0:
+				NavigationUtils.append_trail_point(memorized_target_trail, player.global_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+				trail_sample_timer = TRAIL_SAMPLE_INTERVAL
 		
 		# Weeping Angel behavior - freeze if player is looking at statue
 		if _is_player_looking_at_statue():
@@ -284,23 +250,44 @@ func _physics_process(delta):
 		elif distance_to_player <= DETECTION_RANGE and distance_to_player > 1.5:
 			# Player NOT looking and in range - move toward player
 			var pursuit_target = player.global_position
-			if not has_line_of_sight and los_memory_timer > 0.0:
-				pursuit_target = last_visible_player_position
-			elif not has_line_of_sight:
+			var trail_target := Vector3.ZERO
+			var memory_source := "LOS"
+			if not has_line_of_sight:
+				memory_source = "LAST_SEEN"
+				var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+				if trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false)):
+					trail_target = trail_result["target"]
+					pursuit_target = trail_target
+					memory_source = "TRAIL"
+				else:
+					_log_memory_state(has_line_of_sight, memory_source, player.global_position, last_visible_player_position, trail_target, global_position, true)
+					velocity.x = 0
+					velocity.z = 0
+					_set_idle_pose()
+					is_moving = false
+					wall_follow_mode = 0
+					move_and_slide()
+					return
+
+			_log_memory_state(has_line_of_sight, memory_source, player.global_position, last_visible_player_position, trail_target, pursuit_target)
+
+			# Get direction to current pursuit target
+			var direction_to_player = (pursuit_target - global_position)
+			direction_to_player.y = 0
+			if direction_to_player.length_squared() <= 0.001:
 				velocity.x = 0
 				velocity.z = 0
 				_set_idle_pose()
 				is_moving = false
 				move_and_slide()
 				return
-
-			# Get direction to current pursuit target
-			var direction_to_player = (pursuit_target - global_position)
-			direction_to_player.y = 0
 			direction_to_player = direction_to_player.normalized()
-			
-			# Find best direction using smart pathfinding
-			var move_direction = _find_best_direction(direction_to_player)
+
+			var path_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
+			var move_direction: Vector3 = path_result["direction"]
+			wall_follow_mode = path_result["wall_follow_mode"]
+			if move_direction.length() <= 0.1:
+				move_direction = direction_to_player * 0.4
 			
 			if move_direction.length() > 0.1:
 				was_trying_to_move = true
@@ -342,14 +329,6 @@ func _physics_process(delta):
 		bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	move_and_slide()
-
-func _has_line_of_sight_to(target_position: Vector3) -> bool:
-	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(global_position + Vector3(0, SENSE_RAY_HEIGHT, 0), target_position)
-	query.exclude = [self, player]
-	query.collision_mask = 1
-	var result = space_state.intersect_ray(query)
-	return result.is_empty()
 
 func _process(_delta):
 	# Head tracking runs in _process AFTER animations update
@@ -437,3 +416,32 @@ func _set_idle_pose():
 
 	animation_player.seek(WALK_IDLE_FRAME_TIME, true)
 	animation_player.speed_scale = 0.0
+
+func _format_vec3(v: Vector3) -> String:
+	return "(%.2f, %.2f, %.2f)" % [v.x, v.y, v.z]
+
+func _log_memory_state(
+	has_los: bool,
+	source: String,
+	player_pos: Vector3,
+	last_seen_pos: Vector3,
+	trail_target: Vector3,
+	pursuit_target: Vector3,
+	force: bool = false
+) -> void:
+	if not debug_memory_logs:
+		return
+	if not force and memory_log_timer > 0.0:
+		return
+	memory_log_timer = MEMORY_LOG_INTERVAL
+	print("[StatueMemory] source=%s los=%s player=%s last_seen=%s trail_target=%s pursuit=%s trail_size=%d trail_timer=%.2f los_timer=%.2f" % [
+		source,
+		str(has_los),
+		_format_vec3(player_pos),
+		_format_vec3(last_seen_pos),
+		_format_vec3(trail_target),
+		_format_vec3(pursuit_target),
+		memorized_target_trail.size(),
+		trail_memory_timer,
+		los_memory_timer,
+	])

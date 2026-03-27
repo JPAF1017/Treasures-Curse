@@ -4,3 +4,14 @@ res://entities/fly.tscn
 res://assets/rooms/spawn_fly.tscn
 res://assets/rooms/spawn_gnome.tscn
 res://levels/test map.tscn
+res://scripts/fly.gd
+res://scripts/statue.gd
+res://assets/rooms/corridor.tscn
+res://assets/rooms/spawn_shy.tscn
+res://scripts/shy.gd
+res://assets/rooms/start_room.tscn
+res://entities/shy.tscn
+res://scripts/charger.gd
+res://scripts/NavigationUtils.gd
+res://scripts/shambler.gd
+res://scripts/gnome.gd

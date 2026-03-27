@@ -8,13 +8,17 @@ const DIR_CHANGE_MAX := 3.2
 const TURN_SPEED := 4.0
 const LOS_MEMORY_TIME := 5.0
 const CHASE_MEMORY_TIME := 3.0
-const PATH_RAYCAST_DISTANCE := 3.5
-const SIDE_PROBE_DISTANCE := 2.5
-const SENSE_RAY_HEIGHT := 0.8
+const TRAIL_MEMORY_TIME := 5.0
+const TRAIL_SAMPLE_INTERVAL := 0.2
+const TRAIL_POINT_SPACING := 0.7
+const TRAIL_REACHED_DISTANCE := 0.8
+const TRAIL_MAX_POINTS := 28
+const MEMORY_LOG_INTERVAL := 0.25
 const BUMP_STEP_VELOCITY := 2.0
 const BUMP_STEP_COOLDOWN := 0.15
 
 @export var facing_offset_degrees: float = -90.0
+@export var debug_memory_logs: bool = false
 
 var move_direction: Vector3 = Vector3.ZERO
 var direction_change_timer: float = 0.0
@@ -33,6 +37,12 @@ var chase_memory_timer: float = 0.0
 var last_visible_player_position: Vector3 = Vector3.ZERO
 var wall_follow_mode: int = 0  # 0 = none, 1 = left, -1 = right
 var bump_step_timer: float = 0.0
+var trail_memory_timer: float = 0.0
+var trail_sample_timer: float = 0.0
+var memorized_target_trail: Array[Vector3] = []
+var memory_log_timer: float = 0.0
+var los_state_initialized: bool = false
+var previous_has_line_of_sight: bool = false
 
 func _ready() -> void:
 	randomize()
@@ -59,6 +69,9 @@ func _physics_process(delta: float) -> void:
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	los_memory_timer = max(los_memory_timer - delta, 0.0)
 	chase_memory_timer = max(chase_memory_timer - delta, 0.0)
+	trail_memory_timer = max(trail_memory_timer - delta, 0.0)
+	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
+	memory_log_timer = max(memory_log_timer - delta, 0.0)
 
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -92,10 +105,14 @@ func _physics_process(delta: float) -> void:
 func _should_run_chase() -> bool:
 	if is_player_in_chase and _has_valid_target_player():
 		return true
+	if trail_memory_timer > 0.0 and not memorized_target_trail.is_empty():
+		return true
 	return chase_memory_timer > 0.0
 
 func _should_walk_chase() -> bool:
 	if is_player_in_detect and _has_valid_target_player():
+		return true
+	if trail_memory_timer > 0.0 and not memorized_target_trail.is_empty():
 		return true
 	return los_memory_timer > 0.0
 
@@ -117,19 +134,58 @@ func _has_valid_attack_range_player() -> bool:
 func _update_pursuit_movement(delta: float, move_speed: float) -> void:
 	var has_target := _has_valid_target_player()
 	var has_line_of_sight := false
+	var space_state := get_world_3d().direct_space_state
 
 	if has_target:
 		var target_eye := target_player.global_position + Vector3(0, 1.0, 0)
-		has_line_of_sight = _has_line_of_sight_to(target_eye)
+		has_line_of_sight = NavigationUtils.has_line_of_sight_to(self, target_eye, space_state, [self, target_player])
+		var los_state := NavigationUtils.update_los_trail_state(
+			has_line_of_sight,
+			los_state_initialized,
+			previous_has_line_of_sight,
+			trail_memory_timer,
+			trail_sample_timer,
+			memorized_target_trail,
+			last_visible_player_position,
+			TRAIL_MEMORY_TIME,
+			TRAIL_POINT_SPACING,
+			TRAIL_MAX_POINTS
+		)
+		los_state_initialized = bool(los_state.get("los_state_initialized", los_state_initialized))
+		previous_has_line_of_sight = bool(los_state.get("previous_has_line_of_sight", previous_has_line_of_sight))
+		trail_memory_timer = float(los_state.get("trail_memory_timer", trail_memory_timer))
+		trail_sample_timer = float(los_state.get("trail_sample_timer", trail_sample_timer))
 		if has_line_of_sight:
 			last_visible_player_position = target_player.global_position
 			los_memory_timer = LOS_MEMORY_TIME
+			trail_memory_timer = TRAIL_MEMORY_TIME
+			if trail_sample_timer <= 0.0:
+				NavigationUtils.append_trail_point(memorized_target_trail, target_player.global_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+				trail_sample_timer = TRAIL_SAMPLE_INTERVAL
 
 	var pursuit_target := last_visible_player_position
-	if has_target:
+	var trail_target := Vector3.ZERO
+	var memory_source := "LAST_SEEN"
+	if has_target and has_line_of_sight:
 		pursuit_target = target_player.global_position
-		if not has_line_of_sight and los_memory_timer > 0.0:
-			pursuit_target = last_visible_player_position
+		memory_source = "LOS"
+	else:
+		var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+		if trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false)):
+			trail_target = trail_result["target"]
+			pursuit_target = trail_target
+			memory_source = "TRAIL"
+		else:
+			_log_memory_state(has_line_of_sight, memory_source, target_player.global_position if has_target else Vector3.ZERO, last_visible_player_position, trail_target, global_position, true)
+			velocity.x = 0.0
+			velocity.z = 0.0
+			if not is_player_in_detect and not is_player_in_chase:
+				target_player = null
+			memorized_target_trail.clear()
+			wall_follow_mode = 0
+			return
+
+	_log_memory_state(has_line_of_sight, memory_source, target_player.global_position if has_target else Vector3.ZERO, last_visible_player_position, trail_target, pursuit_target)
 
 	var to_target := pursuit_target - global_position
 	to_target.y = 0.0
@@ -138,7 +194,9 @@ func _update_pursuit_movement(delta: float, move_speed: float) -> void:
 		velocity.z = 0.0
 		return
 
-	var path_dir := _find_path_direction(to_target.normalized())
+	var path_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
+	var path_dir: Vector3 = path_result["direction"]
+	wall_follow_mode = path_result["wall_follow_mode"]
 	if path_dir.length_squared() <= 0.001:
 		path_dir = to_target.normalized() * 0.4
 
@@ -237,9 +295,14 @@ func _on_detect_body_entered(body: Node3D) -> void:
 		return
 
 	target_player = body
+	los_state_initialized = false
 	is_player_in_detect = true
 	last_visible_player_position = target_player.global_position
 	los_memory_timer = LOS_MEMORY_TIME
+	trail_memory_timer = TRAIL_MEMORY_TIME
+	trail_sample_timer = 0.0
+	memorized_target_trail.clear()
+	NavigationUtils.append_trail_point(memorized_target_trail, last_visible_player_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
 
 func _on_detect_body_exited(body: Node3D) -> void:
 	if target_player == null:
@@ -251,6 +314,8 @@ func _on_detect_body_exited(body: Node3D) -> void:
 	if is_instance_valid(target_player):
 		last_visible_player_position = target_player.global_position
 	los_memory_timer = LOS_MEMORY_TIME
+	trail_memory_timer = TRAIL_MEMORY_TIME
+	los_state_initialized = false
 	if not is_player_in_chase:
 		target_player = null
 
@@ -261,9 +326,14 @@ func _on_chase_body_entered(body: Node3D) -> void:
 		return
 
 	target_player = body
+	los_state_initialized = false
 	is_player_in_chase = true
 	chase_memory_timer = CHASE_MEMORY_TIME
 	last_visible_player_position = target_player.global_position
+	trail_memory_timer = TRAIL_MEMORY_TIME
+	trail_sample_timer = 0.0
+	memorized_target_trail.clear()
+	NavigationUtils.append_trail_point(memorized_target_trail, last_visible_player_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
 
 func _on_chase_body_exited(body: Node3D) -> void:
 	if target_player == null:
@@ -275,6 +345,8 @@ func _on_chase_body_exited(body: Node3D) -> void:
 	if is_instance_valid(target_player):
 		last_visible_player_position = target_player.global_position
 	chase_memory_timer = CHASE_MEMORY_TIME
+	trail_memory_timer = TRAIL_MEMORY_TIME
+	los_state_initialized = false
 	if not is_player_in_detect:
 		target_player = null
 
@@ -321,56 +393,6 @@ func _can_lock_player(player: CharacterBody3D) -> bool:
 func _exit_tree() -> void:
 	_lock_grabbed_player(false)
 
-func _has_line_of_sight_to(target_position: Vector3) -> bool:
-	var from_pos := global_position + Vector3(0, SENSE_RAY_HEIGHT, 0)
-	return not _raycast_blocked(from_pos, target_position, [self, target_player])
-
-func _raycast_blocked(from_pos: Vector3, to_pos: Vector3, excluded_bodies: Array) -> bool:
-	var space_state := get_world_3d().direct_space_state
-	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
-	query.exclude = excluded_bodies
-	query.collision_mask = 1
-	var result := space_state.intersect_ray(query)
-	return not result.is_empty()
-
-func _is_direction_clear(direction: Vector3, distance: float = PATH_RAYCAST_DISTANCE) -> bool:
-	if direction.length_squared() <= 0.001:
-		return false
-	var start := global_position + Vector3(0, SENSE_RAY_HEIGHT, 0)
-	var end := start + direction.normalized() * distance
-	return not _raycast_blocked(start, end, [self])
-
-func _find_path_direction(target_direction: Vector3) -> Vector3:
-	target_direction.y = 0.0
-	if target_direction.length_squared() <= 0.001:
-		return Vector3.ZERO
-	target_direction = target_direction.normalized()
-
-	if _is_direction_clear(target_direction):
-		wall_follow_mode = 0
-		return target_direction
-
-	var angles_to_try := [20.0, -20.0, 35.0, -35.0, 50.0, -50.0, 70.0, -70.0, 90.0, -90.0, 120.0, -120.0, 145.0, -145.0]
-	var best_direction := Vector3.ZERO
-	var best_score := -999.0
-
-	for angle_deg in angles_to_try:
-		var angle_rad := deg_to_rad(angle_deg)
-		var test_direction := target_direction.rotated(Vector3.UP, angle_rad)
-		if _is_direction_clear(test_direction, SIDE_PROBE_DISTANCE):
-			var score := test_direction.dot(target_direction)
-			if wall_follow_mode != 0 and signf(angle_deg) == float(wall_follow_mode):
-				score += 0.2
-			if score > best_score:
-				best_score = score
-				best_direction = test_direction
-				if angle_deg > 0.0:
-					wall_follow_mode = 1
-				elif angle_deg < 0.0:
-					wall_follow_mode = -1
-
-	return best_direction
-
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
 		return node
@@ -381,3 +403,32 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 			return found
 
 	return null
+
+func _format_vec3(v: Vector3) -> String:
+	return "(%.2f, %.2f, %.2f)" % [v.x, v.y, v.z]
+
+func _log_memory_state(
+	has_los: bool,
+	source: String,
+	player_pos: Vector3,
+	last_seen_pos: Vector3,
+	trail_target: Vector3,
+	pursuit_target: Vector3,
+	force: bool = false
+) -> void:
+	if not debug_memory_logs:
+		return
+	if not force and memory_log_timer > 0.0:
+		return
+	memory_log_timer = MEMORY_LOG_INTERVAL
+	print("[GnomeMemory] source=%s los=%s player=%s last_seen=%s trail_target=%s pursuit=%s trail_size=%d trail_timer=%.2f los_timer=%.2f" % [
+		source,
+		str(has_los),
+		_format_vec3(player_pos),
+		_format_vec3(last_seen_pos),
+		_format_vec3(trail_target),
+		_format_vec3(pursuit_target),
+		memorized_target_trail.size(),
+		trail_memory_timer,
+		los_memory_timer,
+	])
