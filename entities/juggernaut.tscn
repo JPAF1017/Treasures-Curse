@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dnvvxvbassgxv"]
+
+[ext_resource type="PackedScene" uid="uid://cbg7vv6ume61h" path="res://assets/entities/juggerssy.glb" id="1_joxdm"]
+
+[node name="Juggernaut" type="CharacterBody3D" unique_id=870025459]
+
+[node name="juggerssy" parent="." unique_id=259983534 instance=ExtResource("1_joxdm")]

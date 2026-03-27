@@ -50,6 +50,7 @@ var last_visible_player_position: Vector3 = Vector3.ZERO
 var debug_log_timer: float = 0.0
 var debug_los_initialized: bool = false
 var debug_previous_los: bool = false
+var space_state: PhysicsDirectSpaceState3D = null
 
 # Slope alignment
 var ground_normal: Vector3 = Vector3.UP  # Smoothed ground normal
@@ -61,6 +62,7 @@ func _ready():
 	# Configure slope handling
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7
+	space_state = get_world_3d().direct_space_state
 	
 	# Connect the detector signals
 	$Detector.body_entered.connect(_on_detector_body_entered)
@@ -302,7 +304,7 @@ func _physics_process(delta):
 	
 	# Follow the player if in range
 	if is_player_in_range and player and is_instance_valid(player):
-		var has_line_of_sight = _has_line_of_sight_to(player.global_position + Vector3(0, 1.0, 0))
+		var has_line_of_sight = NavigationUtils.has_line_of_sight_to(self, player.global_position + Vector3(0, 1.0, 0), space_state, [self, player])
 		if not debug_los_initialized or has_line_of_sight != debug_previous_los:
 			_debug_nav_log("LOS changed -> %s (memory %.2f)" % [str(has_line_of_sight), los_memory_timer], true)
 			debug_los_initialized = true
@@ -361,7 +363,9 @@ func _physics_process(delta):
 						animation_player.speed_scale = 1.0
 			else:
 				# Regular walking speed (outside lunge range)
-				var path_direction = _find_path_direction(direction_to_player)
+				var path_result: Dictionary = NavigationUtils.find_path_direction(self, direction_to_player, space_state, wall_follow_mode)
+				var path_direction: Vector3 = path_result["direction"]
+				wall_follow_mode = path_result["wall_follow_mode"]
 				if path_direction.length_squared() > 0.001:
 					_debug_nav_log("Path dir chosen | dist %.2f | wall_follow %d" % [distance_to_player, wall_follow_mode])
 					velocity.x = path_direction.x * SPEED
@@ -410,7 +414,9 @@ func _physics_process(delta):
 			var to_memory = last_visible_player_position - global_position
 			to_memory.y = 0
 			if to_memory.length() > 0.4:
-				var memory_dir = _find_path_direction(to_memory.normalized())
+				var memory_result: Dictionary = NavigationUtils.find_path_direction(self, to_memory.normalized(), space_state, wall_follow_mode)
+				var memory_dir: Vector3 = memory_result["direction"]
+				wall_follow_mode = memory_result["wall_follow_mode"]
 				if memory_dir.length_squared() > 0.001:
 					_debug_nav_log("Memory chase | remaining %.2f" % [los_memory_timer])
 					velocity.x = memory_dir.x * SPEED
@@ -509,64 +515,6 @@ func _align_to_slope(delta: float):
 		# No tilt needed (flat ground or perfectly upright)
 		$Dog.transform = original_dog_transform
 		$CollisionShape3D.transform = original_collision_transform
-
-func _has_line_of_sight_to(target_position: Vector3) -> bool:
-	var from_pos = global_position + Vector3(0, SENSE_RAY_HEIGHT, 0)
-	return not _raycast_blocked(from_pos, target_position, [self, player])
-
-func _raycast_blocked(from_pos: Vector3, to_pos: Vector3, excluded_bodies: Array) -> bool:
-	var space_state = get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(from_pos, to_pos)
-	query.exclude = excluded_bodies
-	query.collision_mask = 1
-	var result = space_state.intersect_ray(query)
-	return not result.is_empty()
-
-func _is_direction_clear(direction: Vector3, distance: float = PATH_RAYCAST_DISTANCE) -> bool:
-	if direction.length_squared() <= 0.001:
-		return false
-	var start = global_position + Vector3(0, SENSE_RAY_HEIGHT, 0)
-	var end = start + direction.normalized() * distance
-	return not _raycast_blocked(start, end, [self])
-
-func _find_path_direction(target_direction: Vector3) -> Vector3:
-	target_direction.y = 0
-	if target_direction.length_squared() <= 0.001:
-		return Vector3.ZERO
-	target_direction = target_direction.normalized()
-
-	if _is_direction_clear(target_direction):
-		wall_follow_mode = 0
-		_debug_nav_log("Direct path clear")
-		return target_direction
-
-	var angles_to_try = [20.0, -20.0, 35.0, -35.0, 50.0, -50.0, 70.0, -70.0, 90.0, -90.0, 120.0, -120.0, 145.0, -145.0]
-	var best_direction = Vector3.ZERO
-	var best_score = -999.0
-	var best_angle = 0.0
-
-	for angle_deg in angles_to_try:
-		var angle_rad = deg_to_rad(angle_deg)
-		var test_direction = target_direction.rotated(Vector3.UP, angle_rad)
-		if _is_direction_clear(test_direction, SIDE_PROBE_DISTANCE):
-			var score = test_direction.dot(target_direction)
-			if wall_follow_mode != 0 and signf(angle_deg) == float(wall_follow_mode):
-				score += 0.2
-			if score > best_score:
-				best_score = score
-				best_direction = test_direction
-				best_angle = angle_deg
-				if angle_deg > 0.0:
-					wall_follow_mode = 1
-				elif angle_deg < 0.0:
-					wall_follow_mode = -1
-
-	if best_direction.length_squared() > 0.001:
-		_debug_nav_log("Probe detour angle %.0f deg" % [best_angle])
-	else:
-		_debug_nav_log("All probes blocked", true)
-
-	return best_direction
 
 func _enable_shadows(node: Node):
 	# Recursively enable shadow casting on all MeshInstance3D nodes

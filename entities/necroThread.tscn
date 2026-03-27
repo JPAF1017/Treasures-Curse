@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dng3ahpej4c1x"]
+
+[ext_resource type="PackedScene" uid="uid://dwk3c8bwsc0th" path="res://assets/entities/manSpider.glb" id="1_w8n8j"]
+
+[node name="NecroThread" type="CharacterBody3D" unique_id=60431569]
+
+[node name="manSpider" parent="." unique_id=498269831 instance=ExtResource("1_w8n8j")]

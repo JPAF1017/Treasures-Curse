@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dr03apd6i8j3n"]
+
+[ext_resource type="PackedScene" uid="uid://bnycbgp6g7mtv" path="res://assets/entities/fly.glb" id="1_m7jbi"]
+[ext_resource type="Script" uid="uid://dnn7b7050rnsm" path="res://scripts/fly.gd" id="1_xmgs0"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_m7jbi"]
+radius = 1.809082
+height = 6.775635
+
+[node name="Fly" type="CharacterBody3D" unique_id=789065429]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+script = ExtResource("1_xmgs0")
+
+[node name="fly" parent="." unique_id=1948640078 instance=ExtResource("1_m7jbi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40125465, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1519742634]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.99999994, 0.94968355)
+shape = SubResource("CapsuleShape3D_m7jbi")

@@ -1,6 +1,6 @@
 CollisionShape3D
-Area3D
 CharacterBody3D
+Area3D
 NavigationRegion3D
 MeshInstance3D
 CSGMesh3D

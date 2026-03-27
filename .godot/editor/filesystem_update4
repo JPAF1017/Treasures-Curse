@@ -1,7 +1,6 @@
-res://levels/test map.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://entities/gnome.tscn
-res://assets/entities/gnome_asset.tscn
-res://scripts/gnome.gd
+res://entities/knight.tscn
+res://entities/fly.tscn
+res://assets/rooms/spawn_fly.tscn
 res://assets/rooms/spawn_gnome.tscn
-res://scripts/player.gd
+res://levels/test map.tscn

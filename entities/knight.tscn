@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://bdgqymx6x75hn"]
+
+[ext_resource type="PackedScene" uid="uid://4pt0ft4yssv0" path="res://assets/entities/knight.glb" id="1_kmc1q"]
+
+[node name="Knight" type="CharacterBody3D" unique_id=1412719762]
+
+[node name="knight" parent="." unique_id=1159527894 instance=ExtResource("1_kmc1q")]
