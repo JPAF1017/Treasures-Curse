@@ -19,6 +19,11 @@ const TRAIL_SAMPLE_INTERVAL := 0.2
 const TRAIL_POINT_SPACING := 0.7
 const TRAIL_REACHED_DISTANCE := 0.8
 const TRAIL_MAX_POINTS := 28
+const LOS_LOSS_GRACE_TIME := 0.35
+const STAIR_VERTICAL_DELTA := 1.6
+const PATH_CACHE_TIME := 1.5
+const PATH_CACHE_MAX_POINTS := 10
+const STAIR_TRAIL_MAX_POINTS := 14
 const MEMORY_LOG_INTERVAL := 0.25
 const WALK_MOVE_RANGES: Array[Vector2i] = [
 	Vector2i(34, 65),
@@ -49,6 +54,10 @@ var memorized_target_trail: Array[Vector3] = []
 var memory_log_timer: float = 0.0
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
+var los_loss_grace_timer: float = 0.0
+var path_cache_timer: float = 0.0
+var cached_nav_path: Array[Vector3] = []
+var last_reachable_target_position: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	randomize()
@@ -74,6 +83,8 @@ func _physics_process(delta: float) -> void:
 	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
 	trail_memory_timer = max(trail_memory_timer - delta, 0.0)
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
+	los_loss_grace_timer = max(los_loss_grace_timer - delta, 0.0)
+	path_cache_timer = max(path_cache_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
 
 	if not is_on_floor():
@@ -124,6 +135,10 @@ func _on_detect_body_entered(body: Node3D) -> void:
 
 	target_player = body
 	los_state_initialized = false
+	los_loss_grace_timer = 0.0
+	path_cache_timer = 0.0
+	cached_nav_path.clear()
+	last_reachable_target_position = Vector3.ZERO
 	last_visible_player_position = target_player.global_position
 	los_memory_timer = LOS_MEMORY_TIME
 	trail_memory_timer = TRAIL_MEMORY_TIME
@@ -142,6 +157,10 @@ func _on_detect_body_exited(body: Node3D) -> void:
 	los_memory_timer = LOS_MEMORY_TIME
 	trail_memory_timer = TRAIL_MEMORY_TIME
 	los_state_initialized = false
+	los_loss_grace_timer = 0.0
+	path_cache_timer = 0.0
+	cached_nav_path.clear()
+	last_reachable_target_position = Vector3.ZERO
 	target_player = null
 
 func _on_attack_range_body_entered(body: Node3D) -> void:
@@ -175,40 +194,78 @@ func _update_chase_movement(delta: float) -> void:
 			last_visible_player_position,
 			TRAIL_MEMORY_TIME,
 			TRAIL_POINT_SPACING,
-			TRAIL_MAX_POINTS
+			TRAIL_MAX_POINTS,
+			los_loss_grace_timer,
+			LOS_LOSS_GRACE_TIME,
+			STAIR_VERTICAL_DELTA,
+			STAIR_TRAIL_MAX_POINTS
 		)
+		has_line_of_sight = bool(los_state.get("effective_has_line_of_sight", has_line_of_sight))
 		los_state_initialized = bool(los_state.get("los_state_initialized", los_state_initialized))
 		previous_has_line_of_sight = bool(los_state.get("previous_has_line_of_sight", previous_has_line_of_sight))
+		los_loss_grace_timer = float(los_state.get("los_loss_grace_timer", los_loss_grace_timer))
 		trail_memory_timer = float(los_state.get("trail_memory_timer", trail_memory_timer))
 		trail_sample_timer = float(los_state.get("trail_sample_timer", trail_sample_timer))
 		if has_line_of_sight:
-			last_visible_player_position = target_player.global_position
+			var snapped_visible := NavigationUtils.snap_position_to_navigation(self, target_player.global_position)
+			last_visible_player_position = snapped_visible
+			last_reachable_target_position = snapped_visible
+			cached_nav_path = NavigationUtils.build_short_path_cache(self, snapped_visible, PATH_CACHE_MAX_POINTS)
+			path_cache_timer = PATH_CACHE_TIME
 			los_memory_timer = LOS_MEMORY_TIME
 			trail_memory_timer = TRAIL_MEMORY_TIME
 			if trail_sample_timer <= 0.0:
-				NavigationUtils.append_trail_point(memorized_target_trail, target_player.global_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+				NavigationUtils.append_trail_point(memorized_target_trail, snapped_visible, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
 				trail_sample_timer = TRAIL_SAMPLE_INTERVAL
 
 	var pursuit_target := last_visible_player_position
 	var trail_target := Vector3.ZERO
 	var memory_source := "LAST_SEEN"
 	if has_target and has_line_of_sight:
-		pursuit_target = target_player.global_position
+		pursuit_target = NavigationUtils.snap_position_to_navigation(self, target_player.global_position)
 		memory_source = "LOS"
 	else:
-		var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
-		if trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false)):
-			trail_target = trail_result["target"]
-			pursuit_target = trail_target
-			memory_source = "TRAIL"
-		else:
-			_log_memory_state(has_line_of_sight, memory_source, target_player.global_position if has_target else Vector3.ZERO, last_visible_player_position, trail_target, global_position, true)
-			velocity.x = 0.0
-			velocity.z = 0.0
-			target_player = null
+		var vertical_mismatch := has_target and absf(target_player.global_position.y - last_visible_player_position.y) > STAIR_VERTICAL_DELTA
+		if vertical_mismatch:
 			memorized_target_trail.clear()
-			wall_follow_mode = 0
-			return
+			cached_nav_path.clear()
+			path_cache_timer = 0.0
+			if last_reachable_target_position != Vector3.ZERO:
+				pursuit_target = last_reachable_target_position
+				memory_source = "LAST_REACHABLE"
+			else:
+				pursuit_target = last_visible_player_position
+
+		if path_cache_timer > 0.0 and not cached_nav_path.is_empty():
+			var cached_result := NavigationUtils.get_cached_path_target(global_position, cached_nav_path, TRAIL_REACHED_DISTANCE)
+			if bool(cached_result.get("has_target", false)):
+				pursuit_target = cached_result["target"]
+				memory_source = "PATH_CACHE"
+
+		if memory_source != "PATH_CACHE":
+			var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+			if trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false)):
+				trail_target = trail_result["target"]
+				pursuit_target = trail_target
+				memory_source = "TRAIL"
+			elif trail_memory_timer > 0.0:
+				pursuit_target = last_visible_player_position
+				memory_source = "LAST_SEEN"
+			else:
+				_log_memory_state(has_line_of_sight, memory_source, target_player.global_position if has_target else Vector3.ZERO, last_visible_player_position, trail_target, global_position, true)
+				velocity.x = 0.0
+				velocity.z = 0.0
+				target_player = null
+				memorized_target_trail.clear()
+				wall_follow_mode = 0
+				return
+
+		if has_target and absf(target_player.global_position.y - last_visible_player_position.y) > STAIR_VERTICAL_DELTA and last_reachable_target_position != Vector3.ZERO and (memory_source == "LAST_SEEN" or memory_source == "TRAIL" or memory_source == "PATH_CACHE"):
+			pursuit_target = last_reachable_target_position
+			memory_source = "LAST_REACHABLE"
+			NavigationUtils.prune_trail_for_stairs(memorized_target_trail, last_visible_player_position.y, STAIR_VERTICAL_DELTA, STAIR_TRAIL_MAX_POINTS)
+
+		pursuit_target = NavigationUtils.snap_position_to_navigation(self, pursuit_target)
 
 	_log_memory_state(has_line_of_sight, memory_source, target_player.global_position if has_target else Vector3.ZERO, last_visible_player_position, trail_target, pursuit_target)
 

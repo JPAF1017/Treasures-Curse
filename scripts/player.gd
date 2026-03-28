@@ -11,13 +11,16 @@ const BOB_FREQ = 2.0
 const BOB_AMP = 0.08
 const BASE_FOV = 75.0
 const FOV_CHANGE = 1.5
+const POSITION_LOG_INTERVAL = 0.25
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
+@export var debug_position_logs: bool = true
 #------------------------------------------------------
 var speed
 var t_bob = 0.0
 var gravity = 20
 var bump_step_timer = 0.0
+var position_log_timer = 0.0
 var movement_lock_sources: Array[Node] = []
 #------------------------------------------------------
 @onready var head = $Head
@@ -73,6 +76,7 @@ func _unhandled_input(event):
 #movement function
 func _physics_process(delta):
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
+	position_log_timer = max(position_log_timer - delta, 0.0)
 	var is_movement_locked := _is_movement_locked()
 
 	if not is_on_floor():
@@ -142,6 +146,7 @@ func _physics_process(delta):
 		bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	move_and_slide()
+	_log_player_position()
 
 func set_movement_locked_by(locker: Node, locked: bool) -> void:
 	if locker == null:
@@ -168,6 +173,21 @@ func _headbob(time) -> Vector3:
 	pos.y = sin(time * BOB_FREQ) * BOB_AMP
 	pos.x = cos(time * BOB_FREQ / 2) * BOB_AMP
 	return pos
+
+func _format_vec3(v: Vector3) -> String:
+	return "(%.2f, %.2f, %.2f)" % [v.x, v.y, v.z]
+
+func _log_player_position() -> void:
+	if not debug_position_logs:
+		return
+	if position_log_timer > 0.0:
+		return
+	position_log_timer = POSITION_LOG_INTERVAL
+	print("[PlayerPos] player=%s velocity=%s on_floor=%s" % [
+		_format_vec3(global_position),
+		_format_vec3(velocity),
+		str(is_on_floor()),
+	])
 
 # Debug function to check collision state
 func _input(event):

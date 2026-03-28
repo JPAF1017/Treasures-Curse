@@ -7,6 +7,8 @@ const BODY_CLEARANCE_WIDTH := 0.7
 const WALL_BUFFER_DISTANCE := 0.55
 const MIN_CLEARANCE_SCORE := 0.52
 const PATH_POINT_REACHED_DISTANCE := 0.55
+const MEMORY_NAV_SNAP_DISTANCE := 6.0
+const TRAIL_VERTICAL_FOLLOW_DELTA := 2.2
 
 static func has_line_of_sight_to(
 	character: CharacterBody3D,
@@ -130,10 +132,14 @@ static func append_trail_point(
 static func get_trail_follow_target(
 	from_position: Vector3,
 	trail: Array[Vector3],
-	reached_distance: float = 0.8
+	reached_distance: float = 0.8,
+	max_vertical_delta: float = TRAIL_VERTICAL_FOLLOW_DELTA
 ) -> Dictionary:
 	while not trail.is_empty():
 		var next_point := trail[0]
+		if absf(next_point.y - from_position.y) > max_vertical_delta:
+			trail.remove_at(0)
+			continue
 		var to_next := next_point - from_position
 		to_next.y = 0.0
 		if to_next.length() <= reached_distance:
@@ -146,6 +152,41 @@ static func get_trail_follow_target(
 
 	return { "has_target": true, "target": trail[0] }
 
+static func prune_trail_for_stairs(
+	trail: Array[Vector3],
+	reference_y: float,
+	max_vertical_delta: float = 1.8,
+	max_points: int = 14
+) -> void:
+	if trail.is_empty():
+		return
+
+	for i in range(trail.size() - 1, -1, -1):
+		if absf(trail[i].y - reference_y) > max_vertical_delta:
+			trail.remove_at(i)
+
+	while trail.size() > max_points:
+		trail.remove_at(trail.size() - 1)
+
+static func get_cached_path_target(
+	from_position: Vector3,
+	path_cache: Array[Vector3],
+	reached_distance: float = 0.8
+) -> Dictionary:
+	while not path_cache.is_empty():
+		var next_point := path_cache[0]
+		var to_next := next_point - from_position
+		to_next.y = 0.0
+		if to_next.length() <= reached_distance:
+			path_cache.remove_at(0)
+		else:
+			break
+
+	if path_cache.is_empty():
+		return { "has_target": false, "target": from_position }
+
+	return { "has_target": true, "target": path_cache[0] }
+
 static func update_los_trail_state(
 	has_line_of_sight: bool,
 	los_state_initialized: bool,
@@ -157,20 +198,27 @@ static func update_los_trail_state(
 	trail_memory_time: float,
 	trail_point_spacing: float,
 	trail_max_points: int,
+	los_loss_grace_timer: float = 0.0,
+	los_loss_grace_duration: float = 0.35,
+	stair_height_delta_for_prune: float = 1.8,
+	stair_prune_max_points: int = 14,
 	clear_on_los_regained: bool = true,
 	reverse_on_los_lost: bool = true
 ) -> Dictionary:
 	var transition := ""
+	if has_line_of_sight:
+		los_loss_grace_timer = los_loss_grace_duration
+	var effective_has_line_of_sight := has_line_of_sight or los_loss_grace_timer > 0.0
 
 	if not los_state_initialized:
-		previous_has_line_of_sight = has_line_of_sight
+		previous_has_line_of_sight = effective_has_line_of_sight
 		los_state_initialized = true
-	elif not previous_has_line_of_sight and has_line_of_sight:
+	elif not previous_has_line_of_sight and effective_has_line_of_sight:
 		transition = "LOS_REGAINED"
 		if clear_on_los_regained:
 			trail.clear()
 			trail_sample_timer = 0.0
-	elif previous_has_line_of_sight and not has_line_of_sight:
+	elif previous_has_line_of_sight and not effective_has_line_of_sight:
 		transition = "LOS_LOST"
 		trail_memory_timer = trail_memory_time
 		trail_sample_timer = 0.0
@@ -178,17 +226,57 @@ static func update_los_trail_state(
 			trail.reverse()
 		if trail.is_empty() or trail[0].distance_to(last_visible_position) > trail_point_spacing:
 			trail.insert(0, last_visible_position)
+		prune_trail_for_stairs(trail, last_visible_position.y, stair_height_delta_for_prune, min(trail_max_points, stair_prune_max_points))
 		while trail.size() > trail_max_points:
 			trail.remove_at(trail.size() - 1)
 
-	previous_has_line_of_sight = has_line_of_sight
+	previous_has_line_of_sight = effective_has_line_of_sight
 	return {
+		"effective_has_line_of_sight": effective_has_line_of_sight,
 		"los_state_initialized": los_state_initialized,
 		"previous_has_line_of_sight": previous_has_line_of_sight,
+		"los_loss_grace_timer": los_loss_grace_timer,
 		"trail_memory_timer": trail_memory_timer,
 		"trail_sample_timer": trail_sample_timer,
 		"transition": transition,
 	}
+
+static func snap_position_to_navigation(
+	character: CharacterBody3D,
+	position: Vector3,
+	max_snap_distance: float = MEMORY_NAV_SNAP_DISTANCE
+) -> Vector3:
+	if character == null:
+		return position
+	var world := character.get_world_3d()
+	if world == null:
+		return position
+	var nav_map: RID = world.navigation_map
+	if not nav_map.is_valid():
+		return position
+	var snapped := NavigationServer3D.map_get_closest_point(nav_map, position)
+	if snapped == Vector3.INF:
+		return position
+	if snapped.distance_to(position) > max_snap_distance:
+		return position
+	return snapped
+
+static func build_short_path_cache(
+	character: CharacterBody3D,
+	target_position: Vector3,
+	max_points: int = 10
+) -> Array[Vector3]:
+	var path := _get_navigation_path(character, target_position)
+	var cache: Array[Vector3] = []
+	if path.size() <= 1:
+		return cache
+
+	for i in range(1, path.size()):
+		cache.append(path[i])
+		if cache.size() >= max_points:
+			break
+
+	return cache
 
 static func _get_navigation_path(character: CharacterBody3D, target_position: Vector3) -> PackedVector3Array:
 	if character == null:
@@ -227,6 +315,14 @@ static func find_path_direction_to_target(
 	space_state: PhysicsDirectSpaceState3D,
 	wall_follow_mode: int = 0
 ) -> Dictionary:
+	if character == null:
+		return { "direction": Vector3.ZERO, "wall_follow_mode": wall_follow_mode }
+
+	var to_target := target_position - character.global_position
+	to_target.y = 0.0
+	if to_target.length() <= PATH_POINT_REACHED_DISTANCE:
+		return { "direction": Vector3.ZERO, "wall_follow_mode": 0 }
+
 	var path := _get_navigation_path(character, target_position)
 	var desired_direction := _get_path_follow_direction(character, path)
 
@@ -237,7 +333,7 @@ static func find_path_direction_to_target(
 			return { "direction": Vector3.ZERO, "wall_follow_mode": wall_follow_mode }
 		desired_direction = desired_direction.normalized()
 
-	return find_path_direction(character, desired_direction, space_state, wall_follow_mode)
+	return { "direction": desired_direction, "wall_follow_mode": 0 }
 
 static func find_path_direction(
 	character: CharacterBody3D,
