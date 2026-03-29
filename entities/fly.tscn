@@ -9,11 +9,23 @@ height = 6.775635
 
 [node name="Fly" type="CharacterBody3D" unique_id=789065429]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+collision_layer = 3
+collision_mask = 3
 script = ExtResource("1_xmgs0")
 
 [node name="fly" parent="." unique_id=1948640078 instance=ExtResource("1_m7jbi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40125465, 0, 0)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.19362545, 0.5813594, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1519742634]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.99999994, 0.94968355)
+[node name="ground" type="CollisionShape3D" parent="." unique_id=1519742634]
+transform = Transform3D(0.5, 0, 0, 0, -2.1855694e-08, -0.5, 0, 0.5, -2.1855694e-08, 0, 0.99999994, 0.28836048)
 shape = SubResource("CapsuleShape3D_m7jbi")
+
+[node name="vertFly" type="CollisionShape3D" parent="." unique_id=327179974]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.22302628, 2.0407906, 0.54855835)
+shape = SubResource("CapsuleShape3D_m7jbi")
+disabled = true
+
+[node name="horFly" type="CollisionShape3D" parent="." unique_id=1567313334]
+transform = Transform3D(0.5, 0, 0, 0, -2.1855694e-08, -0.5, 0, 0.5, -2.1855694e-08, 0.28656864, 2.2305582, -0.099350095)
+shape = SubResource("CapsuleShape3D_m7jbi")
+disabled = true

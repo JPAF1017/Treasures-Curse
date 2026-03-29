@@ -1,9 +1,4 @@
-res://scripts/charger.gd
-res://scripts/gnome.gd
-res://scripts/NavigationUtils.gd
-res://scripts/shambler.gd
-res://scripts/shy.gd
-res://scripts/statue.gd
-res://levels/test map.tscn
+res://entities/fly.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://scripts/fly.gd
 res://scripts/player.gd

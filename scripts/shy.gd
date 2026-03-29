@@ -42,6 +42,7 @@ var seen_area: Area3D = null
 var attack_range_area: Area3D = null
 var current_state: State = State.WANDER
 var target_player: CharacterBody3D = null
+var should_wander_after_scream: bool = false
 var scream_timer: float = 0.0
 var attack_cooldown_timer: float = 0.0
 var is_player_in_attack_range: bool = false
@@ -392,7 +393,11 @@ func _start_attacking() -> void:
 
 func _on_animation_finished(anim_name: StringName) -> void:
 	if current_state == State.SCREAMING and anim_name == "scream":
-		_start_chasing()
+		if should_wander_after_scream:
+			should_wander_after_scream = false
+			_finish_wandering()
+		else:
+			_start_chasing()
 	elif current_state == State.ATTACKING and anim_name == "attack":
 		attack_count += 1
 		if attack_count >= MAX_ATTACKS_BEFORE_WANDER:
@@ -401,6 +406,13 @@ func _on_animation_finished(anim_name: StringName) -> void:
 			_start_chasing()
 
 func _return_to_wander() -> void:
+	current_state = State.SCREAMING
+	should_wander_after_scream = true
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_play_scream_animation()
+
+func _finish_wandering() -> void:
 	current_state = State.WANDER
 	target_player = null
 	los_state_initialized = false

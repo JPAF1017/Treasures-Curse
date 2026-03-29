@@ -14,7 +14,7 @@ const FOV_CHANGE = 1.5
 const POSITION_LOG_INTERVAL = 0.25
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
-@export var debug_position_logs: bool = true
+@export var debug_position_logs: bool = false
 #------------------------------------------------------
 var speed
 var t_bob = 0.0
