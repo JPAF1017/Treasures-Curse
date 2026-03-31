@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cbg7vv6ume61h"
-path="res://.godot/imported/juggerssy.glb-b4b44020922c0fcd1ca1e819219e81a3.scn"
+uid="uid://bdycjkv1k4dcu"
+path="res://.godot/imported/juggernaut.glb-b3192b14b3afb10eca84ac1049df5a88.scn"
 
 [deps]
 
-source_file="res://assets/entities/juggerssy.glb"
-dest_files=["res://.godot/imported/juggerssy.glb-b4b44020922c0fcd1ca1e819219e81a3.scn"]
+source_file="res://assets/entities/juggernaut.glb"
+dest_files=["res://.godot/imported/juggernaut.glb-b3192b14b3afb10eca84ac1049df5a88.scn"]
 
 [params]
 

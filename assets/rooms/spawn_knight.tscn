@@ -6,9 +6,9 @@
 [ext_resource type="PackedScene" uid="uid://o7in1t7fk86v" path="res://assets/room assets/door_frame_01.tscn" id="4_cv2x4"]
 [ext_resource type="PackedScene" uid="uid://bh6l5evgdyhpq" path="res://assets/room assets/door_03.tscn" id="5_t7tg7"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="6_m3f0n"]
-[ext_resource type="PackedScene" uid="uid://b3gcdu8ssg3lu" path="res://entities/statue.tscn" id="7_7s8j8"]
+[ext_resource type="PackedScene" uid="uid://bdgqymx6x75hn" path="res://entities/knight.tscn" id="7_40vni"]
 
-[node name="SpawnStatue" type="Node3D" unique_id=2090395072]
+[node name="SpawnKnight" type="Node3D" unique_id=2090395072]
 script = ExtResource("1_40vni")
 metadata/_custom_type_script = "uid://c801ki3oghumx"
 
@@ -57,5 +57,5 @@ transform = Transform3D(2.9802322e-08, 0, 0.49999994, 0, 0.5, 0, -0.49999994, 0,
 [node name="Block" parent="Ceiling" unique_id=576030278 instance=ExtResource("6_m3f0n")]
 transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, 0, 5, 0)
 
-[node name="Statue" parent="." unique_id=1206284403 instance=ExtResource("7_7s8j8")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.2664108, 0)
+[node name="Knight" parent="." unique_id=1412719762 instance=ExtResource("7_40vni")]
+transform = Transform3D(1.75, 0, 0, 0, 1.75, 0, 0, 0, 1.75, 0, -3, 0)

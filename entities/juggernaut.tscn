@@ -1,7 +1,17 @@
 [gd_scene format=3 uid="uid://dnvvxvbassgxv"]
 
-[ext_resource type="PackedScene" uid="uid://cbg7vv6ume61h" path="res://assets/entities/juggerssy.glb" id="1_joxdm"]
+[ext_resource type="Script" uid="uid://bisvnpcht4suy" path="res://scripts/juggernaut.gd" id="1_fxmnh"]
+[ext_resource type="PackedScene" uid="uid://bdycjkv1k4dcu" path="res://assets/entities/juggernaut.glb" id="1_joxdm"]
 
-[node name="Juggernaut" type="CharacterBody3D" unique_id=870025459]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fxmnh"]
+radius = 2.8266602
+height = 7.7648926
 
-[node name="juggerssy" parent="." unique_id=259983534 instance=ExtResource("1_joxdm")]
+[node name="Juggernaut" type="CharacterBody3D" unique_id=32397171]
+script = ExtResource("1_fxmnh")
+
+[node name="juggernaut" parent="." unique_id=1467718950 instance=ExtResource("1_joxdm")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=713141851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.8758545, 0.8422041)
+shape = SubResource("CapsuleShape3D_fxmnh")

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://l7g7xxxjq17"
-path.s3tc="res://.godot/imported/juggerssy_accesorio 1.png-a31d5e5da14c194dfb1e2c1bec3d4d7a.s3tc.ctex"
+uid="uid://ch2gofubn6mwo"
+path.s3tc="res://.godot/imported/juggernaut_accesorio 1.png-5dc3ce95b09118aa6ec6274e70720438.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -14,8 +14,8 @@ generator_parameters={
 
 [deps]
 
-source_file="res://assets/entities/juggerssy_accesorio 1.png"
-dest_files=["res://.godot/imported/juggerssy_accesorio 1.png-a31d5e5da14c194dfb1e2c1bec3d4d7a.s3tc.ctex"]
+source_file="res://assets/entities/juggernaut_accesorio 1.png"
+dest_files=["res://.godot/imported/juggernaut_accesorio 1.png-5dc3ce95b09118aa6ec6274e70720438.s3tc.ctex"]
 
 [params]
 

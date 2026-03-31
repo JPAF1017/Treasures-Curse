@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bsk56mojr45td"
-path.s3tc="res://.godot/imported/juggerssy_cuerpo loco metal.png-4c63627614767346e630a24050e17707.s3tc.ctex"
+uid="uid://dsnk01sbecm08"
+path.s3tc="res://.godot/imported/juggernaut_cuerpo loco metal_3.png-38e6b6007652755eb402dde2ac1ab979.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "f8d39331579061c8a72bc69f4c4a67a5"
+"md5": "464c88338f4d56ae067a9d6a01ed1855"
 }
 
 [deps]
 
-source_file="res://assets/entities/juggerssy_cuerpo loco metal.png"
-dest_files=["res://.godot/imported/juggerssy_cuerpo loco metal.png-4c63627614767346e630a24050e17707.s3tc.ctex"]
+source_file="res://assets/entities/juggernaut_cuerpo loco metal_3.png"
+dest_files=["res://.godot/imported/juggernaut_cuerpo loco metal_3.png-38e6b6007652755eb402dde2ac1ab979.s3tc.ctex"]
 
 [params]
 
