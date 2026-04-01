@@ -1,46 +1,53 @@
-[gd_scene load_steps=5 format=3 uid="uid://ds38umkop3txm"]
+[gd_scene format=3 uid="uid://ds38umkop3txm"]
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
-[ext_resource type="PackedScene" uid="uid://bjboi8onqameq" path="res://assets/playerCharacter/playerCharacter.glb" id="2_model"]
+[ext_resource type="PackedScene" uid="uid://crkwjia2crxrt" path="res://assets/entities/player.glb" id="2_b0kkn"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_27e7b"]
 radius = 0.3305664
 height = 1.8477783
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b0kkn"]
+radius = 0.3310547
+height = 1.1181335
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_vision"]
 radius = 2.0
 height = 12.0
 
-[node name="player" type="CharacterBody3D" groups=["player"]]
+[node name="player" type="CharacterBody3D" unique_id=1588251422 groups=["player"]]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 3
-collision_mask = 1
 script = ExtResource("1_u63mc")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="Stand" type="CollisionShape3D" parent="." unique_id=1922993831]
 transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, -0.13699949, 0)
 shape = SubResource("CapsuleShape3D_27e7b")
 
-[node name="PlayerModel" parent="." instance=ExtResource("2_model")]
-transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, -1.8083836, 0)
+[node name="Crouch" type="CollisionShape3D" parent="." unique_id=73071658]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, -0.79269105, 0)
+shape = SubResource("CapsuleShape3D_b0kkn")
+disabled = true
 
-[node name="Head" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.999764, -0.0217107, 0, 0.0217107, 0.999764, 0, 0.869034, -0.00946999)
+[node name="Head" type="Node3D" parent="." unique_id=882895973]
+transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 0.869, 0)
 
-[node name="playerCamera" type="Camera3D" parent="Head"]
+[node name="playerCamera" type="Camera3D" parent="Head" unique_id=25879993]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0222359, 0.00750554)
 
-[node name="Vision" type="Area3D" parent="Head/playerCamera" groups=["player_vision"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="Vision" type="Area3D" parent="Head/playerCamera" unique_id=442017822 groups=["player_vision"]]
 collision_layer = 8
 collision_mask = 2
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Head/playerCamera/Vision"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Head/playerCamera/Vision" unique_id=1577182091]
 shape = SubResource("CapsuleShape3D_vision")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera"]
+[node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
 light_volumetric_fog_energy = 0.5
 spot_range = 43.3203
 spot_attenuation = 0.8
 spot_angle = 42.0
 spot_angle_attenuation = 2.37841
+
+[node name="player" parent="." unique_id=1653288559 instance=ExtResource("2_b0kkn")]
+transform = Transform3D(-1.8, 0, 1.5736099e-07, 0, 1.8, 0, -1.5736099e-07, 0, -1.8, 0, -1.807, 0)

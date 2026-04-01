@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="6_5xlv6"]
 [ext_resource type="PackedScene" uid="uid://dnvvxvbassgxv" path="res://entities/juggernaut.tscn" id="7_ltsto"]
 
-[node name="StartRoom" type="Node3D" unique_id=272455968]
+[node name="SpawnJuggernaut" type="Node3D" unique_id=272455968]
 script = ExtResource("1_tf74r")
 metadata/_custom_type_script = "uid://c801ki3oghumx"
 
