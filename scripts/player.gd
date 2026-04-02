@@ -11,6 +11,9 @@ const STAMINA_COLOR_LOW_INDEX = 17
 const HEALTH_MAX = 100.0
 const HEALTH_COLOR_NORMAL_INDEX = 23
 const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
+const BLOOD_OVERLAY_PATH = "res://assets/ui/BloodOverlay.png"
+const DAMAGE_OVERLAY_MAX_ALPHA = 0.7
+const DAMAGE_OVERLAY_FADE_TIME = 0.35
 const JUMP_STAMINA_COST = 20.0
 const TIRED_JUMP_HEIGHT_MULTIPLIER = 1.0 / 3.0
 const STAMINA_REFILL_DELAY_SECONDS = 5.0
@@ -51,6 +54,7 @@ var is_crouching: bool = false
 var stamina: float = STAMINA_MAX
 var stamina_refill_delay_timer: float = 0.0
 var health: float = HEALTH_MAX
+var previous_health: float = HEALTH_MAX
 var is_sprinting: bool = false
 var tired_jump_active: bool = false
 var jump_phase: int = 0
@@ -74,9 +78,12 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var stamina_label_digit: Label = $CanvasLayer/Control/Stamina/LabelDigit
 @onready var health_bar_fill: NinePatchRect = $CanvasLayer/Control/Health/HealthBarContainer
 @onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
+@onready var player_canvas_layer: CanvasLayer = $CanvasLayer
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
+var damage_overlay: TextureRect = null
+var damage_overlay_tween: Tween = null
 
 #function on startup
 func _ready():
@@ -87,8 +94,9 @@ func _ready():
 	initial_head_position = head.position
 	target_head_y = initial_head_position.y
 	_setup_stamina_ui()
-	_update_stamina_ui()
 	_setup_health_ui()
+	_setup_damage_overlay()
+	_update_stamina_ui()
 	_update_health_ui()
 	
 	# Initialize player visual rotation.
@@ -383,6 +391,9 @@ func _update_stamina_ui() -> void:
 	stamina_bar_fill.modulate = active_color
 
 func _update_health_ui() -> void:
+	if health < previous_health - 0.001:
+		_show_damage_overlay()
+
 	var health_points: int = int(round(clampf(health, 0.0, HEALTH_MAX)))
 
 	if health_label_digit != null:
@@ -395,6 +406,47 @@ func _update_health_ui() -> void:
 	var health_ratio: float = clampf(health / HEALTH_MAX, 0.0, 1.0)
 	health_bar_fill.scale = Vector2(health_bar_initial_scale.x * health_ratio, health_bar_initial_scale.y)
 	health_bar_fill.modulate = health_color_normal
+	previous_health = health
+
+func _setup_damage_overlay() -> void:
+	previous_health = health
+	if player_canvas_layer == null:
+		return
+
+	var blood_texture := load(BLOOD_OVERLAY_PATH) as Texture2D
+	if blood_texture == null:
+		push_warning("Blood overlay texture not found at: %s" % BLOOD_OVERLAY_PATH)
+		return
+
+	damage_overlay = TextureRect.new()
+	damage_overlay.name = "DamageOverlay"
+	damage_overlay.texture = blood_texture
+	damage_overlay.stretch_mode = TextureRect.STRETCH_SCALE
+	damage_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	damage_overlay.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	damage_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	damage_overlay.z_index = 100
+	player_canvas_layer.add_child(damage_overlay)
+
+func _show_damage_overlay() -> void:
+	if damage_overlay == null:
+		return
+
+	if damage_overlay_tween:
+		damage_overlay_tween.kill()
+
+	var color := damage_overlay.modulate
+	color.a = DAMAGE_OVERLAY_MAX_ALPHA
+	damage_overlay.modulate = color
+
+	damage_overlay_tween = create_tween()
+	damage_overlay_tween.tween_property(damage_overlay, "modulate:a", 0.0, DAMAGE_OVERLAY_FADE_TIME)
+
+func apply_damage(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	health = maxf(health - amount, 0.0)
+	_update_health_ui()
 
 func _setup_stamina_palette_colors() -> void:
 	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D

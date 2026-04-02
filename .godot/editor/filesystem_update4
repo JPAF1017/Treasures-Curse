@@ -6,3 +6,7 @@ res://scripts/gnome.gd
 res://scripts/shambler.gd
 res://scripts/shy.gd
 res://scripts/statue.gd
+res://assets/scene_entity/charger.tscn
+res://entities/charger.tscn
+res://levels/test map.tscn
+res://assets/items/bat.tscn

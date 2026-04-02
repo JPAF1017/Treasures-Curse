@@ -3,17 +3,21 @@ extends CharacterBody3D
 const EnemyLocomotion := preload("res://scripts/EnemyLocomotionComponent.gd")
 const EnemyPerceptionMemory := preload("res://scripts/EnemyPerceptionMemoryComponent.gd")
 
+const HEALTH_MAX = 20.0
 const GRAVITY = 20.0
 const SPEED = 5.0
 const LUNGE_SPEED = 12.0  # Speed when lunging
 const STOP_DISTANCE = 2.0  # Stop this close to the player
 const LUNGE_COOLDOWN = 1.0  # Cooldown between lunges in seconds
+const BACKUP_INITIATE_COOLDOWN = 0  # Cooldown before starting backup/windup again
 const BACKUP_TIME = 2.0  # How long to walk backwards (seconds)
 const BACKUP_SPEED = 3.0  # Speed when walking backwards
+const COOLDOWN_RETREAT_SPEED = 3.2
 const CHARGE_TIME = 0.6  # How long to run forward before lunging (seconds) — shorter to simulate same distance at higher speed
 const CHARGE_SPEED = 10.0  # Speed when running forward to lunge
 const LUNGE_DURATION = 0.5  # Maximum duration of a lunge in seconds
 const LUNGE_DECEL_TIME = 0.75  # Time to decelerate after lunge ends (seconds)
+const LUNGE_DAMAGE = 10.0
 const CIRCLE_RADIUS = 3.0  # Radius of the circle to walk in when idle
 const CIRCLE_SPEED = 1.0  # Speed of rotation around the circle (radians per second)
 const BUMP_STEP_VELOCITY = 2.0
@@ -35,14 +39,18 @@ const STAIR_TRAIL_MAX_POINTS = 14
 const MEMORY_LOG_INTERVAL = 0.25
 const DEBUG_LOG_INTERVAL = 0.35
 const CROUCH_DETECTION_RAY_LENGTH = 8.0
+const RUN_TURN_SPEED_MULTIPLIER = 0.55
 
 @export var debug_navigation_logs: bool = false
 
+var health: float = HEALTH_MAX
 var player: CharacterBody3D = null
 var is_player_in_range: bool = false
 var is_player_in_lunge_range: bool = false
+var attack_area: Area3D = null
 var animation_player: AnimationPlayer = null
 var lunge_timer: float = 0.0  # Time since last lunge
+var backup_initiate_cooldown_timer: float = 0.0
 var can_lunge: bool = true  # Whether the charger can lunge
 var is_lunging: bool = false  # Currently performing a lunge
 var is_backing_up: bool = false  # Phase 1: walking backwards
@@ -50,8 +58,10 @@ var is_charging: bool = false  # Phase 2: running forward toward memorized posit
 var backup_timer: float = 0.0  # Time spent backing up
 var charge_timer: float = 0.0  # Time spent charging forward
 var memorized_direction: Vector3 = Vector3.ZERO  # Direction toward player when windup started
+var charge_direction: Vector3 = Vector3.ZERO  # Locked movement direction while in charge phase
 var lunge_direction: Vector3 = Vector3.ZERO  # Direction locked in when lunge starts
 var lunge_elapsed: float = 0.0  # Time elapsed during current lunge
+var has_damaged_during_lunge: bool = false
 var is_decelerating: bool = false  # Currently sliding to a stop after lunge
 var decel_velocity: Vector3 = Vector3.ZERO  # Velocity at start of deceleration
 var decel_timer: float = 0.0  # Time spent decelerating
@@ -70,6 +80,7 @@ var trail_memory_timer: float = 0.0
 var trail_sample_timer: float = 0.0
 var memorized_target_trail: Array[Vector3] = []
 var memory_log_timer: float = 0.0
+var cooldown_spacing_mode: String = ""
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
 var los_loss_grace_timer: float = 0.0
@@ -88,6 +99,7 @@ func _ready():
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7
 	space_state = get_world_3d().direct_space_state
+	backup_initiate_cooldown_timer = BACKUP_INITIATE_COOLDOWN
 	
 	# Connect the detector signals
 	$Detector.body_entered.connect(_on_detector_body_entered)
@@ -96,6 +108,7 @@ func _ready():
 	# Connect the lunge area signals
 	$Lunge.body_entered.connect(_on_lunge_body_entered)
 	$Lunge.body_exited.connect(_on_lunge_body_exited)
+	attack_area = get_node_or_null("AttackArea") as Area3D
 	
 	# Initialize circle center to starting position
 	circle_center = global_position
@@ -193,6 +206,12 @@ func _start_charge():
 	is_backing_up = false
 	is_charging = true
 	charge_timer = 0.0
+	charge_direction = memorized_direction
+	if charge_direction.length_squared() <= 0.001:
+		charge_direction = -global_transform.basis.z
+	else:
+		charge_direction = charge_direction.normalized()
+	rotation.y = atan2(charge_direction.x, charge_direction.z)
 	
 	print("Charging forward toward memorized position!")
 	
@@ -209,6 +228,8 @@ func _end_lunge():
 	"""End the lunge and begin decelerating"""
 	is_lunging = false
 	lunge_elapsed = 0.0
+	has_damaged_during_lunge = false
+	backup_initiate_cooldown_timer = BACKUP_INITIATE_COOLDOWN
 	# Start deceleration phase with current horizontal velocity
 	is_decelerating = true
 	decel_timer = 0.0
@@ -220,6 +241,7 @@ func _execute_lunge(direction: Vector3):
 	is_backing_up = false
 	is_charging = false
 	is_lunging = true
+	has_damaged_during_lunge = false
 	lunge_timer = 0.0
 	lunge_elapsed = 0.0
 	lunge_direction = direction
@@ -248,6 +270,7 @@ func _physics_process(delta):
 	path_cache_timer = max(path_cache_timer - delta, 0.0)
 	debug_log_timer = max(debug_log_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
+	backup_initiate_cooldown_timer = max(backup_initiate_cooldown_timer - delta, 0.0)
 	_refresh_player_detection()
 
 	# Apply gravity
@@ -264,6 +287,7 @@ func _physics_process(delta):
 	# Update lunge duration and end lunge if time exceeded
 	if is_lunging:
 		lunge_elapsed += delta
+		_try_apply_lunge_damage()
 		if lunge_elapsed >= LUNGE_DURATION:
 			_end_lunge()
 	
@@ -314,21 +338,13 @@ func _physics_process(delta):
 	# Handle charging forward (Phase 2 of windup)
 	if is_charging:
 		charge_timer += delta
+
+		# Keep the locked direction for the full charge phase.
+		rotation.y = atan2(charge_direction.x, charge_direction.z)
 		
-		# Keep tracking the player direction if still valid
-		if player and is_instance_valid(player):
-			var dir_to_player = (player.global_position - global_position)
-			dir_to_player.y = 0
-			if dir_to_player.length() > 0.1:
-				memorized_direction = dir_to_player.normalized()
-		
-		# Run toward the player's current direction
-		var target_rotation = atan2(memorized_direction.x, memorized_direction.z)
-		rotation.y = lerp_angle(rotation.y, target_rotation, delta * 10.0)
-		
-		# Run forward in current player direction
-		velocity.x = memorized_direction.x * CHARGE_SPEED
-		velocity.z = memorized_direction.z * CHARGE_SPEED
+		# Run forward in the locked charge direction.
+		velocity.x = charge_direction.x * CHARGE_SPEED
+		velocity.z = charge_direction.z * CHARGE_SPEED
 		
 		# Keep run animation playing
 		if animation_player:
@@ -343,7 +359,7 @@ func _physics_process(delta):
 		# Check if charge time is up — lunge!
 		if charge_timer >= CHARGE_TIME:
 			is_charging = false
-			_execute_lunge(memorized_direction)
+			_execute_lunge(charge_direction)
 	
 	# Follow the player if in range
 	if is_player_in_range and player and is_instance_valid(player):
@@ -451,10 +467,12 @@ func _physics_process(delta):
 			if direction_to_player.length() > 0.1:
 				var target_rotation = atan2(direction_to_player.x, direction_to_player.z)
 				# Smoothly rotate to face the player
-				rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
+				rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
 		
 		# Move toward player if not too close
-		if distance_to_player > STOP_DISTANCE:
+		if _update_cooldown_chase_movement(direction_to_player, distance_to_player, delta):
+			pass
+		elif distance_to_player > STOP_DISTANCE:
 			# Check if decelerating (let inertia handle movement)
 			if is_decelerating:
 				pass  # Velocity is handled in deceleration section above
@@ -467,19 +485,9 @@ func _physics_process(delta):
 				velocity.x = lunge_direction.x * LUNGE_SPEED
 				velocity.z = lunge_direction.z * LUNGE_SPEED
 			# Check if player is in lunge range and lunge is ready (start wind-up)
-			elif is_player_in_lunge_range and can_lunge and has_line_of_sight:
+			elif is_player_in_lunge_range and can_lunge and has_line_of_sight and backup_initiate_cooldown_timer <= 0.0:
 				# Start wind-up phase
 				_start_lunge_windup()
-			elif is_player_in_lunge_range and not can_lunge:
-				# Player is in lunge range but lunge on cooldown — stop and wait
-				velocity.x = 0
-				velocity.z = 0
-				# Keep walk animation playing (e.g. pacing in place)
-				if animation_player:
-					if animation_player.has_animation("walk"):
-						if not animation_player.is_playing() or animation_player.current_animation != "walk":
-							animation_player.play("walk")
-						animation_player.speed_scale = 1.0
 			else:
 				# Regular walking speed (outside lunge range)
 				var path_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
@@ -490,7 +498,7 @@ func _physics_process(delta):
 					velocity.x = path_direction.x * SPEED
 					velocity.z = path_direction.z * SPEED
 					var target_rotation = atan2(path_direction.x, path_direction.z)
-					rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
+					rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
 				else:
 					_debug_nav_log("No path dir | LOS %s | on_wall %s | slides %d | dist %.2f" % [str(has_line_of_sight), str(is_on_wall()), get_slide_collision_count(), distance_to_player], true)
 					velocity.x = direction_to_player.x * SPEED * 0.4
@@ -513,6 +521,7 @@ func _physics_process(delta):
 			if is_backing_up:
 				is_backing_up = false
 				can_lunge = true
+				backup_initiate_cooldown_timer = BACKUP_INITIATE_COOLDOWN
 				print("Backup cancelled - player too close!")
 			
 			# Stop animation
@@ -560,7 +569,7 @@ func _physics_process(delta):
 					velocity.x = memory_dir.x * SPEED
 					velocity.z = memory_dir.z * SPEED
 					var memory_rot = atan2(memory_dir.x, memory_dir.z)
-					rotation.y = lerp_angle(rotation.y, memory_rot, delta * 5.0)
+					rotation.y = lerp_angle(rotation.y, memory_rot, delta * _get_turn_speed(5.0))
 				else:
 					_debug_nav_log("Memory blocked | remaining %.2f" % [trail_memory_timer], true)
 					velocity.x = 0
@@ -733,6 +742,94 @@ func _is_body_overlapping_area(area: Area3D, body: Node3D) -> bool:
 	if area == null or body == null or not is_instance_valid(body):
 		return false
 	return area.get_overlapping_bodies().has(body)
+
+func _try_apply_lunge_damage() -> void:
+	if not is_lunging or has_damaged_during_lunge:
+		return
+
+	var active_attack_area := attack_area
+	if active_attack_area == null:
+		active_attack_area = $Lunge
+	if active_attack_area == null:
+		return
+
+	for body in active_attack_area.get_overlapping_bodies():
+		if body is CharacterBody3D and body.is_in_group("player"):
+			_apply_damage_to_player(body, LUNGE_DAMAGE)
+			has_damaged_during_lunge = true
+			return
+
+func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+
+	if target.has_method("apply_damage"):
+		target.call("apply_damage", damage)
+		return
+	if target.has_method("take_damage"):
+		target.call("take_damage", damage)
+		return
+
+	var current_health = target.get("health")
+	if current_health == null:
+		return
+
+	var next_health := maxf(float(current_health) - damage, 0.0)
+	target.set("health", next_health)
+	if target.has_method("_update_health_ui"):
+		target.call("_update_health_ui")
+
+func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_player: float, delta: float) -> bool:
+	var spacing_active := not can_lunge and not is_backing_up and not is_charging and not is_lunging and not is_decelerating
+	if not spacing_active:
+		if cooldown_spacing_mode != "":
+			print("[ChargerCooldown] mode=NONE")
+			cooldown_spacing_mode = ""
+		return false
+
+	if is_player_in_lunge_range:
+		if cooldown_spacing_mode != "RETREAT":
+			print("[ChargerCooldown] mode=RETREAT dist=%.2f" % [distance_to_player])
+			cooldown_spacing_mode = "RETREAT"
+
+		var away_dir := -direction_to_player
+		if away_dir.length_squared() <= 0.001:
+			away_dir = global_transform.basis.z
+		else:
+			away_dir = away_dir.normalized()
+
+		velocity.x = away_dir.x * COOLDOWN_RETREAT_SPEED
+		velocity.z = away_dir.z * COOLDOWN_RETREAT_SPEED
+
+		# Keep facing the player while backing away to maintain pressure.
+		var target_rotation = atan2(direction_to_player.x, direction_to_player.z)
+		rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
+		if animation_player and animation_player.has_animation("walk"):
+			if not animation_player.is_playing() or animation_player.current_animation != "walk":
+				animation_player.play("walk")
+			animation_player.speed_scale = 1.0
+		return true
+
+	if cooldown_spacing_mode != "APPROACH":
+		print("[ChargerCooldown] mode=APPROACH dist=%.2f" % [distance_to_player])
+		cooldown_spacing_mode = "APPROACH"
+
+	velocity.x = direction_to_player.x * SPEED
+	velocity.z = direction_to_player.z * SPEED
+	var target_rotation = atan2(direction_to_player.x, direction_to_player.z)
+	rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
+
+	if animation_player and animation_player.has_animation("walk"):
+		if not animation_player.is_playing() or animation_player.current_animation != "walk":
+			animation_player.play("walk")
+		animation_player.speed_scale = 1.0
+
+	return true
+
+func _get_turn_speed(base_speed: float) -> float:
+	if animation_player and animation_player.is_playing() and animation_player.current_animation == "run":
+		return base_speed * RUN_TURN_SPEED_MULTIPLIER
+	return base_speed
 
 func _align_to_slope(delta: float):
 	"""Tilt the Dog visual and CollisionShape3D to match the ground slope."""
