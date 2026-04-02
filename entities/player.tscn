@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://ds38umkop3txm"]
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
-[ext_resource type="PackedScene" uid="uid://crkwjia2crxrt" path="res://assets/entities/player.glb" id="2_b0kkn"]
+[ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
+[ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_27e7b"]
 radius = 0.3305664
@@ -49,5 +51,206 @@ spot_attenuation = 0.8
 spot_angle = 42.0
 spot_angle_attenuation = 2.37841
 
-[node name="player" parent="." unique_id=1653288559 instance=ExtResource("2_b0kkn")]
-transform = Transform3D(-1.8, 0, 1.5736099e-07, 0, 1.8, 0, -1.5736099e-07, 0, -1.8, 0, -1.807, 0)
+[node name="player" parent="." unique_id=920360375 instance=ExtResource("2_b0kkn")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.6968677, -0.24935776)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]
+
+[node name="Control" type="Control" parent="CanvasLayer" unique_id=2102173205]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Stamina" type="Control" parent="CanvasLayer/Control" unique_id=1969874441]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="StaminaBarContainer" type="NinePatchRect" parent="CanvasLayer/Control/Stamina" unique_id=389236086]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -342.0
+offset_top = -72.0
+offset_right = -22.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("5_qly61")
+region_rect = Rect2(0, 8, 8, 8)
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="StaminaBar" type="NinePatchRect" parent="CanvasLayer/Control/Stamina" unique_id=1048321657]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -342.0
+offset_top = -72.0
+offset_right = -22.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("5_qly61")
+draw_center = false
+region_rect = Rect2(24, 80, 24, 24)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Stamina" unique_id=1794551111]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -342.0
+offset_top = -96.0
+offset_right = -242.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "Stamina"
+
+[node name="LabelDigit" type="Label" parent="CanvasLayer/Control/Stamina" unique_id=2105953396]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -126.0
+offset_top = -96.0
+offset_right = -26.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "100"
+horizontal_alignment = 2
+
+[node name="Health" type="Control" parent="CanvasLayer/Control" unique_id=906819521]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -38.0
+offset_top = -104.0
+offset_right = 2.0
+offset_bottom = -64.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="HealthBarContainer" type="NinePatchRect" parent="CanvasLayer/Control/Health" unique_id=2128171878]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -72.0
+offset_right = -24.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("5_qly61")
+region_rect = Rect2(0, 8, 8, 8)
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="HealthBar" type="NinePatchRect" parent="CanvasLayer/Control/Health" unique_id=623540728]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -72.0
+offset_right = -24.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("5_qly61")
+draw_center = false
+region_rect = Rect2(24, 80, 24, 24)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Health" unique_id=1751555667]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -96.0
+offset_right = -244.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "Health"
+
+[node name="LabelDigit" type="Label" parent="CanvasLayer/Control/Health" unique_id=64566892]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -128.0
+offset_top = -96.0
+offset_right = -28.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "100"
+horizontal_alignment = 2

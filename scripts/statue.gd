@@ -1,5 +1,8 @@
 extends CharacterBody3D
 
+const EnemyLocomotion := preload("res://scripts/EnemyLocomotionComponent.gd")
+const EnemyPerceptionMemory := preload("res://scripts/EnemyPerceptionMemoryComponent.gd")
+
 # Movement constants
 const WALK_SPEED = 10.0
 const GRAVITY = 20.0
@@ -215,10 +218,7 @@ func _physics_process(delta):
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
 
 	# Apply gravity
-	if not is_on_floor():
-		velocity.y -= GRAVITY * delta
-	else:
-		velocity.y = 0
+	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
 
 	was_trying_to_move = false
 	
@@ -227,21 +227,25 @@ func _physics_process(delta):
 		var distance_to_player = global_position.distance_to(player.global_position)
 		var space_state := get_world_3d().direct_space_state
 		var has_line_of_sight = NavigationUtils.has_line_of_sight_to(self, player.global_position + Vector3(0, 1.0, 0), space_state, [self, player])
-		var los_state := NavigationUtils.update_los_trail_state(
+		var los_state := EnemyPerceptionMemory.update_los_trail_state(
 			has_line_of_sight,
-			los_state_initialized,
-			previous_has_line_of_sight,
-			trail_memory_timer,
-			trail_sample_timer,
+			{
+				"los_state_initialized": los_state_initialized,
+				"previous_has_line_of_sight": previous_has_line_of_sight,
+				"trail_memory_timer": trail_memory_timer,
+				"trail_sample_timer": trail_sample_timer,
+				"los_loss_grace_timer": los_loss_grace_timer,
+			},
 			memorized_target_trail,
 			last_visible_player_position,
-			TRAIL_MEMORY_TIME,
-			TRAIL_POINT_SPACING,
-			TRAIL_MAX_POINTS,
-			los_loss_grace_timer,
-			LOS_LOSS_GRACE_TIME,
-			STAIR_VERTICAL_DELTA,
-			STAIR_TRAIL_MAX_POINTS
+			{
+				"trail_memory_time": TRAIL_MEMORY_TIME,
+				"trail_point_spacing": TRAIL_POINT_SPACING,
+				"trail_max_points": TRAIL_MAX_POINTS,
+				"los_loss_grace_time": LOS_LOSS_GRACE_TIME,
+				"stair_vertical_delta": STAIR_VERTICAL_DELTA,
+				"stair_trail_max_points": STAIR_TRAIL_MAX_POINTS,
+			}
 		)
 		has_line_of_sight = bool(los_state.get("effective_has_line_of_sight", has_line_of_sight))
 		los_state_initialized = bool(los_state.get("los_state_initialized", los_state_initialized))
@@ -372,10 +376,7 @@ func _physics_process(delta):
 		is_moving = false
 
 	# Step up tiny bumps while moving so statue keeps advancing on uneven ground.
-	var horizontal_speed = Vector2(velocity.x, velocity.z).length()
-	if horizontal_speed > 0.2 and is_on_floor() and is_on_wall() and velocity.y <= 0.0 and bump_step_timer <= 0.0:
-		velocity.y = BUMP_STEP_VELOCITY
-		bump_step_timer = BUMP_STEP_COOLDOWN
+	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
 	
 	move_and_slide()
 

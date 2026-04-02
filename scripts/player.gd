@@ -4,7 +4,21 @@ extends CharacterBody3D
 const WALK_SPEED = 7.0
 const SPRINT_SPEED = 11.0
 const CROUCH_SPEED = 3.5
-const JUMP_VELOCITY = 8
+const STAMINA_MAX = 100.0
+const STAMINA_WARNING_THRESHOLD = 20.0
+const STAMINA_COLOR_NORMAL_INDEX = 18
+const STAMINA_COLOR_LOW_INDEX = 17
+const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
+const JUMP_STAMINA_COST = 20.0
+const TIRED_JUMP_HEIGHT_MULTIPLIER = 1.0 / 3.0
+const STAMINA_REFILL_DELAY_SECONDS = 5.0
+const STAMINA_DRAIN_PER_SECOND = STAMINA_MAX / 7.0
+const STAMINA_REFILL_PER_SECOND = STAMINA_MAX / 10.0
+const JUMP_VELOCITY = 11
+const JUMP_AIR_LOOP_MIN_FRAME = 4
+const JUMP_HOLD_FRAME = 16
+const JUMP_ANIMATION_FPS = 30.0
+const JUMP_AIR_LOOP_SPEED = 0.45
 const BUMP_STEP_VELOCITY = 2.2
 const BUMP_STEP_COOLDOWN = 0.12
 const SENSITIVITY = 0.003
@@ -16,7 +30,7 @@ const POSITION_LOG_INTERVAL = 0.25
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
-@export var hide_visual_from_player_camera: bool = false
+@export var hide_visual_from_player_camera: bool = true
 @export_range(-360.0, 360.0, 1.0) var visual_yaw_offset_degrees: float = 180.0
 @export var crouch_head_y: float = -0.111
 @export_range(1.0, 30.0, 0.5) var crouch_transition_speed: float = 12.0
@@ -32,6 +46,18 @@ var movement_lock_sources: Array[Node] = []
 var initial_head_position: Vector3 = Vector3.ZERO
 var target_head_y: float = 0.0
 var is_crouching: bool = false
+var stamina: float = STAMINA_MAX
+var stamina_refill_delay_timer: float = 0.0
+var is_sprinting: bool = false
+var tired_jump_active: bool = false
+var jump_phase: int = 0
+var jump_air_loop_frame: float = float(JUMP_AIR_LOOP_MIN_FRAME)
+var jump_air_loop_forward: bool = true
+var stamina_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
+var stamina_color_low: Color = Color(1.0, 0.3, 0.3, 1.0)
+
+const JUMP_PHASE_NONE = 0
+const JUMP_PHASE_ACTIVE = 1
 #------------------------------------------------------
 @onready var head = $Head
 @onready var stand_collision: CollisionShape3D = $Stand
@@ -40,6 +66,10 @@ var is_crouching: bool = false
 @onready var vision_collision_shape: CollisionShape3D = $Head/playerCamera/Vision/CollisionShape3D
 @onready var visual_root: Node3D = _resolve_visual_root()
 @onready var animation_player: AnimationPlayer = _resolve_animation_player()
+@onready var stamina_bar_fill: NinePatchRect = $CanvasLayer/Control/Stamina/StaminaBarContainer
+@onready var stamina_label_digit: Label = $CanvasLayer/Control/Stamina/LabelDigit
+
+var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 
 #function on startup
 func _ready():
@@ -49,6 +79,8 @@ func _ready():
 	_configure_vision_area()
 	initial_head_position = head.position
 	target_head_y = initial_head_position.y
+	_setup_stamina_ui()
+	_update_stamina_ui()
 	
 	# Initialize player visual rotation.
 	if visual_root:
@@ -111,30 +143,72 @@ func _physics_process(delta):
 	_update_head_height(delta)
 #------------------------------------------------------
 #jump input
-	if not is_movement_locked and Input.is_action_just_pressed("ui_accept") and is_on_floor():
-		velocity.y = JUMP_VELOCITY
+	var jump_pressed := not is_movement_locked and Input.is_action_just_pressed("ui_accept")
+	if jump_pressed and is_on_floor():
+		if stamina >= JUMP_STAMINA_COST:
+			stamina = max(stamina - JUMP_STAMINA_COST, 0.0)
+			if stamina <= 0.0:
+				stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
+			tired_jump_active = false
+			jump_phase = JUMP_PHASE_ACTIVE
+			velocity.y = JUMP_VELOCITY
+			jump_air_loop_frame = float(JUMP_AIR_LOOP_MIN_FRAME)
+			jump_air_loop_forward = true
+			if animation_player and animation_player.has_animation("jump"):
+				animation_player.play("jump")
+				animation_player.seek(0.0, true)
+		else:
+			# Tired jump: reduced jump height and no jump animation.
+			if stamina > 0.0:
+				stamina = 0.0
+				stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
+			tired_jump_active = true
+			jump_phase = JUMP_PHASE_NONE
+			velocity.y = JUMP_VELOCITY * TIRED_JUMP_HEIGHT_MULTIPLIER
 #------------------------------------------------------
 #sprint input
 	# Sprint is only valid while moving forward (including forward diagonals) and not crouching.
+	var sprint_input := not is_movement_locked and Input.is_action_pressed("shift")
 	var can_sprint := input_dir.y < 0.0 and not is_crouching
-	if is_crouching:
+	is_sprinting = false
+	if tired_jump_active:
 		speed = CROUCH_SPEED
-	elif not is_movement_locked and Input.is_action_pressed("shift") and can_sprint:
+	elif is_crouching:
+		speed = CROUCH_SPEED
+	elif sprint_input and can_sprint and stamina > 0.0:
+		is_sprinting = true
 		speed = SPRINT_SPEED
 	else:
 		speed = WALK_SPEED
+
+	if is_sprinting:
+		stamina = max(stamina - STAMINA_DRAIN_PER_SECOND * delta, 0.0)
+		if stamina <= 0.0:
+			stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
+			is_sprinting = false
+			speed = WALK_SPEED
+
+	if stamina_refill_delay_timer > 0.0:
+		stamina_refill_delay_timer = max(stamina_refill_delay_timer - delta, 0.0)
+	elif not is_sprinting:
+		stamina = min(stamina + STAMINA_REFILL_PER_SECOND * delta, STAMINA_MAX)
+	_update_stamina_ui()
 #------------------------------------------------------
 #wasd direction input and other physics
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	
 	# Animation handling
 	if animation_player:
+		var jump_anim_active := _update_jump_animation_phase(delta)
 		var is_walking_forward := input_dir.y < 0.0
 		var is_walking_backward := input_dir.y > 0.0
 		var is_strafing_left := input_dir.x < 0.0
 		var is_strafing_right := input_dir.x > 0.0
-		var wants_run := Input.is_action_pressed("shift") and can_sprint
-		if is_on_floor():
+		var wants_run := is_sprinting
+		var grounded_animation_state := is_on_floor() or tired_jump_active
+		if jump_anim_active:
+			pass
+		elif grounded_animation_state:
 			if is_crouching:
 				if is_walking_forward and animation_player.has_animation("crouchWalk"):
 					if animation_player.current_animation != "crouchWalk" or animation_player.speed_scale < 0.0:
@@ -168,8 +242,11 @@ func _physics_process(delta):
 						animation_player.play("rightStrafe")
 				elif animation_player.has_animation("idle") and animation_player.current_animation != "idle":
 					animation_player.play("idle")
+		elif animation_player.has_animation("jump") and jump_phase != JUMP_PHASE_NONE:
+			if animation_player.current_animation != "jump":
+				animation_player.play("jump")
 		elif animation_player.has_animation("idle") and animation_player.current_animation != "idle":
-			# In air - keep a neutral animation state.
+			# Fallback when no jump animation exists.
 			animation_player.play("idle")
 	
 	if is_on_floor():
@@ -200,6 +277,8 @@ func _physics_process(delta):
 		bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	move_and_slide()
+	if tired_jump_active and is_on_floor():
+		tired_jump_active = false
 	_log_player_position()
 
 func set_movement_locked_by(locker: Node, locked: bool) -> void:
@@ -260,6 +339,62 @@ func _update_head_height(delta: float) -> void:
 	head.position.y = lerp(head.position.y, target_head_y, delta * crouch_transition_speed)
 	if abs(head.position.y - target_head_y) < 0.001:
 		head.position.y = target_head_y
+
+func _setup_stamina_ui() -> void:
+	_setup_stamina_palette_colors()
+
+	if stamina_bar_fill == null:
+		return
+
+	stamina_bar_initial_scale = stamina_bar_fill.scale
+	stamina_bar_fill.pivot_offset = Vector2(0.0, stamina_bar_fill.size.y * 0.5)
+
+func _update_stamina_ui() -> void:
+	var stamina_points: int = int(round(clampf(stamina, 0.0, STAMINA_MAX)))
+	var active_color: Color = stamina_color_normal if stamina_points >= int(STAMINA_WARNING_THRESHOLD) else stamina_color_low
+
+	if stamina_label_digit != null:
+		stamina_label_digit.text = str(stamina_points)
+		stamina_label_digit.modulate = active_color
+
+	if stamina_bar_fill == null:
+		return
+
+	var stamina_ratio: float = clampf(stamina / STAMINA_MAX, 0.0, 1.0)
+	stamina_bar_fill.scale = Vector2(stamina_bar_initial_scale.x * stamina_ratio, stamina_bar_initial_scale.y)
+	stamina_bar_fill.modulate = active_color
+
+func _setup_stamina_palette_colors() -> void:
+	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
+	if palette_texture == null:
+		push_warning("Stamina palette texture not found at: %s" % STAMINA_PALETTE_PATH)
+		return
+
+	var palette_image := palette_texture.get_image()
+	if palette_image == null or palette_image.is_empty():
+		push_warning("Stamina palette image is empty: %s" % STAMINA_PALETTE_PATH)
+		return
+
+	stamina_color_normal = _get_palette_color(palette_image, STAMINA_COLOR_NORMAL_INDEX, stamina_color_normal)
+	stamina_color_low = _get_palette_color(palette_image, STAMINA_COLOR_LOW_INDEX, stamina_color_low)
+
+func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Color) -> Color:
+	if one_based_index <= 0:
+		return fallback
+
+	var width := palette_image.get_width()
+	var height := palette_image.get_height()
+	if width <= 0 or height <= 0:
+		return fallback
+
+	var max_colors := width * height
+	if one_based_index > max_colors:
+		return fallback
+
+	var linear_index := one_based_index - 1
+	var pixel_x := linear_index % width
+	var pixel_y := linear_index / width
+	return palette_image.get_pixel(pixel_x, pixel_y)
 
 func _log_player_position() -> void:
 	if not debug_position_logs:
@@ -343,3 +478,53 @@ func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
 		if found:
 			return found
 	return null
+
+func _update_jump_animation_phase(delta: float) -> bool:
+	if animation_player == null:
+		jump_phase = JUMP_PHASE_NONE
+		return false
+	if not animation_player.has_animation("jump"):
+		jump_phase = JUMP_PHASE_NONE
+		return false
+
+	if jump_phase == JUMP_PHASE_NONE:
+		return false
+
+	if animation_player.current_animation != "jump":
+		animation_player.play("jump")
+	animation_player.speed_scale = 1.0
+
+	var jump_animation := animation_player.get_animation("jump")
+	if jump_animation == null:
+		jump_phase = JUMP_PHASE_NONE
+		return false
+
+	var min_loop_frame := float(JUMP_AIR_LOOP_MIN_FRAME)
+	var hold_frame := float(JUMP_HOLD_FRAME)
+	var frame_step := JUMP_ANIMATION_FPS * delta * JUMP_AIR_LOOP_SPEED
+	if not is_on_floor():
+		if jump_air_loop_forward:
+			jump_air_loop_frame += frame_step
+			if jump_air_loop_frame >= hold_frame:
+				jump_air_loop_frame = hold_frame
+				jump_air_loop_forward = false
+		else:
+			jump_air_loop_frame -= frame_step
+			if jump_air_loop_frame <= min_loop_frame:
+				jump_air_loop_frame = min_loop_frame
+				jump_air_loop_forward = true
+
+		var loop_time := (jump_air_loop_frame - 1.0) / JUMP_ANIMATION_FPS
+		animation_player.seek(loop_time, true)
+	else:
+		var hold_time := (hold_frame - 1.0) / JUMP_ANIMATION_FPS
+		if animation_player.current_animation_position < hold_time:
+			animation_player.seek(hold_time, true)
+
+	if animation_player.current_animation_position >= jump_animation.length - 0.02:
+		jump_phase = JUMP_PHASE_NONE
+		jump_air_loop_frame = float(JUMP_AIR_LOOP_MIN_FRAME)
+		jump_air_loop_forward = true
+		return false
+
+	return true
