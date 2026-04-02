@@ -32,6 +32,7 @@ const WALK_MOVE_RANGES: Array[Vector2i] = [
 	Vector2i(34, 65),
 	Vector2i(93, 116),
 ]
+const CROUCH_DETECTION_RAY_LENGTH := 8.0
 
 @export var facing_offset_degrees: float = 0.0
 @export var walk_animation_fps: float = 30.0
@@ -89,6 +90,7 @@ func _physics_process(delta: float) -> void:
 	los_loss_grace_timer = max(los_loss_grace_timer - delta, 0.0)
 	path_cache_timer = max(path_cache_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
+	_refresh_player_detection()
 
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
 
@@ -127,6 +129,8 @@ func _on_detect_body_entered(body: Node3D) -> void:
 		return
 	if not body.is_in_group("player"):
 		return
+	if not _can_detect_crouching_player(body):
+		return
 	if target_player != null:
 		return
 
@@ -164,6 +168,8 @@ func _on_attack_range_body_entered(body: Node3D) -> void:
 	if not (body is CharacterBody3D):
 		return
 	if not body.is_in_group("player"):
+		return
+	if not _can_detect_crouching_player(body):
 		return
 	player_in_attack_range = true
 
@@ -333,6 +339,93 @@ func _log_memory_state(
 		trail_memory_timer,
 		los_memory_timer,
 	])
+
+func _refresh_player_detection() -> void:
+	if target_player != null and is_instance_valid(target_player) and _is_crouched_player_hidden(target_player):
+		target_player = null
+		player_in_attack_range = false
+		los_state_initialized = false
+		previous_has_line_of_sight = false
+		los_loss_grace_timer = 0.0
+		path_cache_timer = 0.0
+		cached_nav_path.clear()
+		last_reachable_target_position = Vector3.ZERO
+
+	if target_player != null and is_instance_valid(target_player):
+		player_in_attack_range = _is_body_overlapping_area(attack_range_area, target_player)
+		return
+
+	var detectable_player := _find_detectable_player_in_area(detect_area)
+	if detectable_player:
+		target_player = detectable_player
+		last_visible_player_position = target_player.global_position
+		los_memory_timer = LOS_MEMORY_TIME
+		trail_memory_timer = TRAIL_MEMORY_TIME
+		trail_sample_timer = 0.0
+		memorized_target_trail.clear()
+		NavigationUtils.append_trail_point(memorized_target_trail, last_visible_player_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+		player_in_attack_range = _is_body_overlapping_area(attack_range_area, target_player)
+		los_state_initialized = false
+		previous_has_line_of_sight = false
+		los_loss_grace_timer = 0.0
+		path_cache_timer = 0.0
+		cached_nav_path.clear()
+		last_reachable_target_position = Vector3.ZERO
+
+func _find_detectable_player_in_area(area: Area3D) -> CharacterBody3D:
+	if area == null:
+		return null
+
+	for body in area.get_overlapping_bodies():
+		if body is CharacterBody3D and body.is_in_group("player") and _can_detect_crouching_player(body):
+			return body
+
+	return null
+
+func _can_detect_crouching_player(body: Node3D) -> bool:
+	if body == null or not is_instance_valid(body):
+		return false
+	if not body.is_in_group("player"):
+		return false
+	if not _is_player_crouching(body):
+		return true
+	return _is_player_in_front_by_raycast(body)
+
+func _is_player_crouching(body: Node) -> bool:
+	return body != null and bool(body.get("is_crouching"))
+
+func _is_crouched_player_hidden(body: Node3D) -> bool:
+	return _is_player_crouching(body) and not _is_player_in_front_by_raycast(body)
+
+func _is_player_in_front_by_raycast(body: Node3D) -> bool:
+	if body == null or not is_instance_valid(body):
+		return false
+	if space_state == null:
+		return false
+
+	var origin := global_position + Vector3.UP * 1.0
+	var target_position := body.global_position + Vector3.UP * 1.0
+	var to_target := target_position - origin
+	if to_target.length_squared() <= 0.001:
+		return true
+
+	var forward := -global_transform.basis.z
+	if forward.dot(to_target.normalized()) <= 0.0:
+		return false
+
+	var ray_direction := to_target.normalized() * minf(to_target.length(), CROUCH_DETECTION_RAY_LENGTH)
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + ray_direction)
+	query.exclude = [self]
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+
+	var hit := space_state.intersect_ray(query)
+	return hit.has("collider") and hit["collider"] == body
+
+func _is_body_overlapping_area(area: Area3D, body: Node3D) -> bool:
+	if area == null or body == null or not is_instance_valid(body):
+		return false
+	return area.get_overlapping_bodies().has(body)
 
 func _update_attack_movement(delta: float) -> void:
 	# Stop all movement

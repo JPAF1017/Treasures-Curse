@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
+[ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="5_qsoyl"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_27e7b"]
 radius = 0.3305664
@@ -167,9 +168,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -38.0
-offset_top = -104.0
+offset_top = -112.0
 offset_right = 2.0
-offset_bottom = -64.0
+offset_bottom = -72.0
 grow_horizontal = 0
 grow_vertical = 0
 
@@ -254,3 +255,126 @@ grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "100"
 horizontal_alignment = 2
+
+[node name="Hotbar" type="Control" parent="CanvasLayer/Control" unique_id=2072693231]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Slot1" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=955799714]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -195.0
+offset_top = -120.0
+offset_right = -115.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("5_qsoyl")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot2" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=694914384]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -115.0
+offset_top = -120.0
+offset_right = -35.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("5_qsoyl")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot3" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=389048436]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -35.0
+offset_top = -120.0
+offset_right = 45.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("5_qsoyl")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot4" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=96544235]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 45.0
+offset_top = -120.0
+offset_right = 125.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("5_qsoyl")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot5" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=1577401734]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 125.0
+offset_top = -120.0
+offset_right = 205.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("5_qsoyl")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4

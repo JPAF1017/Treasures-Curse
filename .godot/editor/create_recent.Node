@@ -1,6 +1,6 @@
-Label
 NinePatchRect
 Control
+Label
 TextureRect
 MenuBar
 CanvasLayer
@@ -12,4 +12,3 @@ NavigationRegion3D
 MeshInstance3D
 CSGMesh3D
 Node
-CSGBox3D

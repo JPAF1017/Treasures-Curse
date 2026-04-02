@@ -8,6 +8,8 @@ const STAMINA_MAX = 100.0
 const STAMINA_WARNING_THRESHOLD = 20.0
 const STAMINA_COLOR_NORMAL_INDEX = 18
 const STAMINA_COLOR_LOW_INDEX = 17
+const HEALTH_MAX = 100.0
+const HEALTH_COLOR_NORMAL_INDEX = 23
 const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
 const JUMP_STAMINA_COST = 20.0
 const TIRED_JUMP_HEIGHT_MULTIPLIER = 1.0 / 3.0
@@ -48,6 +50,7 @@ var target_head_y: float = 0.0
 var is_crouching: bool = false
 var stamina: float = STAMINA_MAX
 var stamina_refill_delay_timer: float = 0.0
+var health: float = HEALTH_MAX
 var is_sprinting: bool = false
 var tired_jump_active: bool = false
 var jump_phase: int = 0
@@ -55,6 +58,7 @@ var jump_air_loop_frame: float = float(JUMP_AIR_LOOP_MIN_FRAME)
 var jump_air_loop_forward: bool = true
 var stamina_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 var stamina_color_low: Color = Color(1.0, 0.3, 0.3, 1.0)
+var health_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
@@ -68,8 +72,11 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var animation_player: AnimationPlayer = _resolve_animation_player()
 @onready var stamina_bar_fill: NinePatchRect = $CanvasLayer/Control/Stamina/StaminaBarContainer
 @onready var stamina_label_digit: Label = $CanvasLayer/Control/Stamina/LabelDigit
+@onready var health_bar_fill: NinePatchRect = $CanvasLayer/Control/Health/HealthBarContainer
+@onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
+var health_bar_initial_scale: Vector2 = Vector2.ONE
 
 #function on startup
 func _ready():
@@ -81,6 +88,8 @@ func _ready():
 	target_head_y = initial_head_position.y
 	_setup_stamina_ui()
 	_update_stamina_ui()
+	_setup_health_ui()
+	_update_health_ui()
 	
 	# Initialize player visual rotation.
 	if visual_root:
@@ -349,6 +358,15 @@ func _setup_stamina_ui() -> void:
 	stamina_bar_initial_scale = stamina_bar_fill.scale
 	stamina_bar_fill.pivot_offset = Vector2(0.0, stamina_bar_fill.size.y * 0.5)
 
+func _setup_health_ui() -> void:
+	_setup_health_palette_colors()
+
+	if health_bar_fill == null:
+		return
+
+	health_bar_initial_scale = health_bar_fill.scale
+	health_bar_fill.pivot_offset = Vector2(0.0, health_bar_fill.size.y * 0.5)
+
 func _update_stamina_ui() -> void:
 	var stamina_points: int = int(round(clampf(stamina, 0.0, STAMINA_MAX)))
 	var active_color: Color = stamina_color_normal if stamina_points >= int(STAMINA_WARNING_THRESHOLD) else stamina_color_low
@@ -364,6 +382,20 @@ func _update_stamina_ui() -> void:
 	stamina_bar_fill.scale = Vector2(stamina_bar_initial_scale.x * stamina_ratio, stamina_bar_initial_scale.y)
 	stamina_bar_fill.modulate = active_color
 
+func _update_health_ui() -> void:
+	var health_points: int = int(round(clampf(health, 0.0, HEALTH_MAX)))
+
+	if health_label_digit != null:
+		health_label_digit.text = str(health_points)
+		health_label_digit.modulate = health_color_normal
+
+	if health_bar_fill == null:
+		return
+
+	var health_ratio: float = clampf(health / HEALTH_MAX, 0.0, 1.0)
+	health_bar_fill.scale = Vector2(health_bar_initial_scale.x * health_ratio, health_bar_initial_scale.y)
+	health_bar_fill.modulate = health_color_normal
+
 func _setup_stamina_palette_colors() -> void:
 	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
 	if palette_texture == null:
@@ -377,6 +409,19 @@ func _setup_stamina_palette_colors() -> void:
 
 	stamina_color_normal = _get_palette_color(palette_image, STAMINA_COLOR_NORMAL_INDEX, stamina_color_normal)
 	stamina_color_low = _get_palette_color(palette_image, STAMINA_COLOR_LOW_INDEX, stamina_color_low)
+
+func _setup_health_palette_colors() -> void:
+	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
+	if palette_texture == null:
+		push_warning("Health palette texture not found at: %s" % STAMINA_PALETTE_PATH)
+		return
+
+	var palette_image := palette_texture.get_image()
+	if palette_image == null or palette_image.is_empty():
+		push_warning("Health palette image is empty: %s" % STAMINA_PALETTE_PATH)
+		return
+
+	health_color_normal = _get_palette_color(palette_image, HEALTH_COLOR_NORMAL_INDEX, health_color_normal)
 
 func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Color) -> Color:
 	if one_based_index <= 0:
