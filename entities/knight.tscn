@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bdgqymx6x75hn"]
 
 [ext_resource type="PackedScene" uid="uid://bkju4rh2uc0es" path="res://assets/entities/knight.glb" id="1_kmc1q"]
-[ext_resource type="Script" uid="uid://cd2df45y6baat" path="res://scripts/knight.gd" id="1_wmydh"]
+[ext_resource type="Script" uid="uid://cd2df45y6baat" path="res://scripts/npc/knight.gd" id="1_wmydh"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kmc1q"]
 radius = 0.9658203

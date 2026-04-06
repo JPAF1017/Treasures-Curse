@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b3gcdu8ssg3lu"]
 
-[ext_resource type="Script" uid="uid://ohuverafit7o" path="res://scripts/statue.gd" id="1_w3y7k"]
+[ext_resource type="Script" uid="uid://ohuverafit7o" path="res://scripts/npc/statue.gd" id="1_w3y7k"]
 [ext_resource type="PackedScene" uid="uid://vr0iu2dcb2hu" path="res://assets/entities/statue.glb" id="2_w8xee"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8l3l5"]

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dd248ait0464c"]
 
-[ext_resource type="Script" uid="uid://xpn4iswxe4os" path="res://scripts/charger.gd" id="1_n2dv8"]
+[ext_resource type="Script" uid="uid://xpn4iswxe4os" path="res://scripts/npc/charger.gd" id="1_n2dv8"]
 [ext_resource type="PackedScene" uid="uid://crxg8ido3i1el" path="res://assets/entities/Dog.glb" id="2_uk7ct"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_uk7ct"]

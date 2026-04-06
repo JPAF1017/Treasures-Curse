@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dr03apd6i8j3n"]
 
 [ext_resource type="PackedScene" uid="uid://bnycbgp6g7mtv" path="res://assets/entities/fly.glb" id="1_m7jbi"]
-[ext_resource type="Script" uid="uid://dnn7b7050rnsm" path="res://scripts/fly.gd" id="1_xmgs0"]
+[ext_resource type="Script" uid="uid://dnn7b7050rnsm" path="res://scripts/npc/fly.gd" id="1_xmgs0"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_m7jbi"]
 radius = 1.809082

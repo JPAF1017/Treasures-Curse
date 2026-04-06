@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cav1pu1wp4wqo"]
 
-[ext_resource type="Script" uid="uid://d207knqhtqb1p" path="res://scripts/shambler.gd" id="1_bhth7"]
+[ext_resource type="Script" uid="uid://d207knqhtqb1p" path="res://scripts/npc/shambler.gd" id="1_bhth7"]
 [ext_resource type="PackedScene" uid="uid://brqj4rm1gwdto" path="res://assets/entities/shambler.glb" id="1_o6p7n"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_o6p7n"]

@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://d0i07q7hajshl"]
+
+[ext_resource type="PackedScene" uid="uid://bmlfruh6i6jy7" path="res://assets/items assets/axe.glb" id="1_88ihb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_88ihb"]
+size = Vector3(0.19555664, 1.868042, 0.6543579)
+
+[node name="Axe" type="RigidBody3D" unique_id=204406245]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+
+[node name="axe" parent="." unique_id=1932123651 instance=ExtResource("1_88ihb")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1683347819]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002319336, -0.0038452148, -0.038970947)
+shape = SubResource("BoxShape3D_88ihb")

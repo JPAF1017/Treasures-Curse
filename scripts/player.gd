@@ -32,11 +32,25 @@ const BOB_AMP = 0.08
 const BASE_FOV = 75.0
 const FOV_CHANGE = 1.5
 const POSITION_LOG_INTERVAL = 0.25
+const AXE_SCENE_PATH = "res://assets/items/axe.tscn"
+const AXE_ATTACHMENT_NODE_NAME = "RightHandAxeAttachment"
+const HOTBAR_SLOT_COUNT = 5
+const HOTBAR_SELECTED_SCALE = 1.18
+const HOTBAR_DEFAULT_SCALE = 1.0
+const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
-@export var hide_visual_from_player_camera: bool = true
+@export var hide_visual_from_player_camera: bool = false
 @export_range(-360.0, 360.0, 1.0) var visual_yaw_offset_degrees: float = 180.0
+@export_range(0.5, 5.0, 0.1) var axe_pickup_max_distance: float = 2.0
+@export var axe_equip_action_name: StringName = &"interact"
+@export var right_hand_bone_name: String = "mixamorig_RightHand"
+@export var axe_hand_local_position: Vector3 = Vector3(0.03, 0.07, -0.04)
+@export var axe_hand_local_rotation_degrees: Vector3 = Vector3(-88.0, 3.0, 276.0)
+@export_range(0.1, 2.0, 0.1) var axe_hand_local_scale: float = 0.7
+@export var axe_flip_blade_face: bool = true
+@export_enum("X", "Y", "Z") var axe_blade_flip_axis: int = 0
 @export var crouch_head_y: float = -0.111
 @export_range(1.0, 30.0, 0.5) var crouch_transition_speed: float = 12.0
 @export var visual_root_path: NodePath
@@ -84,6 +98,16 @@ var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
 var damage_overlay_tween: Tween = null
+var equipped_axe: RigidBody3D = null
+var right_hand_attachment: BoneAttachment3D = null
+var equip_key_was_down: bool = false
+var hotbar_slots: Array[NinePatchRect] = []
+var hotbar_slot_base_scales: Array[Vector2] = []
+var hotbar_item_labels: Array[Label] = []
+var hotbar_item_ids: Array[String] = []
+var selected_hotbar_slot_index: int = 0
+var axe_inventory_slot_index: int = -1
+var hotbar_font: FontFile = null
 
 #function on startup
 func _ready():
@@ -96,6 +120,8 @@ func _ready():
 	_setup_stamina_ui()
 	_setup_health_ui()
 	_setup_damage_overlay()
+	_setup_hotbar_ui()
+	_select_hotbar_slot(0)
 	_update_stamina_ui()
 	_update_health_ui()
 	
@@ -143,6 +169,15 @@ func _unhandled_input(event):
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(90))
 		_sync_visual_rotation_to_head()
+	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_select_hotbar_slot((selected_hotbar_slot_index - 1 + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_select_hotbar_slot((selected_hotbar_slot_index + 1) % HOTBAR_SLOT_COUNT)
+	elif event is InputEventKey and event.pressed and not event.echo:
+		var slot_index := _hotbar_index_from_keycode(event.keycode)
+		if slot_index != -1:
+			_select_hotbar_slot(slot_index)
 
 #movement function
 func _physics_process(delta):
@@ -296,6 +331,7 @@ func _physics_process(delta):
 	move_and_slide()
 	if tired_jump_active and is_on_floor():
 		tired_jump_active = false
+	_try_auto_equip_axe()
 	_log_player_position()
 
 func set_movement_locked_by(locker: Node, locked: bool) -> void:
@@ -441,6 +477,322 @@ func _show_damage_overlay() -> void:
 
 	damage_overlay_tween = create_tween()
 	damage_overlay_tween.tween_property(damage_overlay, "modulate:a", 0.0, DAMAGE_OVERLAY_FADE_TIME)
+
+func _setup_hotbar_ui() -> void:
+	hotbar_font = load(HOTBAR_ITEM_LABEL_FONT_PATH) as FontFile
+	hotbar_slots = [
+		$CanvasLayer/Control/Hotbar/Slot1,
+		$CanvasLayer/Control/Hotbar/Slot2,
+		$CanvasLayer/Control/Hotbar/Slot3,
+		$CanvasLayer/Control/Hotbar/Slot4,
+		$CanvasLayer/Control/Hotbar/Slot5,
+	]
+	hotbar_slot_base_scales.clear()
+	hotbar_item_labels.clear()
+	hotbar_item_ids = []
+
+	for slot in hotbar_slots:
+		slot.pivot_offset = slot.size * 0.5
+		hotbar_slot_base_scales.append(slot.scale)
+		hotbar_item_ids.append("")
+		var item_label := slot.get_node_or_null("ItemLabel") as Label
+		if item_label == null:
+			item_label = Label.new()
+			item_label.name = "ItemLabel"
+			item_label.anchor_left = 0.0
+			item_label.anchor_top = 0.0
+			item_label.anchor_right = 1.0
+			item_label.anchor_bottom = 1.0
+			item_label.offset_left = 0.0
+			item_label.offset_top = 0.0
+			item_label.offset_right = 0.0
+			item_label.offset_bottom = 0.0
+			item_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			item_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			item_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			if hotbar_font:
+				item_label.add_theme_font_override("font", hotbar_font)
+			slot.add_child(item_label)
+		item_label.visible = false
+		hotbar_item_labels.append(item_label)
+
+func _select_hotbar_slot(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= hotbar_slots.size():
+		return
+
+	selected_hotbar_slot_index = slot_index
+	for i in hotbar_slots.size():
+		var slot := hotbar_slots[i]
+		var base_scale := hotbar_slot_base_scales[i] if i < hotbar_slot_base_scales.size() else Vector2.ONE
+		slot.scale = base_scale * (HOTBAR_SELECTED_SCALE if i == selected_hotbar_slot_index else HOTBAR_DEFAULT_SCALE)
+		var item_label := hotbar_item_labels[i]
+		if item_label:
+			item_label.modulate = Color(1.0, 1.0, 1.0, 1.0 if i == selected_hotbar_slot_index else 0.85)
+
+	_refresh_axe_inventory_state()
+
+func _hotbar_index_from_keycode(keycode: int) -> int:
+	match keycode:
+		KEY_1:
+			return 0
+		KEY_2:
+			return 1
+		KEY_3:
+			return 2
+		KEY_4:
+			return 3
+		KEY_5:
+			return 4
+		_:
+			return -1
+
+func _set_hotbar_item(slot_index: int, item_id: String, label_text: String) -> void:
+	if slot_index < 0 or slot_index >= hotbar_item_ids.size():
+		return
+
+	hotbar_item_ids[slot_index] = item_id
+	var item_label := hotbar_item_labels[slot_index] if slot_index < hotbar_item_labels.size() else null
+	if item_label:
+		item_label.text = label_text
+		item_label.visible = not item_id.is_empty()
+
+func _find_first_empty_hotbar_slot() -> int:
+	for i in hotbar_item_ids.size():
+		if hotbar_item_ids[i].is_empty():
+			return i
+	return -1
+
+func _pickup_axe_into_hotbar(axe_body: RigidBody3D) -> void:
+	if axe_body == null or equipped_axe != null:
+		return
+
+	var slot_index := _find_first_empty_hotbar_slot()
+	if slot_index == -1:
+		push_warning("Hotbar is full. Cannot pick up axe.")
+		return
+
+	equipped_axe = axe_body
+	axe_inventory_slot_index = slot_index
+	_set_hotbar_item(slot_index, "axe", "Axe")
+	_move_axe_into_inventory()
+	_refresh_axe_inventory_state()
+
+func _move_axe_into_inventory() -> void:
+	if equipped_axe == null:
+		return
+
+	var old_parent := equipped_axe.get_parent()
+	if old_parent:
+		old_parent.remove_child(equipped_axe)
+	add_child(equipped_axe)
+	_equipped_axe_set_physics_enabled(false)
+	_set_axe_visuals_visible(false)
+
+func _refresh_axe_inventory_state() -> void:
+	if equipped_axe == null:
+		return
+
+	if axe_inventory_slot_index == selected_hotbar_slot_index:
+		_equip_axe_to_right_hand(equipped_axe)
+	else:
+		_detach_axe_from_hand()
+
+func _detach_axe_from_hand() -> void:
+	if equipped_axe == null:
+		return
+
+	var desired_parent := self
+	if equipped_axe.get_parent() != desired_parent:
+		var old_parent := equipped_axe.get_parent()
+		if old_parent:
+			old_parent.remove_child(equipped_axe)
+		add_child(equipped_axe)
+	_equipped_axe_set_physics_enabled(false)
+	_set_axe_visuals_visible(false)
+
+func _equipped_axe_set_physics_enabled(enabled: bool) -> void:
+	if equipped_axe == null:
+		return
+
+	equipped_axe.freeze = not enabled
+	equipped_axe.sleeping = not enabled
+	equipped_axe.linear_velocity = Vector3.ZERO
+	equipped_axe.angular_velocity = Vector3.ZERO
+	equipped_axe.collision_layer = 0
+	equipped_axe.collision_mask = 0
+	var axe_collision := equipped_axe.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if axe_collision:
+		axe_collision.disabled = true
+
+func _set_axe_visuals_visible(visible: bool) -> void:
+	if equipped_axe == null:
+		return
+	_set_visual_children_visible(equipped_axe, visible)
+
+func _set_visual_children_visible(node: Node, visible: bool) -> void:
+	if node is VisualInstance3D:
+		node.visible = visible
+	for child in node.get_children():
+		_set_visual_children_visible(child, visible)
+
+func _try_auto_equip_axe() -> void:
+	if equipped_axe != null:
+		return
+	if camera == null:
+		return
+	if not _is_equip_input_just_pressed():
+		return
+
+	var origin: Vector3 = camera.global_transform.origin
+	var end: Vector3 = origin + (-camera.global_transform.basis.z * axe_pickup_max_distance)
+	var query := PhysicsRayQueryParameters3D.create(origin, end)
+	query.exclude = [self]
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	if result.is_empty():
+		return
+
+	var collider := result.get("collider") as Node
+	if collider == null:
+		return
+
+	var axe_body := _find_axe_rigidbody_from_node(collider)
+	if axe_body == null:
+		return
+
+	_pickup_axe_into_hotbar(axe_body)
+
+func _is_equip_input_just_pressed() -> bool:
+	if not axe_equip_action_name.is_empty() and InputMap.has_action(axe_equip_action_name):
+		return Input.is_action_just_pressed(axe_equip_action_name)
+
+	# Fallback to physical E key if no action is configured.
+	var is_down := Input.is_physical_key_pressed(KEY_E)
+	var just_pressed := is_down and not equip_key_was_down
+	equip_key_was_down = is_down
+	return just_pressed
+
+func _find_axe_rigidbody_from_node(node: Node) -> RigidBody3D:
+	var current: Node = node
+	while current != null:
+		if current is RigidBody3D:
+			var body := current as RigidBody3D
+			if _is_axe_node(body):
+				return body
+		if current is Node3D and _is_axe_node(current):
+			for child in current.get_children():
+				if child is RigidBody3D and _is_axe_node(child):
+					return child as RigidBody3D
+		current = current.get_parent()
+	return null
+
+func _is_axe_node(node: Node) -> bool:
+	if node == null:
+		return false
+
+	if node.scene_file_path == AXE_SCENE_PATH:
+		return true
+
+	var lower_name := node.name.to_lower()
+	if lower_name == "axe" or lower_name.ends_with("axe"):
+		return true
+
+	return false
+
+func _equip_axe_to_right_hand(axe_body: RigidBody3D) -> void:
+	if axe_body == null:
+		return
+
+	var attachment := _get_or_create_right_hand_attachment()
+	if attachment == null:
+		push_warning("Could not attach axe: right hand bone attachment is missing.")
+		return
+
+	var old_parent := axe_body.get_parent()
+	if old_parent:
+		old_parent.remove_child(axe_body)
+	attachment.add_child(axe_body)
+
+	_equipped_axe_set_physics_enabled(false)
+	_set_axe_visuals_visible(true)
+
+	axe_body.position = axe_hand_local_position
+	axe_body.rotation = Vector3(
+		deg_to_rad(axe_hand_local_rotation_degrees.x),
+		deg_to_rad(axe_hand_local_rotation_degrees.y),
+		deg_to_rad(axe_hand_local_rotation_degrees.z)
+	)
+	axe_body.scale = Vector3.ONE * axe_hand_local_scale
+	_apply_axe_blade_face_flip(axe_body)
+
+	equipped_axe = axe_body
+
+func _apply_axe_blade_face_flip(axe_body: Node3D) -> void:
+	if axe_body == null or not axe_flip_blade_face:
+		return
+
+	match axe_blade_flip_axis:
+		0:
+			axe_body.rotate_object_local(Vector3.RIGHT, PI)
+		1:
+			axe_body.rotate_object_local(Vector3.UP, PI)
+		2:
+			axe_body.rotate_object_local(Vector3.FORWARD, PI)
+
+func _get_or_create_right_hand_attachment() -> BoneAttachment3D:
+	if right_hand_attachment and is_instance_valid(right_hand_attachment):
+		return right_hand_attachment
+
+	var skeleton := _find_skeleton_recursive(visual_root)
+	if skeleton == null:
+		return null
+
+	var existing := skeleton.get_node_or_null(AXE_ATTACHMENT_NODE_NAME) as BoneAttachment3D
+	if existing:
+		right_hand_attachment = existing
+		return right_hand_attachment
+
+	var resolved_bone_name := _resolve_right_hand_bone_name(skeleton)
+	if resolved_bone_name.is_empty():
+		return null
+
+	var attachment := BoneAttachment3D.new()
+	attachment.name = AXE_ATTACHMENT_NODE_NAME
+	attachment.bone_name = resolved_bone_name
+	skeleton.add_child(attachment)
+	right_hand_attachment = attachment
+	return right_hand_attachment
+
+func _resolve_right_hand_bone_name(skeleton: Skeleton3D) -> String:
+	if skeleton == null:
+		return ""
+
+	if not right_hand_bone_name.is_empty() and skeleton.find_bone(right_hand_bone_name) != -1:
+		return right_hand_bone_name
+
+	var fallback_bone := ""
+	for i in skeleton.get_bone_count():
+		var bone_name := skeleton.get_bone_name(i)
+		var lower_name := bone_name.to_lower()
+		if lower_name.contains("right") and lower_name.contains("hand"):
+			return bone_name
+		if fallback_bone.is_empty() and lower_name.contains("hand"):
+			fallback_bone = bone_name
+
+	return fallback_bone
+
+func _find_skeleton_recursive(node: Node) -> Skeleton3D:
+	if node == null:
+		return null
+	if node is Skeleton3D:
+		return node as Skeleton3D
+	for child in node.get_children():
+		var found := _find_skeleton_recursive(child)
+		if found:
+			return found
+	return null
 
 func apply_damage(amount: float) -> void:
 	if amount <= 0.0:

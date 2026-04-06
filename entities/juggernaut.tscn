@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dnvvxvbassgxv"]
 
-[ext_resource type="Script" uid="uid://bisvnpcht4suy" path="res://scripts/juggernaut.gd" id="1_fxmnh"]
+[ext_resource type="Script" uid="uid://bisvnpcht4suy" path="res://scripts/npc/juggernaut.gd" id="1_fxmnh"]
 [ext_resource type="PackedScene" uid="uid://bdycjkv1k4dcu" path="res://assets/entities/juggernaut.glb" id="1_joxdm"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fxmnh"]

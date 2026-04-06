@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b84dvtkhuaktk"]
 
 [ext_resource type="PackedScene" uid="uid://cpeiqwo1rd3t8" path="res://assets/entities/shy.glb" id="1_6ts47"]
-[ext_resource type="Script" uid="uid://dqcdnr501prpx" path="res://scripts/shy.gd" id="1_c53tr"]
+[ext_resource type="Script" uid="uid://dqcdnr501prpx" path="res://scripts/npc/shy.gd" id="1_c53tr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c53tr"]
 radius = 0.58496094

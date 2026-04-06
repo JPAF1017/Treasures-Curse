@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
-const EnemyLocomotion := preload("res://scripts/EnemyLocomotionComponent.gd")
-const EnemyPerceptionMemory := preload("res://scripts/EnemyPerceptionMemoryComponent.gd")
+const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
+const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
 
 # Movement constants
 const WALK_SPEED = 10.0

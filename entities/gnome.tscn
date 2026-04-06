@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://by4mn7s5qkd6o"]
 
-[ext_resource type="Script" uid="uid://kphtenejjocw" path="res://scripts/gnome.gd" id="1_0diik"]
+[ext_resource type="Script" uid="uid://kphtenejjocw" path="res://scripts/npc/gnome.gd" id="1_0diik"]
 [ext_resource type="PackedScene" uid="uid://ci68ejmir8osg" path="res://assets/entities/gnome_asset.tscn" id="1_eteen"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0diik"]
