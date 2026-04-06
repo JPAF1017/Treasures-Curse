@@ -6,6 +6,11 @@
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
 [ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="5_qsoyl"]
 [ext_resource type="Texture2D" uid="uid://d2rbt1748nf7v" path="res://assets/ui/crosshairs_tilesheet_white.png" id="6_qsoyl"]
+[ext_resource type="Texture2D" uid="uid://3b05fn107wf4" path="res://assets/ui/E.png" id="7_6nm46"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
+height = 3.1091309
+radius = 0.92626953
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_27e7b"]
 radius = 0.3305664
@@ -24,6 +29,12 @@ transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 3
 script = ExtResource("1_u63mc")
 
+[node name="Attack" type="Area3D" parent="." unique_id=756317047]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attack" unique_id=1951894750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1529541, 1.0763081)
+shape = SubResource("CylinderShape3D_6nm46")
+
 [node name="Stand" type="CollisionShape3D" parent="." unique_id=1922993831]
 transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, -0.13699949, 0)
 shape = SubResource("CapsuleShape3D_27e7b")
@@ -34,7 +45,7 @@ shape = SubResource("CapsuleShape3D_b0kkn")
 disabled = true
 
 [node name="Head" type="Node3D" parent="." unique_id=882895973]
-transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 0.86899996, 1.9822272)
+transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 0.869, 0)
 
 [node name="playerCamera" type="Camera3D" parent="Head" unique_id=25879993]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0222359, 0.00750554)
@@ -54,7 +65,7 @@ spot_angle = 42.0
 spot_angle_attenuation = 2.37841
 
 [node name="player" parent="." unique_id=920360375 instance=ExtResource("2_b0kkn")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.6968677, -0.24935776)
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]
 
@@ -412,7 +423,7 @@ grow_vertical = 2
 texture = ExtResource("6_qsoyl")
 region_rect = Rect2(24, 24, 16, 16)
 
-[node name="Interact" type="Control" parent="CanvasLayer/Control" unique_id=20051029]
+[node name="Pickup" type="Control" parent="CanvasLayer/Control" unique_id=20051029]
 visible = false
 layout_mode = 1
 anchors_preset = 8
@@ -427,18 +438,22 @@ offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="CanvasLayer/Control/Interact" unique_id=20301471]
+[node name="Label" type="Label" parent="CanvasLayer/Control/Pickup" unique_id=20301471]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -19.0
-offset_top = 24.0
-offset_right = 66.0
-offset_bottom = 47.0
+offset_left = -33.5
+offset_top = 18.5
+offset_right = 51.5
+offset_bottom = 41.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "pickup"
+
+[node name="E" type="Sprite2D" parent="CanvasLayer/Control/Pickup" unique_id=1631011629]
+position = Vector2(-30, 49)
+texture = ExtResource("7_6nm46")

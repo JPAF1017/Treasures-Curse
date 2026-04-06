@@ -1,5 +1,22 @@
 extends CharacterBody3D
 
+# Reusable held item transform component
+class HeldItemTransform:
+	var local_position: Vector3
+	var local_rotation_degrees: Vector3
+	var local_scale: float
+	var flip_blade_face: bool = false
+	var blade_flip_axis: int = 0  # 0=X, 1=Y, 2=Z
+	
+	func _init(pos: Vector3, rot: Vector3, scale: float, flip: bool = false, axis: int = 0):
+		local_position = pos
+		local_rotation_degrees = rot
+		local_scale = scale
+		local_rotation_degrees = rot
+		local_scale = scale
+		flip_blade_face = flip
+		blade_flip_axis = axis
+
 #variables and constants
 const WALK_SPEED = 7.0
 const SPRINT_SPEED = 11.0
@@ -8,6 +25,8 @@ const STAMINA_MAX = 100.0
 const STAMINA_WARNING_THRESHOLD = 20.0
 const STAMINA_COLOR_NORMAL_INDEX = 18
 const STAMINA_COLOR_LOW_INDEX = 17
+const ITEM_WINDUP_COLOR_START_INDEX = 17
+const ITEM_WINDUP_COLOR_END_INDEX = 22
 const HEALTH_MAX = 100.0
 const HEALTH_COLOR_NORMAL_INDEX = 23
 const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
@@ -34,23 +53,36 @@ const FOV_CHANGE = 1.5
 const POSITION_LOG_INTERVAL = 0.25
 const AXE_SCENE_PATH = "res://assets/items/axe.tscn"
 const AXE_ATTACHMENT_NODE_NAME = "RightHandAxeAttachment"
+const SWING_ANIMATION_NAME = "swing"
+const SWING_ANIMATION_FPS = 30.0
+const SWING_WINDUP_END_FRAME = 57
+const SWING_RELEASE_FRAME = 58
+const SWING_RELEASE_SPEED_MULTIPLIER = 1.3
+const SWING_DAMAGE_FULL = 20.0
+const SWING_DAMAGE_INCOMPLETE = 7.0
+const AXE_ITEM_ICON: Texture2D = preload("res://assets/ui/axe.png")
 const HOTBAR_SLOT_COUNT = 5
 const HOTBAR_SELECTED_SCALE = 1.18
 const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
+const ITEM_DROP_FORWARD_DISTANCE = 1.0
+const ITEM_DROP_DOWN_OFFSET = -0.25
+const ITEM_DROP_FORWARD_SPEED = 2.0
+const ITEM_DROP_UPWARD_SPEED = 0.5
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
-@export var hide_visual_from_player_camera: bool = false
+@export var hide_visual_from_player_camera: bool = true
 @export_range(-360.0, 360.0, 1.0) var visual_yaw_offset_degrees: float = 180.0
 @export_range(0.5, 5.0, 0.1) var axe_pickup_max_distance: float = 2.0
 @export var axe_equip_action_name: StringName = &"interact"
 @export var right_hand_bone_name: String = "mixamorig_RightHand"
-@export var axe_hand_local_position: Vector3 = Vector3(0.03, 0.07, -0.04)
-@export var axe_hand_local_rotation_degrees: Vector3 = Vector3(-88.0, 3.0, 276.0)
-@export_range(0.1, 2.0, 0.1) var axe_hand_local_scale: float = 0.7
-@export var axe_flip_blade_face: bool = true
-@export_enum("X", "Y", "Z") var axe_blade_flip_axis: int = 0
+# Axe held item configuration (position, rotation, scale, flip blade, flip axis)
+@export var axe_held_item_position: Vector3 = Vector3(0.03, 0.07, -0.04)
+@export var axe_held_item_rotation_degrees: Vector3 = Vector3(-88.0, 90.0, 276.0)
+@export_range(0.1, 2.0, 0.1) var axe_held_item_scale: float = 0.7
+@export var axe_held_item_flip_blade: bool = true
+@export_enum("X", "Y", "Z") var axe_held_item_flip_axis: int = 0
 @export var crouch_head_y: float = -0.111
 @export_range(1.0, 30.0, 0.5) var crouch_transition_speed: float = 12.0
 @export var visual_root_path: NodePath
@@ -71,12 +103,21 @@ var health: float = HEALTH_MAX
 var previous_health: float = HEALTH_MAX
 var is_sprinting: bool = false
 var tired_jump_active: bool = false
+var is_swing_attacking: bool = false
+var swing_in_progress: bool = false
+var swing_animation_finished: bool = false
+var swing_force_release: bool = false
+var swing_was_released_early: bool = false
+var swing_damage_ready: bool = false
+var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
 var jump_phase: int = 0
 var jump_air_loop_frame: float = float(JUMP_AIR_LOOP_MIN_FRAME)
 var jump_air_loop_forward: bool = true
 var stamina_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 var stamina_color_low: Color = Color(1.0, 0.3, 0.3, 1.0)
 var health_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
+var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
+var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
@@ -86,6 +127,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var crouch_collision: CollisionShape3D = $Crouch
 @onready var camera = $Head/playerCamera
 @onready var vision_collision_shape: CollisionShape3D = $Head/playerCamera/Vision/CollisionShape3D
+@onready var attack_area: Area3D = $Attack
 @onready var visual_root: Node3D = _resolve_visual_root()
 @onready var animation_player: AnimationPlayer = _resolve_animation_player()
 @onready var stamina_bar_fill: NinePatchRect = $CanvasLayer/Control/Stamina/StaminaBarContainer
@@ -93,6 +135,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var health_bar_fill: NinePatchRect = $CanvasLayer/Control/Health/HealthBarContainer
 @onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
 @onready var player_canvas_layer: CanvasLayer = $CanvasLayer
+@onready var pickup_control: Control = $CanvasLayer/Control/Pickup
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
@@ -103,8 +146,8 @@ var right_hand_attachment: BoneAttachment3D = null
 var equip_key_was_down: bool = false
 var hotbar_slots: Array[NinePatchRect] = []
 var hotbar_slot_base_scales: Array[Vector2] = []
-var hotbar_item_labels: Array[Label] = []
-var hotbar_item_ids: Array[String] = []
+var hotbar_item_icons: Array[TextureRect] = []
+var hotbar_item_models: Array[Node3D] = []
 var selected_hotbar_slot_index: int = 0
 var axe_inventory_slot_index: int = -1
 var hotbar_font: FontFile = null
@@ -115,10 +158,12 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	floor_snap_length = 0.7
 	_configure_vision_area()
+	_set_control_mouse_filter_recursive(pickup_control, Control.MOUSE_FILTER_IGNORE)
 	initial_head_position = head.position
 	target_head_y = initial_head_position.y
 	_setup_stamina_ui()
 	_setup_health_ui()
+	_setup_item_windup_palette_colors()
 	_setup_damage_overlay()
 	_setup_hotbar_ui()
 	_select_hotbar_slot(0)
@@ -169,12 +214,43 @@ func _unhandled_input(event):
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(90))
 		_sync_visual_rotation_to_head()
-	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_select_hotbar_slot((selected_hotbar_slot_index - 1 + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_select_hotbar_slot((selected_hotbar_slot_index + 1) % HOTBAR_SLOT_COUNT)
+	elif event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				if not _can_trigger_swing_from_selected_slot():
+					is_swing_attacking = false
+					return
+
+				if not swing_in_progress:
+					swing_animation_finished = false
+					is_swing_attacking = true
+					swing_in_progress = true
+					swing_force_release = false
+					swing_was_released_early = false
+					swing_damage_ready = false
+					current_swing_damage = SWING_DAMAGE_INCOMPLETE
+					set_movement_locked_by(self, true)
+				elif swing_in_progress and _is_swing_in_windup():
+					swing_force_release = true
+					swing_was_released_early = true
+			else:
+				is_swing_attacking = false
+				if swing_in_progress and _is_swing_in_windup():
+					swing_force_release = true
+					swing_was_released_early = true
+				# Rearm input for the next click once not in-progress.
+				if not swing_in_progress:
+					swing_animation_finished = false
+		elif event.pressed:
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				_select_hotbar_slot((selected_hotbar_slot_index - 1 + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT)
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				_select_hotbar_slot((selected_hotbar_slot_index + 1) % HOTBAR_SLOT_COUNT)
 	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_Q:
+			_drop_selected_hotbar_item()
+			return
+
 		var slot_index := _hotbar_index_from_keycode(event.keycode)
 		if slot_index != -1:
 			_select_hotbar_slot(slot_index)
@@ -244,6 +320,9 @@ func _physics_process(delta):
 		stamina_refill_delay_timer = max(stamina_refill_delay_timer - delta, 0.0)
 	elif not is_sprinting:
 		stamina = min(stamina + STAMINA_REFILL_PER_SECOND * delta, STAMINA_MAX)
+	_update_pickup_prompt_visibility()
+	_update_held_item_visibility_for_sprint()
+	_update_hotbar_windup_indicator()
 	_update_stamina_ui()
 #------------------------------------------------------
 #wasd direction input and other physics
@@ -251,6 +330,7 @@ func _physics_process(delta):
 	
 	# Animation handling
 	if animation_player:
+		var swing_anim_active := _update_swing_animation()
 		var jump_anim_active := _update_jump_animation_phase(delta)
 		var is_walking_forward := input_dir.y < 0.0
 		var is_walking_backward := input_dir.y > 0.0
@@ -258,7 +338,9 @@ func _physics_process(delta):
 		var is_strafing_right := input_dir.x > 0.0
 		var wants_run := is_sprinting
 		var grounded_animation_state := is_on_floor() or tired_jump_active
-		if jump_anim_active:
+		if swing_anim_active:
+			pass
+		elif jump_anim_active:
 			pass
 		elif grounded_animation_state:
 			if is_crouching:
@@ -488,33 +570,32 @@ func _setup_hotbar_ui() -> void:
 		$CanvasLayer/Control/Hotbar/Slot5,
 	]
 	hotbar_slot_base_scales.clear()
-	hotbar_item_labels.clear()
-	hotbar_item_ids = []
+	hotbar_item_icons.clear()
+	hotbar_item_models = []
 
 	for slot in hotbar_slots:
 		slot.pivot_offset = slot.size * 0.5
 		hotbar_slot_base_scales.append(slot.scale)
-		hotbar_item_ids.append("")
-		var item_label := slot.get_node_or_null("ItemLabel") as Label
-		if item_label == null:
-			item_label = Label.new()
-			item_label.name = "ItemLabel"
-			item_label.anchor_left = 0.0
-			item_label.anchor_top = 0.0
-			item_label.anchor_right = 1.0
-			item_label.anchor_bottom = 1.0
-			item_label.offset_left = 0.0
-			item_label.offset_top = 0.0
-			item_label.offset_right = 0.0
-			item_label.offset_bottom = 0.0
-			item_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			item_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			item_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			if hotbar_font:
-				item_label.add_theme_font_override("font", hotbar_font)
-			slot.add_child(item_label)
-		item_label.visible = false
-		hotbar_item_labels.append(item_label)
+		hotbar_item_models.append(null)
+		var item_icon := slot.get_node_or_null("ItemIcon") as TextureRect
+		if item_icon == null:
+			item_icon = TextureRect.new()
+			item_icon.name = "ItemIcon"
+			item_icon.anchor_left = 0.0
+			item_icon.anchor_top = 0.0
+			item_icon.anchor_right = 1.0
+			item_icon.anchor_bottom = 1.0
+			item_icon.offset_left = 4.0
+			item_icon.offset_top = 4.0
+			item_icon.offset_right = -4.0
+			item_icon.offset_bottom = -4.0
+			item_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			item_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			item_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(item_icon)
+		item_icon.texture = AXE_ITEM_ICON
+		item_icon.visible = false
+		hotbar_item_icons.append(item_icon)
 
 func _select_hotbar_slot(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= hotbar_slots.size():
@@ -525,11 +606,9 @@ func _select_hotbar_slot(slot_index: int) -> void:
 		var slot := hotbar_slots[i]
 		var base_scale := hotbar_slot_base_scales[i] if i < hotbar_slot_base_scales.size() else Vector2.ONE
 		slot.scale = base_scale * (HOTBAR_SELECTED_SCALE if i == selected_hotbar_slot_index else HOTBAR_DEFAULT_SCALE)
-		var item_label := hotbar_item_labels[i]
-		if item_label:
-			item_label.modulate = Color(1.0, 1.0, 1.0, 1.0 if i == selected_hotbar_slot_index else 0.85)
 
 	_refresh_axe_inventory_state()
+	_update_hotbar_windup_indicator()
 
 func _hotbar_index_from_keycode(keycode: int) -> int:
 	match keycode:
@@ -546,21 +625,107 @@ func _hotbar_index_from_keycode(keycode: int) -> int:
 		_:
 			return -1
 
-func _set_hotbar_item(slot_index: int, item_id: String, label_text: String) -> void:
-	if slot_index < 0 or slot_index >= hotbar_item_ids.size():
+func _set_hotbar_item(slot_index: int, item_model: Node3D, item_icon_texture: Texture2D) -> void:
+	if slot_index < 0 or slot_index >= hotbar_item_models.size():
 		return
 
-	hotbar_item_ids[slot_index] = item_id
-	var item_label := hotbar_item_labels[slot_index] if slot_index < hotbar_item_labels.size() else null
-	if item_label:
-		item_label.text = label_text
-		item_label.visible = not item_id.is_empty()
+	hotbar_item_models[slot_index] = item_model
+	var item_icon := hotbar_item_icons[slot_index] if slot_index < hotbar_item_icons.size() else null
+	if item_icon:
+		item_icon.texture = item_icon_texture
+		item_icon.visible = item_icon_texture != null
 
 func _find_first_empty_hotbar_slot() -> int:
-	for i in hotbar_item_ids.size():
-		if hotbar_item_ids[i].is_empty():
+	for i in hotbar_item_models.size():
+		var item_model := hotbar_item_models[i]
+		if item_model == null or not is_instance_valid(item_model):
 			return i
 	return -1
+
+func _can_trigger_swing_from_selected_slot() -> bool:
+	if selected_hotbar_slot_index < 0 or selected_hotbar_slot_index >= hotbar_item_models.size():
+		return false
+
+	var selected_item := hotbar_item_models[selected_hotbar_slot_index]
+	if selected_item == null or not is_instance_valid(selected_item):
+		return false
+
+	# Swing is only valid when the selected slot corresponds to the currently equipped held item.
+	return selected_item == equipped_axe
+
+func _get_item_display_name_from_model(item_node: Node) -> String:
+	if item_node == null:
+		return "Item"
+
+	var raw_name := item_node.name
+	if raw_name.is_empty():
+		return "Item"
+
+	var words := raw_name.replace("-", " ").replace("_", " ").split(" ", false)
+	if words.is_empty():
+		return raw_name
+
+	for i in words.size():
+		words[i] = words[i].capitalize()
+
+	return " ".join(words)
+
+func _drop_selected_hotbar_item() -> void:
+	if selected_hotbar_slot_index < 0 or selected_hotbar_slot_index >= hotbar_item_models.size():
+		return
+
+	var selected_item_model := hotbar_item_models[selected_hotbar_slot_index]
+	if selected_item_model == null or not is_instance_valid(selected_item_model):
+		return
+
+	if selected_item_model == equipped_axe:
+		_drop_axe_from_slot(selected_hotbar_slot_index)
+	else:
+		push_warning("Drop not implemented for selected item model: %s" % selected_item_model.name)
+
+func _drop_axe_from_slot(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= hotbar_item_models.size():
+		return
+
+	if equipped_axe == null:
+		_set_hotbar_item(slot_index, null, null)
+		axe_inventory_slot_index = -1
+		_update_pickup_prompt_visibility()
+		return
+
+	var dropped_item := equipped_axe
+	var world_root := get_tree().current_scene
+	if world_root == null:
+		world_root = get_parent()
+
+	var drop_origin := dropped_item.global_position
+	if camera:
+		drop_origin = camera.global_position + (-camera.global_transform.basis.z * ITEM_DROP_FORWARD_DISTANCE) + Vector3(0.0, ITEM_DROP_DOWN_OFFSET, 0.0)
+
+	var old_parent := dropped_item.get_parent()
+	if old_parent:
+		old_parent.remove_child(dropped_item)
+
+	if world_root:
+		world_root.add_child(dropped_item)
+	else:
+		add_child(dropped_item)
+
+	dropped_item.global_position = drop_origin
+	_set_item_visuals_visible(dropped_item, true)
+	_set_item_physics_enabled(dropped_item, true)
+
+	if dropped_item is RigidBody3D:
+		var dropped_rigid_body := dropped_item as RigidBody3D
+		var forward := -global_transform.basis.z
+		if camera:
+			forward = -camera.global_transform.basis.z
+		dropped_rigid_body.linear_velocity = (forward * ITEM_DROP_FORWARD_SPEED) + (Vector3.UP * ITEM_DROP_UPWARD_SPEED)
+
+	_set_hotbar_item(slot_index, null, null)
+	axe_inventory_slot_index = -1
+	equipped_axe = null
+	_update_pickup_prompt_visibility()
 
 func _pickup_axe_into_hotbar(axe_body: RigidBody3D) -> void:
 	if axe_body == null or equipped_axe != null:
@@ -573,9 +738,10 @@ func _pickup_axe_into_hotbar(axe_body: RigidBody3D) -> void:
 
 	equipped_axe = axe_body
 	axe_inventory_slot_index = slot_index
-	_set_hotbar_item(slot_index, "axe", "Axe")
+	_set_hotbar_item(slot_index, axe_body, AXE_ITEM_ICON)
 	_move_axe_into_inventory()
 	_refresh_axe_inventory_state()
+	_update_pickup_prompt_visibility()
 
 func _move_axe_into_inventory() -> void:
 	if equipped_axe == null:
@@ -585,8 +751,8 @@ func _move_axe_into_inventory() -> void:
 	if old_parent:
 		old_parent.remove_child(equipped_axe)
 	add_child(equipped_axe)
-	_equipped_axe_set_physics_enabled(false)
-	_set_axe_visuals_visible(false)
+	_set_item_physics_enabled(equipped_axe, false)
+	_set_item_visuals_visible(equipped_axe, false)
 
 func _refresh_axe_inventory_state() -> void:
 	if equipped_axe == null:
@@ -596,6 +762,15 @@ func _refresh_axe_inventory_state() -> void:
 		_equip_axe_to_right_hand(equipped_axe)
 	else:
 		_detach_axe_from_hand()
+
+	_update_held_item_visibility_for_sprint()
+
+func _update_held_item_visibility_for_sprint() -> void:
+	if equipped_axe == null:
+		return
+
+	var should_be_visible := axe_inventory_slot_index == selected_hotbar_slot_index and not is_sprinting
+	_set_item_visuals_visible(equipped_axe, should_be_visible)
 
 func _detach_axe_from_hand() -> void:
 	if equipped_axe == null:
@@ -607,27 +782,8 @@ func _detach_axe_from_hand() -> void:
 		if old_parent:
 			old_parent.remove_child(equipped_axe)
 		add_child(equipped_axe)
-	_equipped_axe_set_physics_enabled(false)
-	_set_axe_visuals_visible(false)
-
-func _equipped_axe_set_physics_enabled(enabled: bool) -> void:
-	if equipped_axe == null:
-		return
-
-	equipped_axe.freeze = not enabled
-	equipped_axe.sleeping = not enabled
-	equipped_axe.linear_velocity = Vector3.ZERO
-	equipped_axe.angular_velocity = Vector3.ZERO
-	equipped_axe.collision_layer = 0
-	equipped_axe.collision_mask = 0
-	var axe_collision := equipped_axe.get_node_or_null("CollisionShape3D") as CollisionShape3D
-	if axe_collision:
-		axe_collision.disabled = true
-
-func _set_axe_visuals_visible(visible: bool) -> void:
-	if equipped_axe == null:
-		return
-	_set_visual_children_visible(equipped_axe, visible)
+	_set_item_physics_enabled(equipped_axe, false)
+	_set_item_visuals_visible(equipped_axe, false)
 
 func _set_visual_children_visible(node: Node, visible: bool) -> void:
 	if node is VisualInstance3D:
@@ -638,10 +794,18 @@ func _set_visual_children_visible(node: Node, visible: bool) -> void:
 func _try_auto_equip_axe() -> void:
 	if equipped_axe != null:
 		return
-	if camera == null:
-		return
 	if not _is_equip_input_just_pressed():
 		return
+
+	var axe_body := _get_pickup_candidate()
+	if axe_body == null:
+		return
+
+	_pickup_axe_into_hotbar(axe_body)
+
+func _get_pickup_candidate() -> RigidBody3D:
+	if camera == null:
+		return null
 
 	var origin: Vector3 = camera.global_transform.origin
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * axe_pickup_max_distance)
@@ -652,17 +816,28 @@ func _try_auto_equip_axe() -> void:
 
 	var result := get_world_3d().direct_space_state.intersect_ray(query)
 	if result.is_empty():
-		return
+		return null
 
 	var collider := result.get("collider") as Node
 	if collider == null:
+		return null
+
+	return _find_axe_rigidbody_from_node(collider)
+
+func _update_pickup_prompt_visibility() -> void:
+	if pickup_control == null:
 		return
 
-	var axe_body := _find_axe_rigidbody_from_node(collider)
-	if axe_body == null:
+	pickup_control.visible = equipped_axe == null and _get_pickup_candidate() != null
+
+func _set_control_mouse_filter_recursive(node: Control, mouse_filter: int) -> void:
+	if node == null:
 		return
 
-	_pickup_axe_into_hotbar(axe_body)
+	node.mouse_filter = mouse_filter
+	for child in node.get_children():
+		if child is Control:
+			_set_control_mouse_filter_recursive(child as Control, mouse_filter)
 
 func _is_equip_input_just_pressed() -> bool:
 	if not axe_equip_action_name.is_empty() and InputMap.has_action(axe_equip_action_name):
@@ -705,41 +880,74 @@ func _equip_axe_to_right_hand(axe_body: RigidBody3D) -> void:
 	if axe_body == null:
 		return
 
-	var attachment := _get_or_create_right_hand_attachment()
-	if attachment == null:
-		push_warning("Could not attach axe: right hand bone attachment is missing.")
-		return
-
-	var old_parent := axe_body.get_parent()
-	if old_parent:
-		old_parent.remove_child(axe_body)
-	attachment.add_child(axe_body)
-
-	_equipped_axe_set_physics_enabled(false)
-	_set_axe_visuals_visible(true)
-
-	axe_body.position = axe_hand_local_position
-	axe_body.rotation = Vector3(
-		deg_to_rad(axe_hand_local_rotation_degrees.x),
-		deg_to_rad(axe_hand_local_rotation_degrees.y),
-		deg_to_rad(axe_hand_local_rotation_degrees.z)
+	var held_item := HeldItemTransform.new(
+		axe_held_item_position,
+		axe_held_item_rotation_degrees,
+		axe_held_item_scale,
+		axe_held_item_flip_blade,
+		axe_held_item_flip_axis
 	)
-	axe_body.scale = Vector3.ONE * axe_hand_local_scale
-	_apply_axe_blade_face_flip(axe_body)
-
+	_equip_item_to_hand(axe_body, held_item)
 	equipped_axe = axe_body
 
-func _apply_axe_blade_face_flip(axe_body: Node3D) -> void:
-	if axe_body == null or not axe_flip_blade_face:
+func _equip_item_to_hand(item_body: Node3D, held_item: HeldItemTransform) -> void:
+	if item_body == null or held_item == null:
 		return
 
-	match axe_blade_flip_axis:
+	var attachment := _get_or_create_right_hand_attachment()
+	if attachment == null:
+		push_warning("Could not attach item: right hand bone attachment is missing.")
+		return
+
+	var old_parent := item_body.get_parent()
+	if old_parent:
+		old_parent.remove_child(item_body)
+	attachment.add_child(item_body)
+
+	_set_item_physics_enabled(item_body, false)
+	_set_item_visuals_visible(item_body, true)
+
+	item_body.position = held_item.local_position
+	item_body.rotation = Vector3(
+		deg_to_rad(held_item.local_rotation_degrees.x),
+		deg_to_rad(held_item.local_rotation_degrees.y),
+		deg_to_rad(held_item.local_rotation_degrees.z)
+	)
+	item_body.scale = Vector3.ONE * held_item.local_scale
+	_apply_item_blade_flip(item_body, held_item)
+
+func _apply_item_blade_flip(item_body: Node3D, held_item: HeldItemTransform) -> void:
+	if item_body == null or not held_item.flip_blade_face:
+		return
+
+	match held_item.blade_flip_axis:
 		0:
-			axe_body.rotate_object_local(Vector3.RIGHT, PI)
+			item_body.rotate_object_local(Vector3.RIGHT, PI)
 		1:
-			axe_body.rotate_object_local(Vector3.UP, PI)
+			item_body.rotate_object_local(Vector3.UP, PI)
 		2:
-			axe_body.rotate_object_local(Vector3.FORWARD, PI)
+			item_body.rotate_object_local(Vector3.FORWARD, PI)
+
+func _set_item_physics_enabled(item_body: Node3D, enabled: bool) -> void:
+	if item_body == null:
+		return
+
+	if item_body is RigidBody3D:
+		var rigid_body = item_body as RigidBody3D
+		rigid_body.freeze = not enabled
+		rigid_body.sleeping = not enabled
+		rigid_body.linear_velocity = Vector3.ZERO
+		rigid_body.angular_velocity = Vector3.ZERO
+		rigid_body.collision_layer = 0 if not enabled else 1
+		rigid_body.collision_mask = 0 if not enabled else 1
+		var item_collision := rigid_body.get_node_or_null("CollisionShape3D") as CollisionShape3D
+		if item_collision:
+			item_collision.disabled = not enabled
+
+func _set_item_visuals_visible(item_body: Node3D, visible: bool) -> void:
+	if item_body == null:
+		return
+	_set_visual_children_visible(item_body, visible)
 
 func _get_or_create_right_hand_attachment() -> BoneAttachment3D:
 	if right_hand_attachment and is_instance_valid(right_hand_attachment):
@@ -826,6 +1034,55 @@ func _setup_health_palette_colors() -> void:
 		return
 
 	health_color_normal = _get_palette_color(palette_image, HEALTH_COLOR_NORMAL_INDEX, health_color_normal)
+
+func _setup_item_windup_palette_colors() -> void:
+	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
+	if palette_texture == null:
+		push_warning("Item windup palette texture not found at: %s" % STAMINA_PALETTE_PATH)
+		return
+
+	var palette_image := palette_texture.get_image()
+	if palette_image == null or palette_image.is_empty():
+		push_warning("Item windup palette image is empty: %s" % STAMINA_PALETTE_PATH)
+		return
+
+	item_windup_color_start = _get_palette_color(palette_image, ITEM_WINDUP_COLOR_START_INDEX, item_windup_color_start)
+	item_windup_color_end = _get_palette_color(palette_image, ITEM_WINDUP_COLOR_END_INDEX, item_windup_color_end)
+
+func _update_hotbar_windup_indicator() -> void:
+	for i in hotbar_item_icons.size():
+		var item_icon := hotbar_item_icons[i]
+		if item_icon == null:
+			continue
+
+		var alpha := 1.0 if i == selected_hotbar_slot_index else 0.85
+		var icon_color := Color(1.0, 1.0, 1.0, alpha)
+
+		if i == selected_hotbar_slot_index and hotbar_item_models[i] == equipped_axe and equipped_axe != null:
+			if _is_swing_windup_active():
+				var windup_percent := _get_swing_windup_percent()
+				var windup_color := item_windup_color_start.lerp(item_windup_color_end, windup_percent)
+				icon_color = Color(windup_color.r, windup_color.g, windup_color.b, alpha)
+
+		item_icon.modulate = icon_color
+
+func _get_swing_windup_percent() -> float:
+	if not _is_swing_windup_active():
+		return 0.0
+
+	var release_time := _swing_frame_to_time(SWING_RELEASE_FRAME)
+	if release_time <= 0.0:
+		return 0.0
+
+	return clampf(animation_player.current_animation_position / release_time, 0.0, 1.0)
+
+func _is_swing_windup_active() -> bool:
+	if not swing_in_progress or animation_player == null:
+		return false
+	if animation_player.current_animation != SWING_ANIMATION_NAME:
+		return false
+
+	return animation_player.current_animation_position < _swing_frame_to_time(SWING_RELEASE_FRAME)
 
 func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Color) -> Color:
 	if one_based_index <= 0:
@@ -977,3 +1234,101 @@ func _update_jump_animation_phase(delta: float) -> bool:
 		return false
 
 	return true
+
+func _update_swing_animation() -> bool:
+	if animation_player == null:
+		if swing_in_progress:
+			swing_in_progress = false
+			swing_force_release = false
+			swing_damage_ready = false
+			set_movement_locked_by(self, false)
+		return false
+	if not animation_player.has_animation(SWING_ANIMATION_NAME):
+		if swing_in_progress:
+			swing_in_progress = false
+			swing_force_release = false
+			swing_damage_ready = false
+			set_movement_locked_by(self, false)
+		return false
+	
+	if swing_in_progress:
+		if animation_player.current_animation != SWING_ANIMATION_NAME:
+			animation_player.play(SWING_ANIMATION_NAME)
+		
+		var swing_animation := animation_player.get_animation(SWING_ANIMATION_NAME)
+		if swing_animation == null:
+			swing_in_progress = false
+			swing_force_release = false
+			swing_damage_ready = false
+			set_movement_locked_by(self, false)
+			return false
+
+		var release_time := _swing_frame_to_time(SWING_RELEASE_FRAME)
+		if animation_player.current_animation_position < release_time and swing_force_release:
+			animation_player.seek(release_time, true)
+			swing_force_release = false
+			swing_was_released_early = true
+
+		# Keep windup at normal speed, then speed up committed swing by 30%.
+		animation_player.speed_scale = SWING_RELEASE_SPEED_MULTIPLIER if animation_player.current_animation_position >= release_time else 1.0
+
+		if not swing_damage_ready and animation_player.current_animation_position >= release_time:
+			swing_damage_ready = true
+			current_swing_damage = SWING_DAMAGE_INCOMPLETE if swing_was_released_early else SWING_DAMAGE_FULL
+			stamina = max(stamina - 60.0, 0.0)
+			if stamina <= 0.0:
+				stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
+			_apply_attack_damage(current_swing_damage)
+		
+		# Check if animation is finished
+		if animation_player.current_animation_position >= swing_animation.length - 0.02:
+			swing_in_progress = false
+			swing_animation_finished = true
+			swing_force_release = false
+			animation_player.speed_scale = 1.0
+			set_movement_locked_by(self, false)
+			return false
+		
+		return true
+
+	return false
+
+func _swing_frame_to_time(frame: int) -> float:
+	return max(frame - 1, 0) / SWING_ANIMATION_FPS
+
+func _is_swing_in_windup() -> bool:
+	if not swing_in_progress or animation_player == null:
+		return false
+	if animation_player.current_animation != SWING_ANIMATION_NAME:
+		return true
+
+	return animation_player.current_animation_position < _swing_frame_to_time(SWING_RELEASE_FRAME)
+
+func _apply_attack_damage(amount: float) -> void:
+	if attack_area == null or amount <= 0.0:
+		return
+
+	var damaged_nodes: Array[Node] = []
+	for body in attack_area.get_overlapping_bodies():
+		var target := _find_damage_target(body)
+		if target != null and not damaged_nodes.has(target):
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", amount)
+				damaged_nodes.append(target)
+
+	for area in attack_area.get_overlapping_areas():
+		var target := _find_damage_target(area)
+		if target != null and not damaged_nodes.has(target):
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", amount)
+				damaged_nodes.append(target)
+
+func _find_damage_target(node: Node) -> Node:
+	var current: Node = node
+	while current != null:
+		if current == self:
+			return null
+		if current.has_method("apply_damage"):
+			return current
+		current = current.get_parent()
+	return null

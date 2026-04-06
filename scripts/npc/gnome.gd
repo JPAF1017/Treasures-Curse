@@ -26,7 +26,7 @@ const BUMP_STEP_VELOCITY := 2.0
 const BUMP_STEP_COOLDOWN := 0.15
 const CROUCH_DETECTION_RAY_LENGTH := 8.0
 
-@export var facing_offset_degrees: float = -90.0
+@export var facing_offset_degrees: float = 180.0
 @export var debug_memory_logs: bool = false
 
 var move_direction: Vector3 = Vector3.ZERO
