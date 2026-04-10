@@ -2,7 +2,9 @@ extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
+const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 
+const HEALTH_MAX := 10.0
 const GRAVITY := 20.0
 const WALK_SPEED := 1.8
 const RUN_SPEED := 4.0
@@ -25,11 +27,18 @@ const MEMORY_LOG_INTERVAL := 0.25
 const BUMP_STEP_VELOCITY := 2.0
 const BUMP_STEP_COOLDOWN := 0.15
 const CROUCH_DETECTION_RAY_LENGTH := 8.0
+const ATTACK_SWING_COOLDOWN := 2.0
+const ATTACK_SWING_DAMAGE := 5.0
+const DEATH_LINGER_TIME := 5.0
+const STUN_WALK_ANIMATION_SPEED_SCALE := 0.45
+const GRAB_ESCAPE_REQUIRED_JUMPS := 10
+const GRAB_REACQUIRE_COOLDOWN := 0.8
 
 @export var facing_offset_degrees: float = 180.0
 @export var debug_memory_logs: bool = false
 
 var move_direction: Vector3 = Vector3.ZERO
+var health: float = HEALTH_MAX
 var direction_change_timer: float = 0.0
 var animation_player: AnimationPlayer = null
 var detect_area: Area3D = null
@@ -57,6 +66,13 @@ var path_cache_timer: float = 0.0
 var cached_nav_path: Array[Vector3] = []
 var last_reachable_target_position: Vector3 = Vector3.ZERO
 var space_state: PhysicsDirectSpaceState3D = null
+var attack_swing_cooldown_timer: float = 0.0
+var is_dead: bool = false
+var is_stunned: bool = false
+var stun_timer: float = 0.0
+var stun_walk_visual_active: bool = false
+var grab_escape_jump_count: int = 0
+var grab_reacquire_timer: float = 0.0
 
 func _ready() -> void:
 	randomize()
@@ -81,6 +97,12 @@ func _ready() -> void:
 	_play_walk_animation()
 
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		return
+
+	stun_timer = max(stun_timer - delta, 0.0)
+	is_stunned = stun_timer > 0.0
+
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	los_memory_timer = max(los_memory_timer - delta, 0.0)
 	chase_memory_timer = max(chase_memory_timer - delta, 0.0)
@@ -89,9 +111,27 @@ func _physics_process(delta: float) -> void:
 	los_loss_grace_timer = max(los_loss_grace_timer - delta, 0.0)
 	path_cache_timer = max(path_cache_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
+	attack_swing_cooldown_timer = max(attack_swing_cooldown_timer - delta, 0.0)
+	grab_reacquire_timer = max(grab_reacquire_timer - delta, 0.0)
 	_refresh_player_detection()
 
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
+
+	if is_stunned:
+		_lock_grabbed_player(false)
+		grabbed_player = null
+		target_player = null
+		attack_range_player = null
+		is_player_in_detect = false
+		is_player_in_chase = false
+		is_player_in_attack_range = false
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_stunned_walk_animation()
+		move_and_slide()
+		return
+	elif stun_walk_visual_active:
+		_restore_walk_animation_speed()
 
 	if is_player_in_attack_range and _has_valid_attack_range_player():
 		_update_attack_range_state(delta)
@@ -356,9 +396,21 @@ func _update_wander_movement(delta: float) -> void:
 	_face_direction(move_direction, delta)
 
 func _update_attack_range_state(delta: float) -> void:
-	if grabbed_player == null and _has_valid_attack_range_player() and _can_lock_player(attack_range_player):
+	if is_stunned:
+		return
+
+	if _has_valid_grabbed_player() and not _can_grab_player_on_ground(grabbed_player):
+		_interrupt_grab()
+
+	if _has_valid_grabbed_player() and Input.is_action_just_pressed("ui_accept"):
+		grab_escape_jump_count += 1
+		if grab_escape_jump_count >= GRAB_ESCAPE_REQUIRED_JUMPS:
+			_interrupt_grab()
+
+	if grabbed_player == null and grab_reacquire_timer <= 0.0 and _has_valid_attack_range_player() and _can_grab_player_on_ground(attack_range_player) and _can_lock_player(attack_range_player):
 		grabbed_player = attack_range_player
 		_lock_grabbed_player(true)
+		grab_escape_jump_count = 0
 
 	velocity.x = 0.0
 	velocity.z = 0.0
@@ -419,17 +471,61 @@ func _play_grab_animation() -> void:
 func _play_attack_animation() -> void:
 	if not animation_player:
 		return
+	if is_stunned:
+		return
+
+	if attack_swing_cooldown_timer > 0.0:
+		return
 
 	if animation_player.has_animation("attack"):
 		if animation_player.current_animation != "attack" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("attack")
+			attack_swing_cooldown_timer = ATTACK_SWING_COOLDOWN
+			_try_apply_attack_swing_damage()
 	elif animation_player.has_animation("run"):
 		if animation_player.current_animation != "run" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("run")
 
+func _try_apply_attack_swing_damage() -> void:
+	if attack_range_area == null:
+		return
+
+	for body in attack_range_area.get_overlapping_bodies():
+		if not (body is CharacterBody3D):
+			continue
+		if body == self:
+			continue
+		if not body.is_in_group("player"):
+			continue
+		_apply_damage_to_player(body, ATTACK_SWING_DAMAGE)
+
+func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+
+	if target.has_method("apply_damage"):
+		target.call("apply_damage", damage)
+		return
+	if target.has_method("take_damage"):
+		target.call("take_damage", damage)
+		return
+
+	var current_health = target.get("health")
+	if current_health == null:
+		return
+
+	var next_health := maxf(float(current_health) - damage, 0.0)
+	target.set("health", next_health)
+	if target.has_method("_update_health_ui"):
+		target.call("_update_health_ui")
+
 func _on_detect_body_entered(body: Node3D) -> void:
+	if is_dead:
+		return
+	if is_stunned:
+		return
 	if not (body is CharacterBody3D):
 		return
 	if not body.is_in_group("player"):
@@ -472,6 +568,10 @@ func _on_detect_body_exited(body: Node3D) -> void:
 		target_player = null
 
 func _on_chase_body_entered(body: Node3D) -> void:
+	if is_dead:
+		return
+	if is_stunned:
+		return
 	if not (body is CharacterBody3D):
 		return
 	if not body.is_in_group("player"):
@@ -514,15 +614,20 @@ func _on_chase_body_exited(body: Node3D) -> void:
 		target_player = null
 
 func _on_attack_range_body_entered(body: Node3D) -> void:
+	if is_dead:
+		return
+	if is_stunned:
+		return
 	if not (body is CharacterBody3D):
 		return
 	if not body.is_in_group("player"):
 		return
 
 	attack_range_player = body
-	if _can_lock_player(attack_range_player):
+	if grab_reacquire_timer <= 0.0 and _can_grab_player_on_ground(attack_range_player) and _can_lock_player(attack_range_player):
 		grabbed_player = attack_range_player
 		_lock_grabbed_player(true)
+		grab_escape_jump_count = 0
 	else:
 		grabbed_player = null
 	target_player = body
@@ -535,10 +640,9 @@ func _on_attack_range_body_exited(body: Node3D) -> void:
 	if body != attack_range_player:
 		return
 
-	_lock_grabbed_player(false)
+	_interrupt_grab(false)
 	is_player_in_attack_range = false
 	attack_range_player = null
-	grabbed_player = null
 
 func _lock_grabbed_player(locked: bool) -> void:
 	if grabbed_player == null:
@@ -553,8 +657,102 @@ func _can_lock_player(player: CharacterBody3D) -> bool:
 		return true
 	return not bool(player.call("is_movement_locked_by_other", self))
 
+func _can_grab_player_on_ground(player: CharacterBody3D) -> bool:
+	if player == null or not is_instance_valid(player):
+		return false
+	return player.is_on_floor()
+
 func _exit_tree() -> void:
+	_interrupt_grab(false)
+
+func apply_damage(amount: float) -> void:
+	if is_dead:
+		return
+	if amount <= 0.0:
+		return
+
+	_interrupt_grab()
+	health = maxf(health - amount, 0.0)
+	if health <= 0.0:
+		_die()
+
+func apply_stun_state(duration: float) -> void:
+	if is_dead:
+		return
+	if duration <= 0.0:
+		return
+
+	stun_timer = max(stun_timer, duration)
+	is_stunned = true
+	_interrupt_grab()
+	attack_range_player = null
+	target_player = null
+	is_player_in_detect = false
+	is_player_in_chase = false
+	is_player_in_attack_range = false
+
+func _play_stunned_walk_animation() -> void:
+	if animation_player == null:
+		return
+	if not animation_player.has_animation("walk"):
+		return
+
+	var walk_animation := animation_player.get_animation("walk")
+	if walk_animation and walk_animation.loop_mode == Animation.LOOP_NONE:
+		walk_animation.loop_mode = Animation.LOOP_LINEAR
+
+	if animation_player.current_animation != "walk":
+		animation_player.play("walk")
+	elif not animation_player.is_playing():
+		animation_player.play("walk")
+
+	animation_player.speed_scale = STUN_WALK_ANIMATION_SPEED_SCALE
+	stun_walk_visual_active = true
+
+func _restore_walk_animation_speed() -> void:
+	stun_walk_visual_active = false
+	if animation_player:
+		animation_player.speed_scale = 1.0
+
+func _die() -> void:
+	if is_dead:
+		return
+
+	is_dead = true
+	health = 0.0
+	is_stunned = false
+	stun_timer = 0.0
+	_restore_walk_animation_speed()
+	_interrupt_grab(false)
+	target_player = null
+	attack_range_player = null
+	is_player_in_detect = false
+	is_player_in_chase = false
+	is_player_in_attack_range = false
+	velocity = Vector3.ZERO
+	attack_swing_cooldown_timer = ATTACK_SWING_COOLDOWN
+
+	if detect_area:
+		detect_area.monitoring = false
+	if chase_area:
+		chase_area.monitoring = false
+	if attack_range_area:
+		attack_range_area.monitoring = false
+
+	await EnemyDeathLinger.run_death_linger(
+		self,
+		animation_player,
+		DEATH_LINGER_TIME,
+		[detect_area, chase_area, attack_range_area],
+		[&"death", &"die"]
+	)
+
+func _interrupt_grab(start_reacquire_cooldown: bool = true) -> void:
 	_lock_grabbed_player(false)
+	grabbed_player = null
+	grab_escape_jump_count = 0
+	if start_reacquire_cooldown:
+		grab_reacquire_timer = GRAB_REACQUIRE_COOLDOWN
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:

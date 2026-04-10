@@ -17,7 +17,7 @@ radius = 6.8603516
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_4707s"]
 height = 1.9663086
-radius = 2.0
+radius = 0.9267578
 
 [node name="Gnome" type="CharacterBody3D" unique_id=1695650251]
 script = ExtResource("1_0diik")
@@ -44,5 +44,5 @@ shape = SubResource("CylinderShape3D_0diik")
 [node name="AttackRange" type="Area3D" parent="." unique_id=1769013998]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="AttackRange" unique_id=1172056015]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.016845703, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.016845703, -0.49899077)
 shape = SubResource("CylinderShape3D_4707s")

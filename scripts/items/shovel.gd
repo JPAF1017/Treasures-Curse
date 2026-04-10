@@ -30,6 +30,9 @@ const SWING_DAMAGE_FULL := 10.0
 const SWING_DAMAGE_INCOMPLETE := 3.0
 const SWING_STUN_DURATION_FULL := 10.0
 const SWING_STUN_DURATION_INCOMPLETE := 3.0
+const STUN_WANDER_SPEED := 0.8
+const STUN_WANDER_TICK := 0.2
+const STUN_WALK_ANIMATION_SPEED_SCALE := 0.45
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
@@ -391,30 +394,45 @@ func _apply_npc_stun(target: Node, player: Node, stun_duration: float) -> void:
 		return
 	if not _is_stunnable_npc_target(target, player):
 		return
+	if _has_property(target, "is_dead") and bool(target.get("is_dead")):
+		return
+	if target.has_method("apply_stun_state"):
+		target.call("apply_stun_state", stun_duration)
+		if _has_property(target, "is_dead") and bool(target.get("is_dead")):
+			return
+		_apply_stun_wander_behavior(target)
+		return
 
 	var target_id := target.get_instance_id()
 	var state: Dictionary = npc_stun_states.get(target_id, {})
-	if state.is_empty():
-		state["was_process_enabled"] = target.is_processing()
-		state["was_physics_process_enabled"] = target.is_physics_processing()
-
 	var serial := int(state.get("serial", 0)) + 1
 	state["serial"] = serial
 	npc_stun_states[target_id] = state
 
-	target.set_process(false)
-	target.set_physics_process(false)
-	if target is CharacterBody3D:
-		(target as CharacterBody3D).velocity = Vector3.ZERO
-
-	_release_npc_stun_after(target, target_id, serial, stun_duration)
+	_apply_stun_wander_behavior(target)
+	_run_stun_wander_behavior(target, target_id, serial, stun_duration)
 
 
-func _release_npc_stun_after(target: Node, target_id: int, serial: int, stun_duration: float) -> void:
+func _run_stun_wander_behavior(target: Node, target_id: int, serial: int, stun_duration: float) -> void:
 	if get_tree() == null:
 		return
 
-	await get_tree().create_timer(stun_duration).timeout
+	var elapsed := 0.0
+	while elapsed < stun_duration:
+		if not is_instance_valid(target):
+			npc_stun_states.erase(target_id)
+			return
+
+		var state: Dictionary = npc_stun_states.get(target_id, {})
+		if state.is_empty():
+			return
+		if int(state.get("serial", -1)) != serial:
+			return
+
+		_apply_stun_wander_behavior(target)
+		var wait_time := minf(STUN_WANDER_TICK, stun_duration - elapsed)
+		await get_tree().create_timer(wait_time).timeout
+		elapsed += wait_time
 
 	if not is_instance_valid(target):
 		npc_stun_states.erase(target_id)
@@ -426,9 +444,57 @@ func _release_npc_stun_after(target: Node, target_id: int, serial: int, stun_dur
 	if int(state.get("serial", -1)) != serial:
 		return
 
-	target.set_process(bool(state.get("was_process_enabled", true)))
-	target.set_physics_process(bool(state.get("was_physics_process_enabled", true)))
+	_restore_stun_animation_behavior(target)
 	npc_stun_states.erase(target_id)
+
+
+func _apply_stun_wander_behavior(target: Node) -> void:
+	if not (target is CharacterBody3D):
+		return
+
+	_set_property_if_exists(target, "target_player", null)
+	_set_property_if_exists(target, "attack_range_player", null)
+	_set_property_if_exists(target, "grabbed_player", null)
+	_set_property_if_exists(target, "is_player_in_detect", false)
+	_set_property_if_exists(target, "is_player_in_chase", false)
+	_set_property_if_exists(target, "is_player_in_attack_range", false)
+
+	var target_animation_player := _get_target_animation_player(target)
+	if target_animation_player and target_animation_player.has_animation("walk"):
+		var walk_animation := target_animation_player.get_animation("walk")
+		if walk_animation and walk_animation.loop_mode == Animation.LOOP_NONE:
+			walk_animation.loop_mode = Animation.LOOP_LINEAR
+
+		if target_animation_player.current_animation != "walk":
+			target_animation_player.play("walk")
+		elif not target_animation_player.is_playing():
+			target_animation_player.play("walk")
+
+		target_animation_player.speed_scale = STUN_WALK_ANIMATION_SPEED_SCALE
+
+
+func _set_property_if_exists(target: Node, property_name: String, value: Variant) -> void:
+	if _has_property(target, property_name):
+		target.set(property_name, value)
+
+
+func _has_property(target: Node, property_name: String) -> bool:
+	for property_info in target.get_property_list():
+		if String(property_info.get("name", "")) == property_name:
+			return true
+	return false
+
+
+func _get_target_animation_player(target: Node) -> AnimationPlayer:
+	if not _has_property(target, "animation_player"):
+		return null
+	return target.get("animation_player") as AnimationPlayer
+
+
+func _restore_stun_animation_behavior(target: Node) -> void:
+	var target_animation_player := _get_target_animation_player(target)
+	if target_animation_player:
+		target_animation_player.speed_scale = 1.0
 
 
 func _is_stunnable_npc_target(target: Node, player: Node) -> bool:

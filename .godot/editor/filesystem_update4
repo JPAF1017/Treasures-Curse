@@ -6,3 +6,4 @@ res://scripts/items/axe.gd
 res://assets/items/shovel.tscn
 res://scripts/items/shovel.gd
 res://assets/rooms/start_room.tscn
+res://entities/gnome.tscn
