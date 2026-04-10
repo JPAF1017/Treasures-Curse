@@ -26,8 +26,10 @@ const SWING_ANIMATION_NAME := "swing"
 const SWING_ANIMATION_FPS := 30.0
 const SWING_RELEASE_FRAME := 58
 const SWING_RELEASE_SPEED_MULTIPLIER := 1.3
-const SWING_DAMAGE_FULL := 20.0
-const SWING_DAMAGE_INCOMPLETE := 7.0
+const SWING_DAMAGE_FULL := 10.0
+const SWING_DAMAGE_INCOMPLETE := 3.0
+const SWING_STUN_DURATION_FULL := 10.0
+const SWING_STUN_DURATION_INCOMPLETE := 3.0
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
@@ -57,8 +59,10 @@ var swing_was_released_early: bool = false
 var swing_damage_ready: bool = false
 var swing_momentum_applied: bool = false
 var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
+var current_swing_stun_duration: float = SWING_STUN_DURATION_INCOMPLETE
 var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
 var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
+var npc_stun_states: Dictionary = {}
 
 
 func _ready() -> void:
@@ -150,6 +154,7 @@ func begin_primary_action(player: Node) -> bool:
 	swing_was_released_early = false
 	swing_damage_ready = false
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
+	current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):
 		player.call("set_movement_locked_by", self, true)
 
@@ -204,8 +209,9 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 	if not swing_damage_ready and animation_player.current_animation_position >= release_time:
 		swing_damage_ready = true
 		current_swing_damage = SWING_DAMAGE_INCOMPLETE if swing_was_released_early else SWING_DAMAGE_FULL
+		current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE if swing_was_released_early else SWING_STUN_DURATION_FULL
 		_consume_player_stamina(player, 60.0)
-		_apply_attack_damage(player, current_swing_damage)
+		_apply_attack_damage(player, current_swing_damage, current_swing_stun_duration)
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true
@@ -354,7 +360,7 @@ func _consume_player_stamina(player: Node, amount: float) -> void:
 		player.call("_update_stamina_ui")
 
 
-func _apply_attack_damage(player: Node, amount: float) -> void:
+func _apply_attack_damage(player: Node, amount: float, stun_duration: float) -> void:
 	if player == null or amount <= 0.0:
 		return
 
@@ -368,6 +374,7 @@ func _apply_attack_damage(player: Node, amount: float) -> void:
 		if target != null and not damaged_nodes.has(target):
 			if target.has_method("apply_damage"):
 				target.call("apply_damage", amount)
+				_apply_npc_stun(target, player, stun_duration)
 				damaged_nodes.append(target)
 
 	for area in attack_area.get_overlapping_areas():
@@ -375,7 +382,68 @@ func _apply_attack_damage(player: Node, amount: float) -> void:
 		if target != null and not damaged_nodes.has(target):
 			if target.has_method("apply_damage"):
 				target.call("apply_damage", amount)
+				_apply_npc_stun(target, player, stun_duration)
 				damaged_nodes.append(target)
+
+
+func _apply_npc_stun(target: Node, player: Node, stun_duration: float) -> void:
+	if stun_duration <= 0.0:
+		return
+	if not _is_stunnable_npc_target(target, player):
+		return
+
+	var target_id := target.get_instance_id()
+	var state: Dictionary = npc_stun_states.get(target_id, {})
+	if state.is_empty():
+		state["was_process_enabled"] = target.is_processing()
+		state["was_physics_process_enabled"] = target.is_physics_processing()
+
+	var serial := int(state.get("serial", 0)) + 1
+	state["serial"] = serial
+	npc_stun_states[target_id] = state
+
+	target.set_process(false)
+	target.set_physics_process(false)
+	if target is CharacterBody3D:
+		(target as CharacterBody3D).velocity = Vector3.ZERO
+
+	_release_npc_stun_after(target, target_id, serial, stun_duration)
+
+
+func _release_npc_stun_after(target: Node, target_id: int, serial: int, stun_duration: float) -> void:
+	if get_tree() == null:
+		return
+
+	await get_tree().create_timer(stun_duration).timeout
+
+	if not is_instance_valid(target):
+		npc_stun_states.erase(target_id)
+		return
+
+	var state: Dictionary = npc_stun_states.get(target_id, {})
+	if state.is_empty():
+		return
+	if int(state.get("serial", -1)) != serial:
+		return
+
+	target.set_process(bool(state.get("was_process_enabled", true)))
+	target.set_physics_process(bool(state.get("was_physics_process_enabled", true)))
+	npc_stun_states.erase(target_id)
+
+
+func _is_stunnable_npc_target(target: Node, player: Node) -> bool:
+	if target == null or target == self or target == player:
+		return false
+	if target.is_in_group("player"):
+		return false
+	if not (target is CharacterBody3D):
+		return false
+
+	var target_script := target.get_script() as Script
+	if target_script == null:
+		return false
+
+	return target_script.resource_path.contains("/scripts/npc/")
 
 
 func _find_damage_target(node: Node, player: Node) -> Node:
@@ -620,6 +688,7 @@ func _reset_swing_state(player: Node) -> void:
 	swing_was_released_early = false
 	swing_momentum_applied = false
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
+	current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):
 		player.call("set_movement_locked_by", self, false)
 	var animation_player := _get_player_animation_player(player)

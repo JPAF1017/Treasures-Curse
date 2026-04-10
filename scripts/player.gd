@@ -669,7 +669,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 		push_warning("Pickup not implemented for item model: %s" % item_body.name)
 
 func _try_auto_equip_item() -> void:
-	if _has_any_primary_item_in_hotbar():
+	if _find_first_empty_hotbar_slot() == -1:
 		return
 	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
@@ -716,7 +716,7 @@ func _update_pickup_prompt_visibility() -> void:
 	if pickup_control == null:
 		return
 
-	pickup_control.visible = not _has_any_primary_item_in_hotbar() and _get_pickup_candidate() != null
+	pickup_control.visible = _find_first_empty_hotbar_slot() != -1 and _get_pickup_candidate() != null
 
 func _has_any_primary_item_in_hotbar() -> bool:
 	for item_model in hotbar_item_models:
