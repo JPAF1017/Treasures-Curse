@@ -1,5 +1,2 @@
 res://scripts/player.gd
-res://entities/player.tscn
-res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://levels/test map.tscn
 res://scripts/npc/gnome.gd
