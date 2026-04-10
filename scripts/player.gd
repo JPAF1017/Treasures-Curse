@@ -36,6 +36,7 @@ const HOTBAR_SLOT_COUNT = 5
 const HOTBAR_SELECTED_SCALE = 1.18
 const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
+const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
@@ -161,13 +162,13 @@ func _unhandled_input(event):
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				var selected_axe := _get_selected_axe()
-				if selected_axe == null or not selected_axe.begin_primary_action(self):
+				var selected_item := _get_selected_primary_item()
+				if selected_item == null or not bool(selected_item.call("begin_primary_action", self)):
 					return
 			else:
-				var selected_axe := _get_selected_axe()
-				if selected_axe:
-					selected_axe.release_primary_action(self)
+				var selected_item := _get_selected_primary_item()
+				if selected_item:
+					selected_item.call("release_primary_action", self)
 		elif event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				_select_hotbar_slot((selected_hotbar_slot_index - 1 + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT)
@@ -579,10 +580,16 @@ func _get_selected_hotbar_item() -> Node3D:
 
 	return selected_item
 
-func _get_selected_axe() -> Axe:
+func _is_primary_item_model(item_model: Node) -> bool:
+	return item_model is Axe or _is_shovel_item_model(item_model)
+
+func _is_shovel_item_model(item_model: Node) -> bool:
+	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
+
+func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()
-	if selected_item is Axe:
-		return selected_item as Axe
+	if _is_primary_item_model(selected_item):
+		return selected_item
 	return null
 
 func _has_item_in_hotbar(item: Node) -> bool:
@@ -596,19 +603,19 @@ func _has_item_in_hotbar(item: Node) -> bool:
 
 func _refresh_selected_item_state() -> void:
 	for item_model in hotbar_item_models:
-		if item_model is Axe and is_instance_valid(item_model):
-			(item_model as Axe).refresh_inventory_state(self, selected_hotbar_slot_index, is_sprinting)
+		if _is_primary_item_model(item_model) and is_instance_valid(item_model):
+			item_model.call("refresh_inventory_state", self, selected_hotbar_slot_index, is_sprinting)
 
 func _update_selected_item_action(delta: float) -> bool:
-	var selected_axe := _get_selected_axe()
-	if selected_axe == null:
+	var selected_item := _get_selected_primary_item()
+	if selected_item == null:
 		return false
 
-	return selected_axe.update_primary_action(self, delta)
+	return bool(selected_item.call("update_primary_action", self, delta))
 
 func _can_trigger_swing_from_selected_slot() -> bool:
-	var selected_axe := _get_selected_axe()
-	return selected_axe != null and selected_axe.can_start_primary_action()
+	var selected_item := _get_selected_primary_item()
+	return selected_item != null and bool(selected_item.call("can_start_primary_action"))
 
 func _get_item_display_name_from_model(item_node: Node) -> String:
 	if item_node == null:
@@ -632,9 +639,8 @@ func _drop_selected_hotbar_item() -> void:
 	if selected_item == null:
 		return
 
-	if selected_item is Axe:
-		var selected_axe := selected_item as Axe
-		if selected_axe.drop_from_hotbar(self):
+	if _is_primary_item_model(selected_item):
+		if bool(selected_item.call("drop_from_hotbar", self)):
 			_set_hotbar_item(selected_hotbar_slot_index, null, null)
 			_refresh_selected_item_state()
 			_update_pickup_prompt_visibility()
@@ -646,27 +652,26 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Axe:
-		var axe_body := item_body as Axe
-		if _has_item_in_hotbar(axe_body):
+	if item_body is Axe or _is_shovel_item_model(item_body):
+		if _has_item_in_hotbar(item_body):
 			return
 
 		var slot_index := _find_first_empty_hotbar_slot()
 		if slot_index == -1:
-			push_warning("Hotbar is full. Cannot pick up axe.")
+			push_warning("Hotbar is full. Cannot pick up item.")
 			return
 
-		if axe_body.pick_up_into_hotbar(self, slot_index):
-			_set_hotbar_item(slot_index, axe_body, axe_body.get_hotbar_icon_texture())
+		if bool(item_body.call("pick_up_into_hotbar", self, slot_index)):
+			_set_hotbar_item(slot_index, item_body, item_body.call("get_hotbar_icon_texture"))
 			_refresh_selected_item_state()
 			_update_pickup_prompt_visibility()
 	else:
 		push_warning("Pickup not implemented for item model: %s" % item_body.name)
 
 func _try_auto_equip_item() -> void:
-	if _has_any_axe_in_hotbar():
+	if _has_any_primary_item_in_hotbar():
 		return
-	if not Axe.is_equip_input_just_pressed():
+	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
 
 	var item_body := _get_pickup_candidate()
@@ -686,7 +691,8 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var end: Vector3 = origin + (-camera.global_transform.basis.z * Axe.get_pickup_max_distance())
+	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")))
+	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
 	query.collide_with_areas = false
@@ -700,17 +706,21 @@ func _get_pickup_candidate() -> RigidBody3D:
 	if collider == null:
 		return null
 
-	return Axe.find_axe_rigidbody_from_node(collider)
+	var axe_candidate := Axe.find_axe_rigidbody_from_node(collider)
+	if axe_candidate:
+		return axe_candidate
+
+	return SHOVEL_ITEM_SCRIPT.call("find_shovel_rigidbody_from_node", collider) as RigidBody3D
 
 func _update_pickup_prompt_visibility() -> void:
 	if pickup_control == null:
 		return
 
-	pickup_control.visible = not _has_any_axe_in_hotbar() and _get_pickup_candidate() != null
+	pickup_control.visible = not _has_any_primary_item_in_hotbar() and _get_pickup_candidate() != null
 
-func _has_any_axe_in_hotbar() -> bool:
+func _has_any_primary_item_in_hotbar() -> bool:
 	for item_model in hotbar_item_models:
-		if item_model is Axe and is_instance_valid(item_model):
+		if _is_primary_item_model(item_model) and is_instance_valid(item_model):
 			return true
 	return false
 
@@ -757,9 +767,9 @@ func _update_hotbar_windup_indicator() -> void:
 		var icon_color := Color(1.0, 1.0, 1.0, alpha)
 
 		if i == selected_hotbar_slot_index:
-			var selected_axe := _get_selected_axe()
-			if selected_axe != null:
-				icon_color = selected_axe.get_hotbar_icon_modulate(alpha)
+			var selected_item := _get_selected_primary_item()
+			if selected_item != null:
+				icon_color = selected_item.call("get_hotbar_icon_modulate", alpha)
 
 		item_icon.modulate = icon_color
 

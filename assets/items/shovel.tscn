@@ -1,3 +1,16 @@
 [gd_scene format=3 uid="uid://dc478au7umvs1"]
 
+[ext_resource type="Script" uid="uid://4ohdemwq642m" path="res://scripts/items/shovel.gd" id="1_m86qi"]
+[ext_resource type="PackedScene" uid="uid://caxmjfgpmtj3p" path="res://assets/items assets/shovel.glb" id="1_xbb2e"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_m86qi"]
+size = Vector3(0.17480469, 2.6401367, 0.4196167)
+
 [node name="Shovel" type="RigidBody3D" unique_id=1957626746]
+script = ExtResource("1_m86qi")
+
+[node name="shovel" parent="." unique_id=1493856538 instance=ExtResource("1_xbb2e")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1296833946]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0014648438, -0.022705078, 0.0024108887)
+shape = SubResource("BoxShape3D_m86qi")

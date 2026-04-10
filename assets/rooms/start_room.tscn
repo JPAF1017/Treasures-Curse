@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cs4tf1k5iewuj" path="res://assets/room assets/door_01.tscn" id="5_gnk4p"]
 [ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="6_nq55u"]
 [ext_resource type="PackedScene" uid="uid://d0i07q7hajshl" path="res://assets/items/axe.tscn" id="7_gnk4p"]
+[ext_resource type="PackedScene" uid="uid://dc478au7umvs1" path="res://assets/items/shovel.tscn" id="8_nq55u"]
 
 [node name="StartRoom" type="Node3D" unique_id=403283665]
 script = ExtResource("1_oe4ut")
@@ -59,3 +60,6 @@ transform = Transform3D(0.325, 0, 0, 0, 0.325, 0, 0, 0, 0.325, 4, -4.95, -4)
 
 [node name="Axe" parent="." unique_id=204406245 instance=ExtResource("7_gnk4p")]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 2)
+
+[node name="Shovel" parent="." unique_id=1957626746 instance=ExtResource("8_nq55u")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 3)

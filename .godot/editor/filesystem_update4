@@ -3,3 +3,6 @@ res://scripts/npc/gnome.gd
 res://assets/items/axe.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 res://scripts/items/axe.gd
+res://assets/items/shovel.tscn
+res://scripts/items/shovel.gd
+res://assets/rooms/start_room.tscn
