@@ -33,6 +33,11 @@ const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
 const ITEM_DROP_UPWARD_SPEED := 0.5
 const SWING_MOMENTUM_SPEED := 30.0
+const AXE_PHYSICS_COLLISION_LAYER := 3
+const AXE_PHYSICS_COLLISION_MASK := 3
+const AXE_PHYSICS_MASS := 0.1
+const AXE_PHYSICS_LINEAR_DAMP := 0.2
+const AXE_PHYSICS_ANGULAR_DAMP := 0.4
 
 static var equip_key_was_down: bool = false
 
@@ -57,6 +62,7 @@ var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
 
 
 func _ready() -> void:
+	_configure_item_physics()
 	_setup_item_windup_palette_colors()
 
 
@@ -468,13 +474,24 @@ func _apply_item_blade_flip() -> void:
 func _set_item_physics_enabled(enabled: bool) -> void:
 	freeze = not enabled
 	sleeping = not enabled
+	can_sleep = true
+	mass = AXE_PHYSICS_MASS
+	linear_damp = AXE_PHYSICS_LINEAR_DAMP
+	angular_damp = AXE_PHYSICS_ANGULAR_DAMP
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
-	collision_layer = 0 if not enabled else 1
-	collision_mask = 0 if not enabled else 1
+	collision_layer = 0 if not enabled else AXE_PHYSICS_COLLISION_LAYER
+	collision_mask = 0 if not enabled else AXE_PHYSICS_COLLISION_MASK
 	var item_collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if item_collision:
 		item_collision.disabled = not enabled
+
+
+func _configure_item_physics() -> void:
+	mass = AXE_PHYSICS_MASS
+	linear_damp = AXE_PHYSICS_LINEAR_DAMP
+	angular_damp = AXE_PHYSICS_ANGULAR_DAMP
+	can_sleep = true
 
 
 func _set_item_visuals_visible(visibility: bool) -> void:

@@ -1,8 +1,8 @@
+RigidBody3D
 Area3D
 CollisionShape3D
 Label
 Control
-RigidBody3D
 CollisionPolygon3D
 Node3D
 NinePatchRect
