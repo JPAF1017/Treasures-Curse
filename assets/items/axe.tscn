@@ -1,12 +1,14 @@
 [gd_scene format=3 uid="uid://d0i07q7hajshl"]
 
 [ext_resource type="PackedScene" uid="uid://bmlfruh6i6jy7" path="res://assets/items assets/axe.glb" id="1_88ihb"]
+[ext_resource type="Script" uid="uid://co8bhh042ynal" path="res://scripts/items/axe.gd" id="1_rgvkb"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_88ihb"]
 size = Vector3(0.19555664, 1.868042, 0.6543579)
 
 [node name="Axe" type="RigidBody3D" unique_id=204406245]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+script = ExtResource("1_rgvkb")
 
 [node name="axe" parent="." unique_id=1932123651 instance=ExtResource("1_88ihb")]
 
