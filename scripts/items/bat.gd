@@ -18,6 +18,7 @@ class HeldItemTransform:
 
 const BAT_SCENE_PATH := "res://assets/items/bat.tscn"
 const BAT_ATTACHMENT_NODE_NAME := "RightHandBatAttachment"
+static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const BAT_ITEM_ICON: Texture2D = preload("res://assets/ui/bat.png")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
 const ITEM_WINDUP_COLOR_START_INDEX := 17
@@ -25,11 +26,15 @@ const ITEM_WINDUP_COLOR_END_INDEX := 22
 const SWING_ANIMATION_NAME := "swing"
 const SWING_ANIMATION_FPS := 30.0
 const SWING_RELEASE_FRAME := 58
+const SWING_STOP_FRAME := 100
 const SWING_RELEASE_SPEED_MULTIPLIER := 1.3
 const SWING_DAMAGE_FULL := 10.0
 const SWING_DAMAGE_INCOMPLETE := 3.0
-const BAT_KNOCKBACK_INCOMPLETE := 8.0
+const BAT_KNOCKBACK_INCOMPLETE := 20.0
 const BAT_KNOCKBACK_FULL := BAT_KNOCKBACK_INCOMPLETE * 3.0
+const BAT_KNOCKBACK_DURATION := 0.18
+const BAT_KNOCKBACK_POSITION_SCALE := 0.04
+const BAT_KNOCKBACK_UPWARD_RATIO := 1
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
@@ -60,6 +65,7 @@ var swing_damage_ready: bool = false
 var swing_momentum_applied: bool = false
 var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
 var current_swing_knockback: float = BAT_KNOCKBACK_INCOMPLETE
+var npc_knockback_states: Dictionary = {}
 var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
 var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
 
@@ -69,12 +75,16 @@ func _ready() -> void:
 	_setup_item_windup_palette_colors()
 
 
+func _physics_process(delta: float) -> void:
+	_update_npc_knockback_states(delta)
+
+
 static func get_pickup_max_distance() -> float:
-	return 2.0
+	return MeleeShared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return &"interact"
+	return MeleeShared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -86,44 +96,17 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_bat_node(node: Node) -> bool:
-	if node == null:
-		return false
-
-	if node.scene_file_path == BAT_SCENE_PATH:
-		return true
-
-	var lower_name := node.name.to_lower()
-	if lower_name == "bat" or lower_name.ends_with("bat"):
-		return true
-
-	return false
+	return MeleeShared.is_item_node(node, BAT_SCENE_PATH, "bat")
 
 
 static func find_bat_rigidbody_from_node(node: Node) -> RigidBody3D:
-	var current: Node = node
-	while current != null:
-		if current is RigidBody3D:
-			var body := current as RigidBody3D
-			if is_bat_node(body):
-				return body
-		if current is Node3D and is_bat_node(current):
-			for child in current.get_children():
-				if child is RigidBody3D and is_bat_node(child):
-					return child as RigidBody3D
-		current = current.get_parent()
-	return null
+	return MeleeShared.find_item_rigidbody_from_node(node, BAT_SCENE_PATH, "bat")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var action_name := get_equip_action_name()
-	if not action_name.is_empty() and InputMap.has_action(action_name):
-		return Input.is_action_just_pressed(action_name)
-
-	# Fallback to the physical E key if the action is not configured.
-	var is_down := Input.is_physical_key_pressed(KEY_E)
-	var just_pressed := is_down and not equip_key_was_down
-	equip_key_was_down = is_down
-	return just_pressed
+	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
+	return bool(equip_input.get("just_pressed", false))
 
 
 func get_hotbar_icon_texture() -> Texture2D:
@@ -140,7 +123,7 @@ func get_hotbar_icon_modulate(alpha: float) -> Color:
 
 
 func can_start_primary_action() -> bool:
-	return inventory_slot_index >= 0 and swing_in_progress == false and is_equipped_in_hand()
+	return inventory_slot_index >= 0 and swing_in_progress == false and is_equipped_in_hand() and _is_wielding_player_on_floor()
 
 
 func begin_primary_action(player: Node) -> bool:
@@ -214,6 +197,13 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true
+
+	var stop_time := minf(_swing_frame_to_time(SWING_STOP_FRAME), swing_animation.length)
+	if animation_player.current_animation_position >= stop_time:
+		animation_player.seek(stop_time, true)
+		_reset_swing_state(player)
+		animation_player.speed_scale = 1.0
+		return false
 
 	if animation_player.current_animation_position >= swing_animation.length - 0.02:
 		_reset_swing_state(player)
@@ -401,10 +391,63 @@ func _apply_npc_knockback(target: Node, player: Node, knockback_strength: float)
 		if knockback_direction == Vector3.ZERO:
 			return
 
-		var new_velocity := body.velocity
-		new_velocity.x += knockback_direction.x * knockback_strength
-		new_velocity.z += knockback_direction.z * knockback_strength
-		body.velocity = new_velocity
+		var launch_velocity := knockback_direction * knockback_strength
+		launch_velocity.y = knockback_strength * BAT_KNOCKBACK_UPWARD_RATIO
+
+		var target_id := body.get_instance_id()
+		npc_knockback_states[target_id] = {
+			"target": body,
+			"direction": knockback_direction,
+			"strength": knockback_strength,
+			"launch_velocity": launch_velocity,
+			"time_left": BAT_KNOCKBACK_DURATION,
+		}
+		_apply_knockback_to_body(body, knockback_direction, knockback_strength, launch_velocity, true, get_physics_process_delta_time())
+
+
+func _update_npc_knockback_states(delta: float) -> void:
+	if npc_knockback_states.is_empty():
+		return
+
+	var expired_ids: Array[int] = []
+	for target_id in npc_knockback_states.keys():
+		var state: Dictionary = npc_knockback_states.get(target_id, {})
+		var target := state.get("target") as CharacterBody3D
+		if target == null or not is_instance_valid(target):
+			expired_ids.append(int(target_id))
+			continue
+
+		var time_left := float(state.get("time_left", 0.0)) - delta
+		if time_left <= 0.0:
+			expired_ids.append(int(target_id))
+			continue
+
+		state["time_left"] = time_left
+		npc_knockback_states[target_id] = state
+		_apply_knockback_to_body(
+			target,
+			state.get("direction") as Vector3,
+			float(state.get("strength", 0.0)),
+			state.get("launch_velocity") as Vector3,
+			false,
+			delta
+		)
+
+	for target_id in expired_ids:
+		npc_knockback_states.erase(target_id)
+
+
+func _apply_knockback_to_body(body: CharacterBody3D, knockback_direction: Vector3, knockback_strength: float, launch_velocity: Vector3, apply_vertical_launch: bool, delta: float) -> void:
+	if body == null or knockback_direction == Vector3.ZERO or knockback_strength <= 0.0:
+		return
+
+	var new_velocity := body.velocity
+	new_velocity.x += knockback_direction.x * knockback_strength
+	new_velocity.z += knockback_direction.z * knockback_strength
+	if apply_vertical_launch:
+		new_velocity.y = maxf(new_velocity.y, launch_velocity.y)
+	body.velocity = new_velocity
+	body.global_position += knockback_direction * knockback_strength * BAT_KNOCKBACK_POSITION_SCALE * maxf(delta, 0.016)
 
 
 func _find_damage_target(node: Node, player: Node) -> Node:
@@ -532,19 +575,7 @@ func _apply_item_blade_flip() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	freeze = not enabled
-	sleeping = not enabled
-	can_sleep = true
-	mass = BAT_PHYSICS_MASS
-	linear_damp = BAT_PHYSICS_LINEAR_DAMP
-	angular_damp = BAT_PHYSICS_ANGULAR_DAMP
-	linear_velocity = Vector3.ZERO
-	angular_velocity = Vector3.ZERO
-	collision_layer = 0 if not enabled else BAT_PHYSICS_COLLISION_LAYER
-	collision_mask = 0 if not enabled else BAT_PHYSICS_COLLISION_MASK
-	var item_collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
-	if item_collision:
-		item_collision.disabled = not enabled
+	MeleeShared.set_item_physics_enabled(self, enabled, BAT_PHYSICS_COLLISION_LAYER, BAT_PHYSICS_COLLISION_MASK, BAT_PHYSICS_MASS, BAT_PHYSICS_LINEAR_DAMP, BAT_PHYSICS_ANGULAR_DAMP)
 
 
 func _configure_item_physics() -> void:
@@ -559,10 +590,7 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 
 func _set_visual_children_visible(node: Node, visibility: bool) -> void:
-	if node is VisualInstance3D:
-		node.visible = visibility
-	for child in node.get_children():
-		_set_visual_children_visible(child, visibility)
+	MeleeShared.set_visual_children_visible(node, visibility)
 
 
 func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
@@ -644,6 +672,10 @@ func _get_player_attack_area(player: Node) -> Area3D:
 	if player == null:
 		return null
 	return player.get("attack_area") as Area3D
+
+
+func _is_wielding_player_on_floor() -> bool:
+	return MeleeShared.is_wielding_player_on_floor(self)
 
 
 func _get_self_animation_player() -> AnimationPlayer:

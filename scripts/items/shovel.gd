@@ -18,6 +18,7 @@ class HeldItemTransform:
 
 const SHOVEL_SCENE_PATH := "res://assets/items/shovel.tscn"
 const SHOVEL_ATTACHMENT_NODE_NAME := "RightHandShovelAttachment"
+static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const SHOVEL_ITEM_ICON: Texture2D = preload("res://assets/ui/shovel.png")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
 const ITEM_WINDUP_COLOR_START_INDEX := 17
@@ -25,6 +26,7 @@ const ITEM_WINDUP_COLOR_END_INDEX := 22
 const SWING_ANIMATION_NAME := "swing"
 const SWING_ANIMATION_FPS := 30.0
 const SWING_RELEASE_FRAME := 58
+const SWING_STOP_FRAME := 100
 const SWING_RELEASE_SPEED_MULTIPLIER := 1.3
 const SWING_DAMAGE_FULL := 10.0
 const SWING_DAMAGE_INCOMPLETE := 3.0
@@ -74,11 +76,11 @@ func _ready() -> void:
 
 
 static func get_pickup_max_distance() -> float:
-	return 2.0
+	return MeleeShared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return &"interact"
+	return MeleeShared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -90,44 +92,17 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_shovel_node(node: Node) -> bool:
-	if node == null:
-		return false
-
-	if node.scene_file_path == SHOVEL_SCENE_PATH:
-		return true
-
-	var lower_name := node.name.to_lower()
-	if lower_name == "shovel" or lower_name.ends_with("shovel"):
-		return true
-
-	return false
+	return MeleeShared.is_item_node(node, SHOVEL_SCENE_PATH, "shovel")
 
 
 static func find_shovel_rigidbody_from_node(node: Node) -> RigidBody3D:
-	var current: Node = node
-	while current != null:
-		if current is RigidBody3D:
-			var body := current as RigidBody3D
-			if is_shovel_node(body):
-				return body
-		if current is Node3D and is_shovel_node(current):
-			for child in current.get_children():
-				if child is RigidBody3D and is_shovel_node(child):
-					return child as RigidBody3D
-		current = current.get_parent()
-	return null
+	return MeleeShared.find_item_rigidbody_from_node(node, SHOVEL_SCENE_PATH, "shovel")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var action_name := get_equip_action_name()
-	if not action_name.is_empty() and InputMap.has_action(action_name):
-		return Input.is_action_just_pressed(action_name)
-
-	# Fallback to the physical E key if the action is not configured.
-	var is_down := Input.is_physical_key_pressed(KEY_E)
-	var just_pressed := is_down and not equip_key_was_down
-	equip_key_was_down = is_down
-	return just_pressed
+	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
+	return bool(equip_input.get("just_pressed", false))
 
 
 func get_hotbar_icon_texture() -> Texture2D:
@@ -144,7 +119,7 @@ func get_hotbar_icon_modulate(alpha: float) -> Color:
 
 
 func can_start_primary_action() -> bool:
-	return inventory_slot_index >= 0 and swing_in_progress == false and is_equipped_in_hand()
+	return inventory_slot_index >= 0 and swing_in_progress == false and is_equipped_in_hand() and _is_wielding_player_on_floor()
 
 
 func begin_primary_action(player: Node) -> bool:
@@ -218,6 +193,13 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true
+
+	var stop_time := minf(_swing_frame_to_time(SWING_STOP_FRAME), swing_animation.length)
+	if animation_player.current_animation_position >= stop_time:
+		animation_player.seek(stop_time, true)
+		_reset_swing_state(player)
+		animation_player.speed_scale = 1.0
+		return false
 
 	if animation_player.current_animation_position >= swing_animation.length - 0.02:
 		_reset_swing_state(player)
@@ -423,10 +405,10 @@ func _run_stun_wander_behavior(target: Node, target_id: int, serial: int, stun_d
 			npc_stun_states.erase(target_id)
 			return
 
-		var state: Dictionary = npc_stun_states.get(target_id, {})
-		if state.is_empty():
+		var stun_state: Dictionary = npc_stun_states.get(target_id, {})
+		if stun_state.is_empty():
 			return
-		if int(state.get("serial", -1)) != serial:
+		if int(stun_state.get("serial", -1)) != serial:
 			return
 
 		_apply_stun_wander_behavior(target)
@@ -438,10 +420,10 @@ func _run_stun_wander_behavior(target: Node, target_id: int, serial: int, stun_d
 		npc_stun_states.erase(target_id)
 		return
 
-	var state: Dictionary = npc_stun_states.get(target_id, {})
-	if state.is_empty():
+	var final_state: Dictionary = npc_stun_states.get(target_id, {})
+	if final_state.is_empty():
 		return
-	if int(state.get("serial", -1)) != serial:
+	if int(final_state.get("serial", -1)) != serial:
 		return
 
 	_restore_stun_animation_behavior(target)
@@ -606,19 +588,7 @@ func _apply_item_blade_flip() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	freeze = not enabled
-	sleeping = not enabled
-	can_sleep = true
-	mass = SHOVEL_PHYSICS_MASS
-	linear_damp = SHOVEL_PHYSICS_LINEAR_DAMP
-	angular_damp = SHOVEL_PHYSICS_ANGULAR_DAMP
-	linear_velocity = Vector3.ZERO
-	angular_velocity = Vector3.ZERO
-	collision_layer = 0 if not enabled else SHOVEL_PHYSICS_COLLISION_LAYER
-	collision_mask = 0 if not enabled else SHOVEL_PHYSICS_COLLISION_MASK
-	var item_collision := get_node_or_null("CollisionShape3D") as CollisionShape3D
-	if item_collision:
-		item_collision.disabled = not enabled
+	MeleeShared.set_item_physics_enabled(self, enabled, SHOVEL_PHYSICS_COLLISION_LAYER, SHOVEL_PHYSICS_COLLISION_MASK, SHOVEL_PHYSICS_MASS, SHOVEL_PHYSICS_LINEAR_DAMP, SHOVEL_PHYSICS_ANGULAR_DAMP)
 
 
 func _configure_item_physics() -> void:
@@ -633,10 +603,7 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 
 func _set_visual_children_visible(node: Node, visibility: bool) -> void:
-	if node is VisualInstance3D:
-		node.visible = visibility
-	for child in node.get_children():
-		_set_visual_children_visible(child, visibility)
+	MeleeShared.set_visual_children_visible(node, visibility)
 
 
 func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
@@ -718,6 +685,10 @@ func _get_player_attack_area(player: Node) -> Area3D:
 	if player == null:
 		return null
 	return player.get("attack_area") as Area3D
+
+
+func _is_wielding_player_on_floor() -> bool:
+	return MeleeShared.is_wielding_player_on_floor(self)
 
 
 func _get_self_animation_player() -> AnimationPlayer:

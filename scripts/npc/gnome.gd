@@ -3,6 +3,7 @@ extends CharacterBody3D
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
+const EnemyKnockback := preload("res://scripts/npc/NPCKnockbackComponent.gd")
 
 const HEALTH_MAX := 10.0
 const GRAVITY := 20.0
@@ -33,6 +34,8 @@ const DEATH_LINGER_TIME := 5.0
 const STUN_WALK_ANIMATION_SPEED_SCALE := 0.45
 const GRAB_ESCAPE_REQUIRED_JUMPS := 10
 const GRAB_REACQUIRE_COOLDOWN := 0.8
+const HIT_REACTION_DURATION := 0.35
+const DAMAGE_ACTION_COOLDOWN := 3.0
 
 @export var facing_offset_degrees: float = 180.0
 @export var debug_memory_logs: bool = false
@@ -70,6 +73,9 @@ var attack_swing_cooldown_timer: float = 0.0
 var is_dead: bool = false
 var is_stunned: bool = false
 var stun_timer: float = 0.0
+var hit_reaction_timer: float = 0.0
+var knockback_component = EnemyKnockback.new()
+var damage_action_cooldown_timer: float = 0.0
 var stun_walk_visual_active: bool = false
 var grab_escape_jump_count: int = 0
 var grab_reacquire_timer: float = 0.0
@@ -113,9 +119,23 @@ func _physics_process(delta: float) -> void:
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
 	attack_swing_cooldown_timer = max(attack_swing_cooldown_timer - delta, 0.0)
 	grab_reacquire_timer = max(grab_reacquire_timer - delta, 0.0)
+	damage_action_cooldown_timer = max(damage_action_cooldown_timer - delta, 0.0)
 	_refresh_player_detection()
 
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
+
+	if knockback_component.is_active():
+		knockback_component.update(delta)
+		move_and_slide()
+		return
+
+	if hit_reaction_timer > 0.0:
+		hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_hit_animation()
+		move_and_slide()
+		return
 
 	if is_stunned:
 		_lock_grabbed_player(false)
@@ -399,6 +419,17 @@ func _update_attack_range_state(delta: float) -> void:
 	if is_stunned:
 		return
 
+	if damage_action_cooldown_timer > 0.0:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		var cooldown_target := attack_range_player if _has_valid_attack_range_player() else target_player
+		if cooldown_target and is_instance_valid(cooldown_target):
+			var to_player := cooldown_target.global_position - global_position
+			to_player.y = 0.0
+			if to_player.length_squared() > 0.001:
+				_face_direction(to_player.normalized(), delta)
+		return
+
 	if _has_valid_grabbed_player() and not _can_grab_player_on_ground(grabbed_player):
 		_interrupt_grab()
 
@@ -672,6 +703,8 @@ func apply_damage(amount: float) -> void:
 		return
 
 	_interrupt_grab()
+	_begin_hit_reaction()
+	damage_action_cooldown_timer = DAMAGE_ACTION_COOLDOWN
 	health = maxf(health - amount, 0.0)
 	if health <= 0.0:
 		_die()
@@ -690,6 +723,31 @@ func apply_stun_state(duration: float) -> void:
 	is_player_in_detect = false
 	is_player_in_chase = false
 	is_player_in_attack_range = false
+
+
+func apply_knockback(direction: Vector3, strength: float) -> void:
+	if is_dead:
+		return
+	knockback_component.begin_knockback(self, direction, strength, 0.35, 0.18)
+
+
+func _begin_hit_reaction() -> void:
+	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_play_hit_animation()
+
+
+func _play_hit_animation() -> void:
+	if animation_player == null:
+		return
+	if not animation_player.has_animation("hit"):
+		return
+
+	if animation_player.current_animation != "hit" or not animation_player.is_playing():
+		animation_player.speed_scale = 1.0
+		animation_player.play("hit")
+		animation_player.seek(0.0, true)
 
 func _play_stunned_walk_animation() -> void:
 	if animation_player == null:

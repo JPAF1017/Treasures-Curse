@@ -581,7 +581,7 @@ func _get_selected_hotbar_item() -> Node3D:
 	return selected_item
 
 func _is_primary_item_model(item_model: Node) -> bool:
-	return item_model is Axe or _is_shovel_item_model(item_model)
+	return item_model is Axe or item_model is Bat or _is_shovel_item_model(item_model)
 
 func _is_shovel_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
@@ -652,7 +652,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Axe or _is_shovel_item_model(item_body):
+	if item_body is Axe or item_body is Bat or _is_shovel_item_model(item_body):
 		if _has_item_in_hotbar(item_body):
 			return
 
@@ -691,7 +691,7 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")))
+	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance"))))
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
@@ -705,6 +705,10 @@ func _get_pickup_candidate() -> RigidBody3D:
 	var collider := result.get("collider") as Node
 	if collider == null:
 		return null
+
+	var bat_candidate := Bat.find_bat_rigidbody_from_node(collider)
+	if bat_candidate:
+		return bat_candidate
 
 	var axe_candidate := Axe.find_axe_rigidbody_from_node(collider)
 	if axe_candidate:
