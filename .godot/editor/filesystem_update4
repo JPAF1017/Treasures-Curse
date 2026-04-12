@@ -1,9 +1,4 @@
+res://scripts/npc/knight.gd
+res://levels/test map.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://assets/items/bat.tscn
-res://scripts/items/bat.gd
-res://assets/rooms/start_room.tscn
-res://scripts/player.gd
-res://scripts/npc/gnome.gd
-res://scripts/items/axe.gd
-res://scripts/items/shovel.gd
-res://entities/player.tscn
+res://entities/knight.tscn
