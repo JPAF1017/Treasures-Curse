@@ -19,6 +19,7 @@ var walk_before_idle_timer: float = 0.0
 var idle_timer: float = 0.0
 var is_idle: bool = false
 @export var health: int = 60
+@export var debug_attack_logs: bool = true
 var is_dead: bool = false
 var hit_reaction_timer: float = 0.0
 var animation_player: AnimationPlayer = null
@@ -26,6 +27,7 @@ var animation_player: AnimationPlayer = null
 func _ready() -> void:
 	randomize()
 	animation_player = _find_animation_player(self)
+	_log_attack("ready node=%s health=%d" % [name, health])
 	_pick_new_direction()
 	_reset_direction_timer()
 	_reset_walk_before_idle_timer()
@@ -54,13 +56,19 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func apply_damage(amount: float) -> void:
+	_log_attack("apply_damage called amount=%.2f health_before=%d" % [amount, health])
+
 	if is_dead:
+		_log_attack("ignored damage because knight is already dead")
 		return
 	if amount <= 0.0:
+		_log_attack("ignored non-positive damage amount=%.2f" % amount)
 		return
 
 	health = maxi(health - int(round(amount)), 0)
+	_log_attack("damage applied health_after=%d" % health)
 	if health <= 0:
+		_log_attack("health reached 0, triggering death")
 		_die()
 		return
 
@@ -68,10 +76,12 @@ func apply_damage(amount: float) -> void:
 	_play_hit_animation()
 
 func take_damage(amount: float) -> void:
+	_log_attack("take_damage forwarded amount=%.2f" % amount)
 	apply_damage(amount)
 
 func _die() -> void:
 	if is_dead:
+		_log_attack("_die called again while already dead")
 		return
 
 	is_dead = true
@@ -87,6 +97,9 @@ func _die() -> void:
 		[],
 		[&"death", &"die"]
 	)
+
+func _log_attack(message: String) -> void:
+	print("[KnightAttack] %s" % message)
 
 func _update_wander_state(delta: float) -> void:
 	# Can only wander when on the ground

@@ -3,12 +3,12 @@
 [ext_resource type="Script" uid="uid://xpn4iswxe4os" path="res://scripts/npc/charger.gd" id="1_n2dv8"]
 [ext_resource type="PackedScene" uid="uid://crxg8ido3i1el" path="res://assets/entities/Dog.glb" id="2_uk7ct"]
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_uk7ct"]
-radius = 1.1032295
-
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8l3l5"]
 radius = 0.6152344
 height = 2.1542702
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_uk7ct"]
+radius = 1.1032295
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_n2dv8"]
 height = 23.339844
@@ -21,21 +21,22 @@ radius = 4.979492
 [node name="Charger" type="CharacterBody3D" unique_id=1896734156]
 script = ExtResource("1_n2dv8")
 
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=232926487]
+transform = Transform3D(-7.86805e-08, 7.86805e-08, -1.8, 1.8, 3.439234e-15, -7.86805e-08, 0, -1.8, -7.86805e-08, 1.7298702e-09, -0.1983614, 0.20798835)
+shape = SubResource("CapsuleShape3D_8l3l5")
+debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)
+
+[node name="Dog" parent="." unique_id=791997368 instance=ExtResource("2_uk7ct")]
+transform = Transform3D(-0.012, 0, 1.8119497e-09, 0, 0.012, 0, -1.8119497e-09, 0, -0.012, 0, -1.3130372, 0.4952116)
+
 [node name="AttackArea" type="Area3D" parent="." unique_id=1600080193]
-collision_layer = 0
 collision_mask = 3
 
 [node name="Attack" type="CollisionShape3D" parent="AttackArea" unique_id=490331570]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22178239, 1.7575533)
 shape = SubResource("SphereShape3D_uk7ct")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=232926487]
-transform = Transform3D(-7.86805e-08, 7.86805e-08, -1.8, 1.8, 3.439234e-15, -7.86805e-08, 0, -1.8, -7.86805e-08, 1.7298702e-09, -0.1983614, 0.20798835)
-shape = SubResource("CapsuleShape3D_8l3l5")
-debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)
-
 [node name="Detector" type="Area3D" parent="." unique_id=188811864]
-collision_layer = 0
 collision_mask = 2
 
 [node name="DetectorShape" type="CollisionShape3D" parent="Detector" unique_id=1632285917]
@@ -43,11 +44,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09667969, 0)
 shape = SubResource("CylinderShape3D_n2dv8")
 
 [node name="Lunge" type="Area3D" parent="." unique_id=1404727092]
-collision_layer = 0
 collision_mask = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Lunge" unique_id=1258345008]
 shape = SubResource("CylinderShape3D_uk7ct")
 
-[node name="Dog" parent="." unique_id=791997368 instance=ExtResource("2_uk7ct")]
-transform = Transform3D(-0.012, 0, 1.8119497e-09, 0, 0.012, 0, -1.8119497e-09, 0, -0.012, 0, -1.3130372, 0.4952116)
+[node name="Hurtbox" type="Area3D" parent="." unique_id=516759337]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=741339884]
+transform = Transform3D(-7.86805e-08, 7.86805e-08, -1.8, 1.8, 3.439234e-15, -7.86805e-08, 0, -1.8, -7.86805e-08, 1.7298702e-09, -0.1983614, 0.20798835)
+shape = SubResource("CapsuleShape3D_8l3l5")
+debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)

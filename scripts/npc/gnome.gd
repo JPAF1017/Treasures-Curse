@@ -36,6 +36,7 @@ const GRAB_ESCAPE_REQUIRED_JUMPS := 10
 const GRAB_REACQUIRE_COOLDOWN := 0.8
 const HIT_REACTION_DURATION := 0.35
 const DAMAGE_ACTION_COOLDOWN := 3.0
+const HIT_ANIMATION_CANDIDATES: Array[StringName] = [&"hurt", &"hit", &"damage"]
 
 @export var facing_offset_degrees: float = 180.0
 @export var debug_memory_logs: bool = false
@@ -732,21 +733,47 @@ func apply_knockback(direction: Vector3, strength: float) -> void:
 
 
 func _begin_hit_reaction() -> void:
-	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	hit_reaction_timer = max(hit_reaction_timer, _get_hit_reaction_duration())
 	velocity.x = 0.0
 	velocity.z = 0.0
 	_play_hit_animation()
+
+func _get_hit_reaction_duration() -> float:
+	if animation_player == null:
+		return HIT_REACTION_DURATION
+
+	var hit_animation_name := _get_hit_animation_name()
+	if hit_animation_name == StringName():
+		return HIT_REACTION_DURATION
+
+	var hit_animation := animation_player.get_animation(hit_animation_name)
+	if hit_animation:
+		return max(HIT_REACTION_DURATION, hit_animation.length)
+
+	return HIT_REACTION_DURATION
+
+func _get_hit_animation_name() -> StringName:
+	if animation_player == null:
+		return StringName()
+
+	for anim_name in HIT_ANIMATION_CANDIDATES:
+		if animation_player.has_animation(anim_name):
+			return anim_name
+
+	return StringName()
 
 
 func _play_hit_animation() -> void:
 	if animation_player == null:
 		return
-	if not animation_player.has_animation("hit"):
+
+	var hit_animation_name := _get_hit_animation_name()
+	if hit_animation_name == StringName():
 		return
 
-	if animation_player.current_animation != "hit" or not animation_player.is_playing():
+	if animation_player.current_animation != hit_animation_name or not animation_player.is_playing():
 		animation_player.speed_scale = 1.0
-		animation_player.play("hit")
+		animation_player.play(hit_animation_name)
 		animation_player.seek(0.0, true)
 
 func _play_stunned_walk_animation() -> void:

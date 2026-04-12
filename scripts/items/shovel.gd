@@ -65,6 +65,7 @@ var swing_damage_ready: bool = false
 var swing_momentum_applied: bool = false
 var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
 var current_swing_stun_duration: float = SWING_STUN_DURATION_INCOMPLETE
+var swing_damaged_targets: Dictionary = {}
 var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
 var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
 var npc_stun_states: Dictionary = {}
@@ -131,6 +132,7 @@ func begin_primary_action(player: Node) -> bool:
 	swing_force_release = false
 	swing_was_released_early = false
 	swing_damage_ready = false
+	swing_damaged_targets.clear()
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
 	current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):
@@ -189,10 +191,12 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 		current_swing_damage = SWING_DAMAGE_INCOMPLETE if swing_was_released_early else SWING_DAMAGE_FULL
 		current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE if swing_was_released_early else SWING_STUN_DURATION_FULL
 		_consume_player_stamina(player, 60.0)
-		_apply_attack_damage(player, current_swing_damage, current_swing_stun_duration)
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true
+
+	if swing_damage_ready and animation_player.current_animation_position < _swing_frame_to_time(SWING_STOP_FRAME):
+		_apply_attack_damage(player, current_swing_damage, current_swing_stun_duration)
 
 	var stop_time := minf(_swing_frame_to_time(SWING_STOP_FRAME), swing_animation.length)
 	if animation_player.current_animation_position >= stop_time:
@@ -353,22 +357,12 @@ func _apply_attack_damage(player: Node, amount: float, stun_duration: float) -> 
 	if attack_area == null:
 		return
 
-	var damaged_nodes: Array[Node] = []
-	for body in attack_area.get_overlapping_bodies():
-		var target := _find_damage_target(body, player)
-		if target != null and not damaged_nodes.has(target):
-			if target.has_method("apply_damage"):
-				target.call("apply_damage", amount)
-				_apply_npc_stun(target, player, stun_duration)
-				damaged_nodes.append(target)
-
-	for area in attack_area.get_overlapping_areas():
-		var target := _find_damage_target(area, player)
-		if target != null and not damaged_nodes.has(target):
-			if target.has_method("apply_damage"):
-				target.call("apply_damage", amount)
-				_apply_npc_stun(target, player, stun_duration)
-				damaged_nodes.append(target)
+	var targets: Array[Node] = MeleeShared.collect_hurtbox_damage_targets(attack_area, self, player, swing_damaged_targets)
+	for target: Node in targets:
+		if target.has_method("apply_damage"):
+			target.call("apply_damage", amount)
+			_apply_npc_stun(target, player, stun_duration)
+			swing_damaged_targets[target.get_instance_id()] = true
 
 
 func _apply_npc_stun(target: Node, player: Node, stun_duration: float) -> void:
@@ -492,17 +486,6 @@ func _is_stunnable_npc_target(target: Node, player: Node) -> bool:
 		return false
 
 	return target_script.resource_path.contains("/scripts/npc/")
-
-
-func _find_damage_target(node: Node, player: Node) -> Node:
-	var current: Node = node
-	while current != null:
-		if current == self or current == player:
-			return null
-		if current.has_method("apply_damage"):
-			return current
-		current = current.get_parent()
-	return null
 
 
 func _apply_swing_momentum(player: Node) -> void:
@@ -714,7 +697,7 @@ func _is_swing_in_windup(player: Node) -> bool:
 
 
 func _swing_frame_to_time(frame: int) -> float:
-	return max(frame - 1, 0) / SWING_ANIMATION_FPS
+	return MeleeShared.swing_frame_to_time(frame, SWING_ANIMATION_FPS)
 
 
 func _reset_swing_state(player: Node) -> void:
@@ -724,6 +707,7 @@ func _reset_swing_state(player: Node) -> void:
 	swing_damage_ready = false
 	swing_was_released_early = false
 	swing_momentum_applied = false
+	swing_damaged_targets.clear()
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
 	current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):

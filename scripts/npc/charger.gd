@@ -2,6 +2,8 @@ extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
+const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
+const EnemyKnockback := preload("res://scripts/npc/NPCKnockbackComponent.gd")
 
 const HEALTH_MAX = 20.0
 const GRAVITY = 20.0
@@ -40,8 +42,12 @@ const MEMORY_LOG_INTERVAL = 0.25
 const DEBUG_LOG_INTERVAL = 0.35
 const CROUCH_DETECTION_RAY_LENGTH = 8.0
 const RUN_TURN_SPEED_MULTIPLIER = 0.55
+const HIT_REACTION_DURATION = 0.3
+const DEATH_LINGER_TIME = 5.0
+const STUN_WALK_ANIMATION_SPEED_SCALE = 0.45
 
 @export var debug_navigation_logs: bool = false
+@export var facing_offset_degrees: float = 90.0
 
 var health: float = HEALTH_MAX
 var player: CharacterBody3D = null
@@ -87,6 +93,12 @@ var los_loss_grace_timer: float = 0.0
 var path_cache_timer: float = 0.0
 var cached_nav_path: Array[Vector3] = []
 var last_reachable_target_position: Vector3 = Vector3.ZERO
+var is_dead: bool = false
+var hit_reaction_timer: float = 0.0
+var is_stunned: bool = false
+var stun_timer: float = 0.0
+var knockback_component = EnemyKnockback.new()
+var stun_walk_visual_active: bool = false
 
 # Slope alignment
 var ground_normal: Vector3 = Vector3.UP  # Smoothed ground normal
@@ -211,7 +223,7 @@ func _start_charge():
 		charge_direction = -global_transform.basis.z
 	else:
 		charge_direction = charge_direction.normalized()
-	rotation.y = atan2(charge_direction.x, charge_direction.z)
+	rotation.y = _yaw_with_facing_offset(charge_direction)
 	
 	print("Charging forward toward memorized position!")
 	
@@ -247,7 +259,7 @@ func _execute_lunge(direction: Vector3):
 	lunge_direction = direction
 	
 	# Snap rotation to face the lunge direction immediately
-	rotation.y = atan2(lunge_direction.x, lunge_direction.z)
+	rotation.y = _yaw_with_facing_offset(lunge_direction)
 	print("Executing lunge! Direction locked: ", lunge_direction)
 	
 	# Play lunge animation
@@ -262,7 +274,12 @@ func _execute_lunge(direction: Vector3):
 			print("No lunge animation, using walk at 2x speed")
 
 func _physics_process(delta):
+	if is_dead:
+		return
+
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
+	stun_timer = max(stun_timer - delta, 0.0)
+	is_stunned = stun_timer > 0.0
 	los_memory_timer = max(los_memory_timer - delta, 0.0)
 	trail_memory_timer = max(trail_memory_timer - delta, 0.0)
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
@@ -275,6 +292,36 @@ func _physics_process(delta):
 
 	# Apply gravity
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
+
+	if knockback_component.is_active():
+		knockback_component.update(delta)
+		move_and_slide()
+		_align_to_slope(delta)
+		return
+
+	hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
+	if hit_reaction_timer > 0.0:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_hurt_animation()
+		move_and_slide()
+		_align_to_slope(delta)
+		return
+
+	if is_stunned:
+		is_backing_up = false
+		is_charging = false
+		is_lunging = false
+		is_decelerating = false
+		has_damaged_during_lunge = false
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_stunned_walk_animation()
+		move_and_slide()
+		_align_to_slope(delta)
+		return
+	elif stun_walk_visual_active:
+		_restore_walk_animation_speed()
 	
 	# Update lunge cooldown timer
 	if not can_lunge and not is_backing_up and not is_charging:
@@ -318,7 +365,7 @@ func _physics_process(delta):
 		var away_dir = -memorized_direction
 		
 		# Face the player while walking backwards
-		var target_rotation = atan2(memorized_direction.x, memorized_direction.z)
+		var target_rotation = _yaw_with_facing_offset(memorized_direction)
 		rotation.y = lerp_angle(rotation.y, target_rotation, delta * 8.0)
 		
 		# Move backwards
@@ -340,7 +387,7 @@ func _physics_process(delta):
 		charge_timer += delta
 
 		# Keep the locked direction for the full charge phase.
-		rotation.y = atan2(charge_direction.x, charge_direction.z)
+		rotation.y = _yaw_with_facing_offset(charge_direction)
 		
 		# Run forward in the locked charge direction.
 		velocity.x = charge_direction.x * CHARGE_SPEED
@@ -465,7 +512,7 @@ func _physics_process(delta):
 		if not is_lunging and not is_decelerating and not is_backing_up and not is_charging:
 			# Calculate target rotation
 			if direction_to_player.length() > 0.1:
-				var target_rotation = atan2(direction_to_player.x, direction_to_player.z)
+				var target_rotation = _yaw_with_facing_offset(direction_to_player)
 				# Smoothly rotate to face the player
 				rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
 		
@@ -497,7 +544,7 @@ func _physics_process(delta):
 					_debug_nav_log("Path dir chosen | dist %.2f | wall_follow %d" % [distance_to_player, wall_follow_mode])
 					velocity.x = path_direction.x * SPEED
 					velocity.z = path_direction.z * SPEED
-					var target_rotation = atan2(path_direction.x, path_direction.z)
+					var target_rotation = _yaw_with_facing_offset(path_direction)
 					rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
 				else:
 					_debug_nav_log("No path dir | LOS %s | on_wall %s | slides %d | dist %.2f" % [str(has_line_of_sight), str(is_on_wall()), get_slide_collision_count(), distance_to_player], true)
@@ -568,7 +615,7 @@ func _physics_process(delta):
 					_debug_nav_log("Memory chase | remaining %.2f" % [trail_memory_timer])
 					velocity.x = memory_dir.x * SPEED
 					velocity.z = memory_dir.z * SPEED
-					var memory_rot = atan2(memory_dir.x, memory_dir.z)
+					var memory_rot = _yaw_with_facing_offset(memory_dir)
 					rotation.y = lerp_angle(rotation.y, memory_rot, delta * _get_turn_speed(5.0))
 				else:
 					_debug_nav_log("Memory blocked | remaining %.2f" % [trail_memory_timer], true)
@@ -597,7 +644,7 @@ func _physics_process(delta):
 				direction = direction.normalized()
 				
 				# Rotate to face the direction of movement
-				var target_rotation = atan2(direction.x, direction.z)
+				var target_rotation = _yaw_with_facing_offset(direction)
 				rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
 				
 				# Move along the circle
@@ -622,6 +669,135 @@ func _physics_process(delta):
 	
 	# Align visuals and collision to slope
 	_align_to_slope(delta)
+
+func apply_damage(amount: float) -> void:
+	if is_dead:
+		return
+	if amount <= 0.0:
+		return
+
+	health = maxf(health - amount, 0.0)
+	if health <= 0.0:
+		_die()
+		return
+
+	_begin_hit_reaction()
+
+func take_damage(amount: float) -> void:
+	apply_damage(amount)
+
+func apply_stun_state(duration: float) -> void:
+	if is_dead:
+		return
+	if duration <= 0.0:
+		return
+
+	stun_timer = max(stun_timer, duration)
+	is_stunned = true
+	is_backing_up = false
+	is_charging = false
+	is_lunging = false
+	is_decelerating = false
+	has_damaged_during_lunge = false
+	player = null
+	is_player_in_range = false
+	is_player_in_lunge_range = false
+
+func apply_knockback(direction: Vector3, strength: float) -> void:
+	if is_dead:
+		return
+	knockback_component.begin_knockback(self, direction, strength, 0.35, 0.18)
+
+func _begin_hit_reaction() -> void:
+	hit_reaction_timer = max(hit_reaction_timer, _get_hurt_reaction_duration())
+	# Hurt should take priority over ongoing charge/lunge logic.
+	is_backing_up = false
+	is_charging = false
+	is_lunging = false
+	is_decelerating = false
+	has_damaged_during_lunge = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_play_hurt_animation()
+
+func _get_hurt_reaction_duration() -> float:
+	if animation_player == null:
+		return HIT_REACTION_DURATION
+
+	var duration := HIT_REACTION_DURATION
+	var hurt_candidates: Array[StringName] = [&"hurt", &"hit", &"damage"]
+	for anim_name in hurt_candidates:
+		if animation_player.has_animation(anim_name):
+			var anim := animation_player.get_animation(anim_name)
+			if anim:
+				duration = max(duration, anim.length)
+			break
+
+	return duration
+
+func _play_hurt_animation() -> void:
+	if animation_player == null:
+		return
+
+	var hurt_candidates: Array[StringName] = [&"hurt", &"hit", &"damage"]
+	for anim_name in hurt_candidates:
+		if animation_player.has_animation(anim_name):
+			if animation_player.current_animation != anim_name or not animation_player.is_playing():
+				animation_player.speed_scale = 1.0
+				animation_player.play(anim_name)
+				animation_player.seek(0.0, true)
+			return
+
+func _play_stunned_walk_animation() -> void:
+	if animation_player == null:
+		return
+	if not animation_player.has_animation("walk"):
+		return
+
+	var walk_animation := animation_player.get_animation("walk")
+	if walk_animation and walk_animation.loop_mode == Animation.LOOP_NONE:
+		walk_animation.loop_mode = Animation.LOOP_LINEAR
+
+	if animation_player.current_animation != "walk":
+		animation_player.play("walk")
+	elif not animation_player.is_playing():
+		animation_player.play("walk")
+
+	animation_player.speed_scale = STUN_WALK_ANIMATION_SPEED_SCALE
+	stun_walk_visual_active = true
+
+func _restore_walk_animation_speed() -> void:
+	stun_walk_visual_active = false
+	if animation_player:
+		animation_player.speed_scale = 1.0
+
+func _die() -> void:
+	if is_dead:
+		return
+
+	is_dead = true
+	health = 0.0
+	hit_reaction_timer = 0.0
+	is_stunned = false
+	stun_timer = 0.0
+	_restore_walk_animation_speed()
+	is_player_in_range = false
+	is_player_in_lunge_range = false
+	can_lunge = false
+	is_lunging = false
+	is_backing_up = false
+	is_charging = false
+	is_decelerating = false
+	has_damaged_during_lunge = false
+	velocity = Vector3.ZERO
+
+	await EnemyDeathLinger.run_death_linger(
+		self,
+		animation_player,
+		DEATH_LINGER_TIME,
+		[$Detector, $Lunge, attack_area],
+		[&"death", &"die"]
+	)
 
 func _debug_nav_log(message: String, force: bool = false) -> void:
 	if not debug_navigation_logs:
@@ -830,6 +1006,12 @@ func _get_turn_speed(base_speed: float) -> float:
 	if animation_player and animation_player.is_playing() and animation_player.current_animation == "run":
 		return base_speed * RUN_TURN_SPEED_MULTIPLIER
 	return base_speed
+
+func _yaw_with_facing_offset(direction: Vector3) -> float:
+	var flat_dir := Vector3(direction.x, 0.0, direction.z)
+	if flat_dir.length_squared() <= 0.001:
+		return rotation.y
+	return atan2(flat_dir.x, flat_dir.z) + deg_to_rad(facing_offset_degrees)
 
 func _align_to_slope(delta: float):
 	"""Tilt the Dog visual and CollisionShape3D to match the ground slope."""

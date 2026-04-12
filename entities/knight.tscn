@@ -8,13 +8,14 @@ radius = 0.9658203
 height = 5.577881
 
 [node name="Knight" type="CharacterBody3D" unique_id=1412719762]
-collision_layer = 1
-collision_mask = 1
 script = ExtResource("1_wmydh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1623037696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7876916, 0.092847146)
 shape = SubResource("CapsuleShape3D_kmc1q")
+
+[node name="knight" parent="." unique_id=1365753289 instance=ExtResource("1_kmc1q")]
+transform = Transform3D(0.9625, 0, 0, 0, 0.9625, 0, 0, 0, 0.9625, 0, 0, 0)
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=1902234001]
 collision_layer = 2
@@ -23,6 +24,3 @@ collision_mask = 0
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=1991447203]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7876916, 0.092847146)
 shape = SubResource("CapsuleShape3D_kmc1q")
-
-[node name="knight" parent="." unique_id=1365753289 instance=ExtResource("1_kmc1q")]
-transform = Transform3D(0.9625, 0, 0, 0, 0.9625, 0, 0, 0, 0.9625, 0, 0, 0)

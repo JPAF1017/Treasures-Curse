@@ -93,3 +93,56 @@ func is_wielding_player_on_floor(item_node: Node) -> bool:
 			return current.is_on_floor()
 		current = current.get_parent()
 	return false
+
+
+func is_hurtbox_area(node: Node) -> bool:
+	if not (node is Area3D):
+		return false
+
+	var area := node as Area3D
+	if area.is_in_group("hurtbox"):
+		return true
+
+	return area.name.to_lower().contains("hurtbox")
+
+
+func find_damage_target_from_hurtbox(overlap_node: Node, item_node: Node, player: Node) -> Node:
+	if not is_hurtbox_area(overlap_node):
+		return null
+
+	var current: Node = overlap_node
+	while current != null:
+		if current == item_node or current == player:
+			return null
+		if current.has_method("apply_damage"):
+			return current
+		current = current.get_parent()
+
+	return null
+
+
+func collect_hurtbox_damage_targets(attack_area: Area3D, item_node: Node, player: Node, already_hit_targets: Dictionary = {}) -> Array[Node]:
+	var targets: Array[Node] = []
+	if attack_area == null:
+		return targets
+
+	for area in attack_area.get_overlapping_areas():
+		var target := find_damage_target_from_hurtbox(area, item_node, player)
+		if target == null:
+			continue
+
+		var target_id := target.get_instance_id()
+		if already_hit_targets.has(target_id):
+			continue
+		if targets.has(target):
+			continue
+
+		targets.append(target)
+
+	return targets
+
+
+func swing_frame_to_time(frame: int, animation_fps: float) -> float:
+	if animation_fps <= 0.0:
+		return 0.0
+	return max(frame - 1, 0) / animation_fps

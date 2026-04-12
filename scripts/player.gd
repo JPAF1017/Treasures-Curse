@@ -40,6 +40,7 @@ const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
+@export var debug_attack_overlap_logs: bool = true
 @export var hide_visual_from_player_camera: bool = true
 @export_range(-360.0, 360.0, 1.0) var visual_yaw_offset_degrees: float = 180.0
 @export var crouch_head_y: float = -0.111
@@ -52,6 +53,7 @@ var t_bob = 0.0
 var gravity = 20
 var bump_step_timer = 0.0
 var position_log_timer = 0.0
+var attack_overlap_log_timer = 0.0
 var movement_lock_sources: Array[Node] = []
 var initial_head_position: Vector3 = Vector3.ZERO
 var target_head_y: float = 0.0
@@ -114,6 +116,7 @@ func _ready():
 	_select_hotbar_slot(0)
 	_update_stamina_ui()
 	_update_health_ui()
+	_setup_attack_overlap_debug()
 	
 	# Initialize player visual rotation.
 	if visual_root:
@@ -187,6 +190,7 @@ func _unhandled_input(event):
 func _physics_process(delta):
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	position_log_timer = max(position_log_timer - delta, 0.0)
+	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	var is_movement_locked := _is_movement_locked()
 	var input_dir := Vector2.ZERO
 	if not is_movement_locked:
@@ -343,6 +347,82 @@ func _physics_process(delta):
 		tired_jump_active = false
 	_try_auto_equip_item()
 	_log_player_position()
+	_log_attack_overlap_snapshot()
+
+func _setup_attack_overlap_debug() -> void:
+	if attack_area == null:
+		return
+
+	if not attack_area.area_entered.is_connected(_on_attack_area_entered):
+		attack_area.area_entered.connect(_on_attack_area_entered)
+	if not attack_area.area_exited.is_connected(_on_attack_area_exited):
+		attack_area.area_exited.connect(_on_attack_area_exited)
+	if not attack_area.body_entered.is_connected(_on_attack_body_entered):
+		attack_area.body_entered.connect(_on_attack_body_entered)
+	if not attack_area.body_exited.is_connected(_on_attack_body_exited):
+		attack_area.body_exited.connect(_on_attack_body_exited)
+
+	print("[AttackDebug] attack area ready monitoring=%s monitorable=%s layer=%d mask=%d" % [
+		str(attack_area.monitoring),
+		str(attack_area.monitorable),
+		attack_area.collision_layer,
+		attack_area.collision_mask,
+	])
+
+func _on_attack_area_entered(area: Area3D) -> void:
+	if not debug_attack_overlap_logs:
+		return
+	if area == null:
+		return
+	print("[AttackDebug] area entered: %s parent=%s" % [area.name, area.get_parent().name if area.get_parent() else "<none>"])
+
+func _on_attack_area_exited(area: Area3D) -> void:
+	if not debug_attack_overlap_logs:
+		return
+	if area == null:
+		return
+	print("[AttackDebug] area exited: %s parent=%s" % [area.name, area.get_parent().name if area.get_parent() else "<none>"])
+
+func _on_attack_body_entered(body: Node3D) -> void:
+	if not debug_attack_overlap_logs:
+		return
+	if body == null:
+		return
+	print("[AttackDebug] body entered: %s" % body.name)
+
+func _on_attack_body_exited(body: Node3D) -> void:
+	if not debug_attack_overlap_logs:
+		return
+	if body == null:
+		return
+	print("[AttackDebug] body exited: %s" % body.name)
+
+func _log_attack_overlap_snapshot() -> void:
+	if not debug_attack_overlap_logs:
+		return
+	if attack_area == null:
+		return
+	if attack_overlap_log_timer > 0.0:
+		return
+
+	attack_overlap_log_timer = 0.25
+	var overlapping_areas := attack_area.get_overlapping_areas()
+	var overlapping_bodies := attack_area.get_overlapping_bodies()
+	var knight_hurtbox_overlap := false
+
+	for area in overlapping_areas:
+		if area == null:
+			continue
+		var parent := area.get_parent()
+		if area.name.to_lower().contains("hurtbox") or (parent and parent.name.to_lower().contains("knight")):
+			knight_hurtbox_overlap = true
+			break
+
+	print("[AttackDebug] snapshot areas=%d bodies=%d knight_hurtbox_overlap=%s" % [
+		overlapping_areas.size(),
+		overlapping_bodies.size(),
+		str(knight_hurtbox_overlap),
+	])
 
 func set_movement_locked_by(locker: Node, locked: bool) -> void:
 	if locker == null:
