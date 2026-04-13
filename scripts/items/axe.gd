@@ -191,7 +191,8 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 	if not swing_damage_ready and animation_player.current_animation_position >= release_time:
 		swing_damage_ready = true
 		current_swing_damage = SWING_DAMAGE_INCOMPLETE if swing_was_released_early else SWING_DAMAGE_FULL
-		_consume_player_stamina(player, 60.0)
+		_consume_player_stamina(player, 40.0)
+		_viewmodel.start_swing()
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true

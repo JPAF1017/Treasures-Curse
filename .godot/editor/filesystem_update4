@@ -8,3 +8,4 @@ res://scripts/items/axe.gd
 res://scripts/items/bat.gd
 res://scripts/items/shovel.gd
 res://scripts/items/MeleeViewmodelComponent.gd
+res://levels/test map.tscn

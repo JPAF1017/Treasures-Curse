@@ -59,8 +59,8 @@ static var equip_key_was_down: bool = false
 @export_enum("X", "Y", "Z") var held_item_flip_axis: int = 0
 
 @export_group("Viewmodel")
-@export var viewmodel_position: Vector3 = Vector3(0.3, -0.4, -0.45)
-@export var viewmodel_rotation_degrees: Vector3 = Vector3(-20.0, -100.0, 10.0)
+@export var viewmodel_position: Vector3 = Vector3(0.5, -0.4, -0.45)
+@export var viewmodel_rotation_degrees: Vector3 = Vector3(-20.0, -10.0, 10.0)
 @export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 1
 
 var inventory_slot_index: int = -1
@@ -204,7 +204,8 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 		swing_damage_ready = true
 		current_swing_damage = SWING_DAMAGE_INCOMPLETE if swing_was_released_early else SWING_DAMAGE_FULL
 		current_swing_knockback = BAT_KNOCKBACK_INCOMPLETE if swing_was_released_early else BAT_KNOCKBACK_FULL
-		_consume_player_stamina(player, 60.0)
+		_consume_player_stamina(player, 40.0)
+		_viewmodel.start_swing()
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true

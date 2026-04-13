@@ -15,6 +15,11 @@ var _shake_time: float = 0.0
 const SHAKE_SPEED := 45.0
 const SHAKE_INTENSITY := 0.006
 
+var _swing_active: bool = false
+var _swing_time: float = 0.0
+const SWING_DURATION := 0.2
+const SWING_ANGLE := 90.0
+
 
 func _init(model_scene: PackedScene, viewmodel_name: String) -> void:
 	_model_scene = model_scene
@@ -82,6 +87,24 @@ func update_bob(player: Node, delta: float, base_position: Vector3) -> void:
 		_shake_time = 0.0
 
 	_instance.position = base_position + offset
+
+	if _swing_active:
+		_swing_time += delta
+		var t := clampf(_swing_time / SWING_DURATION, 0.0, 1.0)
+		var swing_curve: float
+		if t < 0.4:
+			swing_curve = t / 0.4
+		else:
+			swing_curve = 1.0 - ((t - 0.4) / 0.6)
+		var swing_angle := deg_to_rad(-SWING_ANGLE) * swing_curve
+		_instance.rotation.x += swing_angle
+		if t >= 1.0:
+			_swing_active = false
+
+
+func start_swing() -> void:
+	_swing_active = true
+	_swing_time = 0.0
 
 
 func is_active() -> bool:
