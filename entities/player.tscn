@@ -66,7 +66,7 @@ spot_attenuation = 0.8
 spot_angle = 42.0
 spot_angle_attenuation = 2.37841
 
-[node name="player" parent="." unique_id=920360375 instance=ExtResource("2_b0kkn")]
+[node name="player" parent="." unique_id=1414178216 instance=ExtResource("2_b0kkn")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]

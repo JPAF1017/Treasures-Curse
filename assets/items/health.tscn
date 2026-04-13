@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://tqvfwlkbwja4"]
+
+[ext_resource type="Script" uid="uid://brxc7lsdw8lpi" path="res://scripts/items/health.gd" id="1_agd2w"]
+[ext_resource type="PackedScene" uid="uid://binumxdf5knpu" path="res://assets/items assets/health.glb" id="1_t73jc"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_t73jc"]
+radius = 1.1621094
+height = 3.0821533
+
+[node name="Health" type="RigidBody3D" unique_id=1919651728]
+script = ExtResource("1_agd2w")
+
+[node name="health" parent="." unique_id=1557227419 instance=ExtResource("1_t73jc")]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=769325705]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0.11213815, 0)
+shape = SubResource("CapsuleShape3D_t73jc")

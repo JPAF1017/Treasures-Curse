@@ -20,6 +20,7 @@ const BAT_SCENE_PATH := "res://assets/items/bat.tscn"
 const BAT_ATTACHMENT_NODE_NAME := "RightHandBatAttachment"
 static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const BAT_ITEM_ICON: Texture2D = preload("res://assets/ui/bat.png")
+const BAT_MODEL_SCENE: PackedScene = preload("res://assets/items assets/bat.glb")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
 const ITEM_WINDUP_COLOR_START_INDEX := 17
 const ITEM_WINDUP_COLOR_END_INDEX := 22
@@ -55,8 +56,18 @@ static var equip_key_was_down: bool = false
 @export var held_item_flip_blade: bool = true
 @export_enum("X", "Y", "Z") var held_item_flip_axis: int = 0
 
+@export var viewmodel_position: Vector3 = Vector3(0.3, -0.25, -0.45)
+@export var viewmodel_rotation_degrees: Vector3 = Vector3(-20.0, -100.0, 10.0)
+@export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.15
+
+const VIEWMODEL_BOB_FREQ := 2.0
+const VIEWMODEL_BOB_AMP_Y := 0.012
+const VIEWMODEL_BOB_AMP_X := 0.006
+
 var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
+var viewmodel_instance: Node3D = null
+var viewmodel_bob_time: float = 0.0
 var swing_in_progress: bool = false
 var swing_animation_finished: bool = false
 var swing_force_release: bool = false
@@ -160,6 +171,7 @@ func release_primary_action(player: Node) -> void:
 
 
 func update_primary_action(player: Node, _delta: float) -> bool:
+	_update_viewmodel_bob(player, _delta)
 	var animation_player := _get_player_animation_player(player)
 	if animation_player == null:
 		if swing_in_progress:
@@ -267,6 +279,8 @@ func drop_from_hotbar(player: Node) -> bool:
 
 	_reset_swing_state(player)
 
+	_hide_viewmodel()
+
 	var world_root: Node = null
 	if player.has_method("get_tree"):
 		var tree := player.get_tree()
@@ -291,6 +305,7 @@ func drop_from_hotbar(player: Node) -> bool:
 		player.add_child(self)
 
 	global_position = drop_origin
+	_set_visual_layer_recursive(self, 1)
 	_set_item_visuals_visible(true)
 	_set_item_physics_enabled(true)
 	var player_node := player as Node3D
@@ -312,8 +327,13 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, is_sprintin
 	if inventory_slot_index == selected_slot_index:
 		_equip_to_right_hand(player)
 		_set_item_visuals_visible(not is_sprinting)
+		if not is_sprinting:
+			_show_viewmodel(player)
+		else:
+			_hide_viewmodel()
 	else:
 		_detach_from_hand(player)
+		_hide_viewmodel()
 
 
 func is_equipped_in_hand() -> bool:
@@ -533,6 +553,7 @@ func _equip_to_right_hand(player: Node) -> void:
 
 	_set_item_physics_enabled(false)
 	_set_item_visuals_visible(true)
+	_set_visual_layer_recursive(self, 2)
 
 	position = held_item_position
 	rotation = Vector3(
@@ -574,6 +595,63 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 func _set_visual_children_visible(node: Node, visibility: bool) -> void:
 	MeleeShared.set_visual_children_visible(node, visibility)
+
+
+func _set_visual_layer_recursive(node: Node, layer: int) -> void:
+	if node is VisualInstance3D:
+		node.layers = 1 << (layer - 1)
+	for child in node.get_children():
+		_set_visual_layer_recursive(child, layer)
+
+
+func _show_viewmodel(player: Node) -> void:
+	if viewmodel_instance and is_instance_valid(viewmodel_instance):
+		viewmodel_instance.visible = true
+		return
+
+	var camera := _get_player_camera(player)
+	if camera == null:
+		return
+
+	viewmodel_instance = BAT_MODEL_SCENE.instantiate() as Node3D
+	viewmodel_instance.name = "BatViewmodel"
+	camera.add_child(viewmodel_instance)
+
+	viewmodel_instance.position = viewmodel_position
+	viewmodel_instance.rotation = Vector3(
+		deg_to_rad(viewmodel_rotation_degrees.x),
+		deg_to_rad(viewmodel_rotation_degrees.y),
+		deg_to_rad(viewmodel_rotation_degrees.z)
+	)
+	viewmodel_instance.scale = Vector3.ONE * viewmodel_scale
+
+
+func _hide_viewmodel() -> void:
+	if viewmodel_instance and is_instance_valid(viewmodel_instance):
+		viewmodel_instance.queue_free()
+		viewmodel_instance = null
+	viewmodel_bob_time = 0.0
+
+
+func _update_viewmodel_bob(player: Node, delta: float) -> void:
+	if viewmodel_instance == null or not is_instance_valid(viewmodel_instance):
+		return
+
+	var player_body := player as CharacterBody3D
+	if player_body == null:
+		return
+
+	var speed := player_body.velocity.length()
+	var on_floor: bool = player_body.is_on_floor()
+
+	if speed > 0.5 and on_floor:
+		viewmodel_bob_time += delta * speed
+	else:
+		viewmodel_bob_time = lerpf(viewmodel_bob_time, 0.0, delta * 5.0)
+
+	var bob_y := sin(viewmodel_bob_time * VIEWMODEL_BOB_FREQ) * VIEWMODEL_BOB_AMP_Y
+	var bob_x := cos(viewmodel_bob_time * VIEWMODEL_BOB_FREQ * 0.5) * VIEWMODEL_BOB_AMP_X
+	viewmodel_instance.position = viewmodel_position + Vector3(bob_x, bob_y, 0.0)
 
 
 func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:

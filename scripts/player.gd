@@ -37,6 +37,7 @@ const HOTBAR_SELECTED_SCALE = 1.18
 const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
+const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
@@ -270,6 +271,7 @@ func _physics_process(delta):
 		var is_strafing_right := input_dir.x > 0.0
 		var wants_run := is_sprinting
 		var grounded_animation_state := is_on_floor() or tired_jump_active
+		var _hold_item := _is_health_item_model(_get_selected_hotbar_item())
 		if swing_anim_active:
 			pass
 		elif jump_anim_active:
@@ -277,37 +279,58 @@ func _physics_process(delta):
 		elif grounded_animation_state:
 			if is_crouching:
 				if is_walking_forward and animation_player.has_animation("crouchWalk"):
-					if animation_player.current_animation != "crouchWalk" or animation_player.speed_scale < 0.0:
-						animation_player.play("crouchWalk")
+					var _anim := "crouchWalkHold" if _hold_item and animation_player.has_animation("crouchWalkHold") else "crouchWalk"
+					if animation_player.current_animation != _anim or animation_player.speed_scale < 0.0:
+						animation_player.play(_anim)
 				elif is_walking_backward and animation_player.has_animation("crouchWalk"):
-					if animation_player.current_animation != "crouchWalk" or animation_player.speed_scale > 0.0:
-						animation_player.play_backwards("crouchWalk")
+					var _anim := "crouchWalkBackHold" if _hold_item and animation_player.has_animation("crouchWalkBackHold") else "crouchWalk"
+					if _hold_item and animation_player.has_animation("crouchWalkBackHold"):
+						if animation_player.current_animation != _anim:
+							animation_player.play(_anim)
+					else:
+						if animation_player.current_animation != _anim or animation_player.speed_scale > 0.0:
+							animation_player.play_backwards(_anim)
 				elif is_strafing_right and animation_player.has_animation("crouchStrafeRight"):
-					if animation_player.current_animation != "crouchStrafeRight":
-						animation_player.play("crouchStrafeRight")
+					var _anim := "crouchStrafeRightHold" if _hold_item and animation_player.has_animation("crouchStrafeRightHold") else "crouchStrafeRight"
+					if animation_player.current_animation != _anim:
+						animation_player.play(_anim)
 				elif is_strafing_left and animation_player.has_animation("crouchStrafeLeft"):
-					if animation_player.current_animation != "crouchStrafeLeft":
-						animation_player.play("crouchStrafeLeft")
-				elif animation_player.has_animation("crouchIdle") and animation_player.current_animation != "crouchIdle":
-					animation_player.play("crouchIdle")
+					var _anim := "crouchStrafeLeftHold" if _hold_item and animation_player.has_animation("crouchStrafeLeftHold") else "crouchStrafeLeft"
+					if animation_player.current_animation != _anim:
+						animation_player.play(_anim)
+				else:
+					var _anim := "crouchIdleHold" if _hold_item and animation_player.has_animation("crouchIdleHold") else "crouchIdle"
+					if animation_player.has_animation(_anim) and animation_player.current_animation != _anim:
+						animation_player.play(_anim)
 			elif animation_player.has_animation("walk"):
 				if is_walking_forward:
 					if wants_run and animation_player.has_animation("run"):
 						if animation_player.current_animation != "run":
 							animation_player.play("run")
-					elif animation_player.current_animation != "walk" or animation_player.speed_scale < 0.0:
-						animation_player.play("walk")
+					else:
+						var _anim := "walkHold" if _hold_item and animation_player.has_animation("walkHold") else "walk"
+						if animation_player.current_animation != _anim or animation_player.speed_scale < 0.0:
+							animation_player.play(_anim)
 				elif is_walking_backward:
-					if animation_player.current_animation != "walk" or animation_player.speed_scale > 0.0:
-						animation_player.play_backwards("walk")
-				elif is_strafing_left and animation_player.has_animation("leftStrafe"):
-					if animation_player.current_animation != "leftStrafe":
-						animation_player.play("leftStrafe")
-				elif is_strafing_right and animation_player.has_animation("rightStrafe"):
-					if animation_player.current_animation != "rightStrafe":
-						animation_player.play("rightStrafe")
-				elif animation_player.has_animation("idle") and animation_player.current_animation != "idle":
-					animation_player.play("idle")
+					var _anim := "walkBackHold" if _hold_item and animation_player.has_animation("walkBackHold") else "walk"
+					if _hold_item and animation_player.has_animation("walkBackHold"):
+						if animation_player.current_animation != _anim:
+							animation_player.play(_anim)
+					else:
+						if animation_player.current_animation != _anim or animation_player.speed_scale > 0.0:
+							animation_player.play_backwards(_anim)
+				elif is_strafing_left:
+					var _anim := "leftStrafeHold" if _hold_item and animation_player.has_animation("leftStrafeHold") else "leftStrafe"
+					if animation_player.has_animation(_anim) and animation_player.current_animation != _anim:
+						animation_player.play(_anim)
+				elif is_strafing_right:
+					var _anim := "rightStrafeHold" if _hold_item and animation_player.has_animation("rightStrafeHold") else "rightStrafe"
+					if animation_player.has_animation(_anim) and animation_player.current_animation != _anim:
+						animation_player.play(_anim)
+				else:
+					var _anim := "idleHold" if _hold_item and animation_player.has_animation("idleHold") else "idle"
+					if animation_player.has_animation(_anim) and animation_player.current_animation != _anim:
+						animation_player.play(_anim)
 		elif animation_player.has_animation("jump") and jump_phase != JUMP_PHASE_NONE:
 			if animation_player.current_animation != "jump":
 				animation_player.play("jump")
@@ -661,10 +684,13 @@ func _get_selected_hotbar_item() -> Node3D:
 	return selected_item
 
 func _is_primary_item_model(item_model: Node) -> bool:
-	return item_model is Axe or item_model is Bat or _is_shovel_item_model(item_model)
+	return item_model is Axe or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model)
 
 func _is_shovel_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
+
+func _is_health_item_model(item_model: Node) -> bool:
+	return item_model != null and item_model.get_script() == HEALTH_ITEM_SCRIPT
 
 func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()
@@ -732,7 +758,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Axe or item_body is Bat or _is_shovel_item_model(item_body):
+	if item_body is Axe or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body):
 		if _has_item_in_hotbar(item_body):
 			return
 
@@ -751,7 +777,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 func _try_auto_equip_item() -> void:
 	if _find_first_empty_hotbar_slot() == -1:
 		return
-	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
+	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
 
 	var item_body := _get_pickup_candidate()
@@ -771,7 +797,7 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance"))))
+	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")))))
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
@@ -794,7 +820,11 @@ func _get_pickup_candidate() -> RigidBody3D:
 	if axe_candidate:
 		return axe_candidate
 
-	return SHOVEL_ITEM_SCRIPT.call("find_shovel_rigidbody_from_node", collider) as RigidBody3D
+	var shovel_candidate := SHOVEL_ITEM_SCRIPT.call("find_shovel_rigidbody_from_node", collider) as RigidBody3D
+	if shovel_candidate:
+		return shovel_candidate
+
+	return HEALTH_ITEM_SCRIPT.call("find_health_rigidbody_from_node", collider) as RigidBody3D
 
 func _update_pickup_prompt_visibility() -> void:
 	if pickup_control == null:

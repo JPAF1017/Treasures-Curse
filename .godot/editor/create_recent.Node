@@ -1,7 +1,7 @@
-Area3D
 CollisionShape3D
-CollisionPolygon3D
 RigidBody3D
+Area3D
+CollisionPolygon3D
 Label
 Control
 Node3D

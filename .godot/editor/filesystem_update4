@@ -1,14 +1,9 @@
-res://scripts/npc/knight.gd
-res://levels/test map.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://entities/knight.tscn
+res://assets/items/health.tscn
 res://scripts/player.gd
-res://scripts/npc/charger.gd
-res://entities/charger.tscn
-res://entities/gnome.tscn
+res://scripts/items/health.gd
+res://assets/rooms/start_room.tscn
+res://entities/player.tscn
 res://scripts/items/axe.gd
 res://scripts/items/bat.gd
-res://scripts/items/MeleeItemSharedComponent.gd
 res://scripts/items/shovel.gd
-res://entities/player.tscn
-res://scripts/npc/gnome.gd
