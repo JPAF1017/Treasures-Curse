@@ -21,6 +21,8 @@ const SHOVEL_ATTACHMENT_NODE_NAME := "RightHandShovelAttachment"
 static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const SHOVEL_ITEM_ICON: Texture2D = preload("res://assets/ui/shovel.png")
 const SHOVEL_MODEL_SCENE: PackedScene = preload("res://assets/items assets/shovel.glb")
+const ViewmodelComponent = preload("res://scripts/items/MeleeViewmodelComponent.gd")
+var _viewmodel = ViewmodelComponent.new(SHOVEL_MODEL_SCENE, "ShovelViewmodel")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
 const ITEM_WINDUP_COLOR_START_INDEX := 17
 const ITEM_WINDUP_COLOR_END_INDEX := 22
@@ -57,16 +59,9 @@ static var equip_key_was_down: bool = false
 @export_enum("X", "Y", "Z") var held_item_flip_axis: int = 0
 
 @export_group("Viewmodel")
-@export var viewmodel_position: Vector3 = Vector3(0.3, -0.25, -0.45)
+@export var viewmodel_position: Vector3 = Vector3(0.35, -0.25, -0.45)
 @export var viewmodel_rotation_degrees: Vector3 = Vector3(-20.0, -100.0, 10.0)
-@export_range(0.01, 1.0, 0.005) var viewmodel_scale: float = 0.15
-
-const BOB_SPEED := 10.0
-const BOB_H_AMOUNT := 0.01
-const BOB_V_AMOUNT := 0.008
-
-var _viewmodel_instance: Node3D = null
-var _viewmodel_bob_time: float = 0.0
+@export_range(0.01, 1.0, 0.005) var viewmodel_scale: float = 0.7
 
 var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
@@ -169,7 +164,8 @@ func release_primary_action(player: Node) -> void:
 
 
 func update_primary_action(player: Node, _delta: float) -> bool:
-	_update_viewmodel_bob(player, _delta)
+	_viewmodel.update_bob(player, _delta, viewmodel_position)
+	_viewmodel.shaking = swing_in_progress and _is_swing_in_windup(player)
 	var animation_player := _get_player_animation_player(player)
 	if animation_player == null:
 		if swing_in_progress:
@@ -276,7 +272,7 @@ func drop_from_hotbar(player: Node) -> bool:
 		return false
 
 	_reset_swing_state(player)
-	_hide_viewmodel()
+	_viewmodel.hide()
 
 	var world_root: Node = null
 	if player.has_method("get_tree"):
@@ -302,7 +298,7 @@ func drop_from_hotbar(player: Node) -> bool:
 		player.add_child(self)
 
 	global_position = drop_origin
-	_set_visual_layer_recursive(self, 1)
+	ViewmodelComponent.set_visual_layer_recursive(self, 1)
 	_set_item_visuals_visible(true)
 	_set_item_physics_enabled(true)
 	var player_node := player as Node3D
@@ -325,12 +321,12 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, is_sprintin
 		_equip_to_right_hand(player)
 		_set_item_visuals_visible(not is_sprinting)
 		if not is_sprinting:
-			_show_viewmodel(player)
+			_viewmodel.show(player, viewmodel_position, viewmodel_rotation_degrees, viewmodel_scale)
 		else:
-			_hide_viewmodel()
+			_viewmodel.hide()
 	else:
 		_detach_from_hand(player)
-		_hide_viewmodel()
+		_viewmodel.hide()
 
 
 func is_equipped_in_hand() -> bool:
@@ -567,7 +563,7 @@ func _equip_to_right_hand(player: Node) -> void:
 
 	_set_item_physics_enabled(false)
 	_set_item_visuals_visible(true)
-	_set_visual_layer_recursive(self, 2)
+	ViewmodelComponent.set_visual_layer_recursive(self, 2)
 
 	position = held_item_position
 	rotation = Vector3(
@@ -609,53 +605,6 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 func _set_visual_children_visible(node: Node, visibility: bool) -> void:
 	MeleeShared.set_visual_children_visible(node, visibility)
-
-
-func _set_visual_layer_recursive(node: Node, layer: int) -> void:
-	if node is VisualInstance3D:
-		node.layers = layer
-	for child in node.get_children():
-		_set_visual_layer_recursive(child, layer)
-
-
-func _show_viewmodel(player: Node) -> void:
-	if _viewmodel_instance and is_instance_valid(_viewmodel_instance):
-		return
-	var camera := _get_player_camera(player)
-	if camera == null:
-		return
-	_viewmodel_instance = SHOVEL_MODEL_SCENE.instantiate()
-	_viewmodel_instance.name = "ShovelViewmodel"
-	camera.add_child(_viewmodel_instance)
-	_viewmodel_instance.position = viewmodel_position
-	_viewmodel_instance.rotation_degrees = viewmodel_rotation_degrees
-	_viewmodel_instance.scale = Vector3.ONE * viewmodel_scale
-
-
-func _hide_viewmodel() -> void:
-	if _viewmodel_instance and is_instance_valid(_viewmodel_instance):
-		_viewmodel_instance.queue_free()
-		_viewmodel_instance = null
-	_viewmodel_bob_time = 0.0
-
-
-func _update_viewmodel_bob(player: Node, delta: float) -> void:
-	if _viewmodel_instance == null or not is_instance_valid(_viewmodel_instance):
-		return
-	var velocity := Vector3.ZERO
-	if player is CharacterBody3D:
-		velocity = player.velocity
-	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
-	if horizontal_speed > 0.5:
-		_viewmodel_bob_time += delta * BOB_SPEED
-	else:
-		_viewmodel_bob_time = lerpf(_viewmodel_bob_time, 0.0, delta * 5.0)
-	var bob_offset := Vector3(
-		cos(_viewmodel_bob_time) * BOB_H_AMOUNT,
-		sin(_viewmodel_bob_time * 2.0) * BOB_V_AMOUNT,
-		0.0
-	)
-	_viewmodel_instance.position = viewmodel_position + bob_offset
 
 
 func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
