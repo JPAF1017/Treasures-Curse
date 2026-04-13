@@ -47,7 +47,7 @@ const DEATH_LINGER_TIME = 5.0
 const STUN_WALK_ANIMATION_SPEED_SCALE = 0.45
 
 @export var debug_navigation_logs: bool = false
-@export var facing_offset_degrees: float = 90.0
+@export var facing_offset_degrees: float = 0
 
 var health: float = HEALTH_MAX
 var player: CharacterBody3D = null

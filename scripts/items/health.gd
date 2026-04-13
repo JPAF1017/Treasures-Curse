@@ -5,7 +5,7 @@ const HEALTH_ITEM_ICON: Texture2D = preload("res://assets/ui/health.png")
 const HEALTH_MODEL_SCENE: PackedScene = preload("res://assets/items assets/health.glb")
 static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
-const HEALTH_RESTORE_AMOUNT := 25.0
+const HEALTH_RESTORE_AMOUNT := 30.0
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
@@ -81,7 +81,48 @@ func get_hotbar_icon_modulate(alpha: float) -> Color:
 
 
 func can_start_primary_action() -> bool:
-	return false
+	return inventory_slot_index >= 0 and is_equipped_in_hand()
+
+
+func begin_primary_action(player: Node) -> bool:
+	if not can_start_primary_action():
+		return false
+	if player == null:
+		return false
+
+	var current_health := float(player.get("health"))
+	var max_health := 100.0
+	if current_health >= max_health:
+		return false
+
+	var new_health := minf(current_health + HEALTH_RESTORE_AMOUNT, max_health)
+	player.set("health", new_health)
+	if player.has_method("_update_health_ui"):
+		player.call("_update_health_ui")
+
+	_hide_viewmodel()
+
+	var slot := inventory_slot_index
+	inventory_slot_index = -1
+	right_hand_attachment = null
+
+	if player.has_method("_set_hotbar_item"):
+		player.call("_set_hotbar_item", slot, null, null)
+	if player.has_method("_refresh_selected_item_state"):
+		player.call("_refresh_selected_item_state")
+
+	var old_parent := get_parent()
+	if old_parent:
+		old_parent.remove_child(self)
+	queue_free()
+	return true
+
+
+func is_equipped_in_hand() -> bool:
+	if inventory_slot_index < 0:
+		return false
+	var parent := get_parent()
+	return parent != null and parent == right_hand_attachment
 
 
 func update_primary_action(player: Node, delta: float) -> bool:

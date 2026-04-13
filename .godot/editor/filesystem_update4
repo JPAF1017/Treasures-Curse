@@ -9,3 +9,7 @@ res://scripts/items/bat.gd
 res://scripts/items/shovel.gd
 res://scripts/items/MeleeViewmodelComponent.gd
 res://levels/test map.tscn
+res://scripts/npc/shambler.gd
+res://entities/shambler.tscn
+res://scripts/npc/charger.gd
+res://entities/charger.tscn

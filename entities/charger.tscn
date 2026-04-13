@@ -22,14 +22,15 @@ radius = 4.979492
 script = ExtResource("1_n2dv8")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=232926487]
-transform = Transform3D(-7.86805e-08, 7.86805e-08, -1.8, 1.8, 3.439234e-15, -7.86805e-08, 0, -1.8, -7.86805e-08, 1.7298702e-09, -0.1983614, 0.20798835)
+transform = Transform3D(3.4392335e-15, 1.8, 1.57361e-07, 1.8, 3.4392343e-15, -7.86805e-08, -7.86805e-08, 1.57361e-07, -1.8, -0.032188356, -0.1983614, 0.1758)
 shape = SubResource("CapsuleShape3D_8l3l5")
 debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)
 
 [node name="Dog" parent="." unique_id=791997368 instance=ExtResource("2_uk7ct")]
-transform = Transform3D(-0.012, 0, 1.8119497e-09, 0, 0.012, 0, -1.8119497e-09, 0, -0.012, 0, -1.3130372, 0.4952116)
+transform = Transform3D(2.3364866e-09, 0, 0.012, 0, 0.012, 0, -0.012, 0, 2.3364866e-09, -0.3194116, -1.3130372, 0.17579998)
 
 [node name="AttackArea" type="Area3D" parent="." unique_id=1600080193]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.1758, 0, 0.1758)
 collision_mask = 3
 
 [node name="Attack" type="CollisionShape3D" parent="AttackArea" unique_id=490331570]
@@ -50,6 +51,7 @@ collision_mask = 2
 shape = SubResource("CylinderShape3D_uk7ct")
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=516759337]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.1758, 0, 0.1758)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=741339884]
 transform = Transform3D(-7.86805e-08, 7.86805e-08, -1.8, 1.8, 3.439234e-15, -7.86805e-08, 0, -1.8, -7.86805e-08, 1.7298702e-09, -0.1983614, 0.20798835)

@@ -34,7 +34,7 @@ const WALK_MOVE_RANGES: Array[Vector2i] = [
 ]
 const CROUCH_DETECTION_RAY_LENGTH := 8.0
 
-@export var facing_offset_degrees: float = 0.0
+@export var facing_offset_degrees: float = 0
 @export var walk_animation_fps: float = 30.0
 @export var debug_memory_logs: bool = false
 
