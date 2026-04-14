@@ -14,6 +14,8 @@ const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
 const BLOOD_OVERLAY_PATH = "res://assets/ui/BloodOverlay.png"
 const DAMAGE_OVERLAY_MAX_ALPHA = 0.7
 const DAMAGE_OVERLAY_FADE_TIME = 0.35
+const DAMAGE_TILT_ANGLE_DEG = 20.5
+const DAMAGE_TILT_DURATION = 0.35
 const JUMP_STAMINA_COST = 20.0
 const TIRED_JUMP_HEIGHT_MULTIPLIER = 1.0 / 3.0
 const STAMINA_REFILL_DELAY_SECONDS = 5.0
@@ -96,6 +98,7 @@ var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
 var damage_overlay_tween: Tween = null
+var damage_tilt_tween: Tween = null
 var hotbar_slots: Array[NinePatchRect] = []
 var hotbar_slot_base_scales: Array[Vector2] = []
 var hotbar_item_icons: Array[TextureRect] = []
@@ -847,6 +850,17 @@ func apply_damage(amount: float) -> void:
 		return
 	health = maxf(health - amount, 0.0)
 	_update_health_ui()
+	_apply_damage_camera_tilt()
+
+func _apply_damage_camera_tilt() -> void:
+	if camera == null:
+		return
+	if damage_tilt_tween:
+		damage_tilt_tween.kill()
+	var direction := 1.0 if randf() < 0.5 else -1.0
+	camera.rotation.z = deg_to_rad(DAMAGE_TILT_ANGLE_DEG * direction)
+	damage_tilt_tween = create_tween()
+	damage_tilt_tween.tween_property(camera, "rotation:z", 0.0, DAMAGE_TILT_DURATION).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 
 func apply_stun_state(duration: float) -> void:
 	stun_timer = maxf(stun_timer, duration)

@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1776146777
+::res://::1776170399
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1762067671::1762067671::1::::<><><>0<>0<>4ef53fe4fa71720005a197a89e551d5b<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
 ::res://addons/::1762181518
@@ -9,13 +9,13 @@ DungeonRoom3D.gd::GDScript::7142279615129479639::1762067671::0::1::::DungeonRoom
 DungeonUtils.gd::GDScript::6070860448080015173::1762067671::0::1::::DungeonUtils<>Node<><>0<>0<><>::
 plugin.cfg::TextFile::-1::1762067671::0::1::::<><><>0<>0<><>::
 plugin.gd::GDScript::9070280916846602594::1762067671::0::1::::<>EditorPlugin<><>0<>1<><>::
-::res://addons/SimpleDungeons/debug_visuals/::1776071589
+::res://addons/SimpleDungeons/debug_visuals/::1776147079
 DebugAlert.gd::GDScript::4586560211018176867::1762067671::0::1::::<>Node3D<><>0<>1<><>::
 DebugAlert.tscn::PackedScene::7810854742127915647::1762067671::0::1::::<><><>0<>0<><>::res://addons/SimpleDungeons/debug_visuals/DebugAlert.gd<>uid://byywkosue8x0q::::res://addons/SimpleDungeons/res/warning-sign.svg
 DoorDebugVisual.tscn::PackedScene::5453507236684216206::1762067671::0::1::::<><><>0<>0<><>::uid://pq2fqq4ophsy::::res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 DungeonGenerator3DDebugView.gd::GDScript::4236237803941079560::1762067671::0::1::::<>Node3D<><>0<>1<><>::
 DungeonRoom3DDebugView.gd::GDScript::5308857045408188190::1762067671::0::1::::<>Node3D<><>0<>1<><>::
-WireframeColorMat.tres::ShaderMaterial::1087511852837068432::1776071589::0::1::::<><><>0<>0<><>::
+WireframeColorMat.tres::ShaderMaterial::1087511852837068432::1776147079::0::1::::<><><>0<>0<><>::
 WireframeCube.gd::GDScript::9185337655749715378::1762067671::0::1::::<>Node3D<><>0<>1<><>::
 WireframeCube.gdshader::Shader::8297571535039200518::1762067671::0::1::::<><><>0<>0<><>::
 WireframeCube.tscn::PackedScene::5128393708817932903::1762067671::0::1::::<><><>0<>0<><>::res://addons/SimpleDungeons/debug_visuals/WireframeCube.gd<>res://addons/SimpleDungeons/debug_visuals/WireframeCube.gdshader
@@ -290,22 +290,22 @@ dungeon-pal.png::CompressedTexture2D::5414532902131510788::1775097564::177509756
 E.png::CompressedTexture2D::1968923782170495919::1775805110::1775805141::1::::<><><>0<>0<>fb90e7a9d53490f72916093102ba3fb4<>res://.godot/imported/E.png-8267d04f6e99024839105abde34685de.ctex::
 health.png::CompressedTexture2D::6310224808751936348::1776072005::1776072016::1::::<><><>0<>0<>8a04de077d835b2e725f88d0939a517d<>res://.godot/imported/health.png-c8e310077151d1ced46604f8ee9121ae.ctex::
 shovel.png::CompressedTexture2D::8140832654871042140::1775820251::1775820262::1::::<><><>0<>0<>1ed66d91ef882112a346aad2e3a8c36b<>res://.godot/imported/shovel.png-c0e04f0f10be4e50436bae97e92867cf.ctex::
-::res://entities/::1776085376
+::res://entities/::1776159553
 charger.tscn::PackedScene::7427386518598396720::1776085274::0::1::::<><><>0<>0<><>::uid://xpn4iswxe4os::::res://scripts/npc/charger.gd<>uid://crxg8ido3i1el::::res://assets/entities/Dog.glb
 fly.tscn::PackedScene::8405782706479971729::1775196137::0::1::::<><><>0<>0<><>::uid://bnycbgp6g7mtv::::res://assets/entities/fly.glb<>uid://dnn7b7050rnsm::::res://scripts/npc/fly.gd
 gnome.tscn::PackedScene::4131573415046098760::1775982131::0::1::::<><><>0<>0<><>::uid://kphtenejjocw::::res://scripts/npc/gnome.gd<>uid://ci68ejmir8osg::::res://assets/entities/gnome_asset.tscn
 juggernaut.tscn::PackedScene::8116386185876814507::1775196137::0::1::::<><><>0<>0<><>::uid://bisvnpcht4suy::::res://scripts/npc/juggernaut.gd<>uid://bdycjkv1k4dcu::::res://assets/entities/juggernaut.glb
-knight.tscn::PackedScene::2610388479320767619::1775975214::0::1::::<><><>0<>0<><>::uid://bkju4rh2uc0es::::res://assets/entities/knight.glb<>uid://cd2df45y6baat::::res://scripts/npc/knight.gd
+knight.tscn::PackedScene::2610388479320767619::1776159553::0::1::::<><><>0<>0<><>::uid://bkju4rh2uc0es::::res://assets/entities/knight.glb<>uid://cd2df45y6baat::::res://scripts/npc/knight.gd
 necroThread.tscn::PackedScene::8085803751725972811::1774530005::0::1::::<><><>0<>0<><>::uid://dwk3c8bwsc0th::::res://assets/entities/manSpider.glb
 player.tscn::PackedScene::8482503836702461174::1776074149::0::1::::<><><>0<>0<><>::uid://dj8t3bynv2pc1::::res://scripts/player.gd<>uid://dd12bwwoi2560::::res://assets/entities/player.glb<>uid://b1sww20xebp3q::::res://assets/ui/dungeon-mode.ttf<>uid://l5r1a33n2v2b::::res://assets/ui/dungeon-mode.png<>uid://cw51qjjc1tdv6::::res://assets/ui/dungeon-437.png<>uid://d2rbt1748nf7v::::res://assets/ui/crosshairs_tilesheet_white.png<>uid://3b05fn107wf4::::res://assets/ui/E.png
-shambler.tscn::PackedScene::4817799820594666782::1776085376::0::1::::<><><>0<>0<><>::uid://d207knqhtqb1p::::res://scripts/npc/shambler.gd<>uid://brqj4rm1gwdto::::res://assets/entities/shambler.glb
+shambler.tscn::PackedScene::4817799820594666782::1776147159::0::1::::<><><>0<>0<><>::uid://d207knqhtqb1p::::res://scripts/npc/shambler.gd<>uid://brqj4rm1gwdto::::res://assets/entities/shambler.glb
 shy.tscn::PackedScene::4762740145002689240::1775196137::0::1::::<><><>0<>0<><>::uid://cpeiqwo1rd3t8::::res://assets/entities/shy.glb<>uid://dqcdnr501prpx::::res://scripts/npc/shy.gd
 statue.tscn::PackedScene::4364222465737322954::1775196137::0::1::::<><><>0<>0<><>::uid://ohuverafit7o::::res://scripts/npc/statue.gd<>uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb
-::res://levels/::1776085100
+::res://levels/::1776159553
 test map backup.tscn::PackedScene::4267208314936302595::1768017799::0::1::::<><><>0<>0<><>::uid://ds38umkop3txm::::res://entities/player.tscn<>uid://bqeu73gvoygbb::::res://addons/SimpleDungeons/DungeonGenerator3D.gd<>uid://bw0184ufe88px::::res://assets/rooms/stair.tscn<>uid://scxkscsgrow5::::res://assets/rooms/narrow.tscn<>uid://da7ty6ck0l2sl::::res://assets/rooms/big_room.tscn<>uid://djgwx2fo8gck3::::res://assets/rooms/l_shape_room.tscn<>uid://bugkkvou15g0f::::res://assets/rooms/bridge.tscn<>uid://cfoq1560fj5jf::::res://assets/rooms/treasure_room.tscn<>uid://dvdly7xo8rxig::::res://assets/rooms/corridor.tscn<>uid://cjnmq8wqhrf84::::res://assets/rooms/start_room.tscn
-test map.tscn::PackedScene::505655486333358223::1776085100::0::1::::<><><>0<>0<><>::uid://ds38umkop3txm::::res://entities/player.tscn<>uid://bqeu73gvoygbb::::res://addons/SimpleDungeons/DungeonGenerator3D.gd<>uid://dfh2o4rqmfxq8::::res://assets/rooms/spawn_gnome.tscn<>uid://bw0184ufe88px::::res://assets/rooms/stair.tscn<>uid://cjx3o3ukf7pbc::::res://assets/rooms/spawn_knight.tscn<>uid://dmh06o2y4u65n::::res://assets/rooms/spawn_shambler.tscn<>uid://cjnmq8wqhrf84::::res://assets/rooms/start_room.tscn<>uid://wxbfj11sq1id::::res://assets/rooms/spawn_charger.tscn<>uid://dvdly7xo8rxig::::res://assets/rooms/corridor.tscn
+test map.tscn::PackedScene::505655486333358223::1776159553::0::1::::<><><>0<>0<><>::uid://ds38umkop3txm::::res://entities/player.tscn<>uid://bqeu73gvoygbb::::res://addons/SimpleDungeons/DungeonGenerator3D.gd<>uid://bw0184ufe88px::::res://assets/rooms/stair.tscn<>uid://cjx3o3ukf7pbc::::res://assets/rooms/spawn_knight.tscn<>uid://cjnmq8wqhrf84::::res://assets/rooms/start_room.tscn<>uid://wxbfj11sq1id::::res://assets/rooms/spawn_charger.tscn<>uid://dvdly7xo8rxig::::res://assets/rooms/corridor.tscn
 ::res://scripts/::1775969062
-player.gd::GDScript::7860289825015925474::1776074178::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1776159608::0::1::::<>CharacterBody3D<><>0<>0<><>::
 ::res://scripts/items/::1776077956
 axe.gd::GDScript::5823683269390956943::1776083737::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
 bat.gd::GDScript::8071771524868046774::1776083654::0::1::::Bat<>RigidBody3D<><>0<>0<><>::
@@ -314,16 +314,16 @@ MeleeItemSharedComponent.gd::GDScript::7278604385311045916::1775983481::0::1::::
 MeleeViewmodelComponent.gd::GDScript::1319044425994665230::1776083251::0::1::::MeleeViewmodelComponent<>RefCounted<><>0<>0<><>::
 shovel.gd::GDScript::2064808360044123086::1776083665::0::1::::Shovel<>RigidBody3D<><>0<>0<><>::
 ::res://scripts/npc/::1775970618
-charger.gd::GDScript::1646150627938634418::1776085063::0::1::::<>CharacterBody3D<><>0<>0<><>::
+charger.gd::GDScript::1646150627938634418::1776160250::0::1::::<>CharacterBody3D<><>0<>0<><>::
 EnemyDeathLingerComponent.gd::GDScript::8940946792397853270::1775830239::0::1::::EnemyDeathLingerComponent<>RefCounted<><>0<>0<><>::
 EnemyLocomotionComponent.gd::GDScript::441470401969985677::1775098145::0::1::::EnemyLocomotionComponent<>RefCounted<><>0<>0<><>::
 EnemyPerceptionMemoryComponent.gd::GDScript::4902680277644045211::1775098285::0::1::::EnemyPerceptionMemoryComponent<>RefCounted<><>0<>0<><>::
 fly.gd::GDScript::8100500379503402940::1774776760::0::1::::<>CharacterBody3D<><>0<>0<><>::
-gnome.gd::GDScript::733313282094775466::1775983874::0::1::::<>CharacterBody3D<><>0<>0<><>::
+gnome.gd::GDScript::733313282094775466::1776158891::0::1::::<>CharacterBody3D<><>0<>0<><>::
 juggernaut.gd::GDScript::2986389295823756160::1774848206::0::1::::<>CharacterBody3D<><>0<>0<><>::
-knight.gd::GDScript::5039338748260939659::1775975304::0::1::::<>CharacterBody3D<><>0<>0<><>::
-NavigationUtils.gd::GDScript::7424022917554956822::1774682820::0::1::::NavigationUtils<>RefCounted<><>0<>0<><>::
+knight.gd::GDScript::5039338748260939659::1776157616::0::1::::<>CharacterBody3D<><>0<>0<><>::
+NavigationUtils.gd::GDScript::7424022917554956822::1776149153::0::1::::NavigationUtils<>RefCounted<><>0<>0<><>::
 NPCKnockbackComponent.gd::GDScript::4514494447575375801::1775903283::0::1::::NPCKnockbackComponent<>RefCounted<><>0<>0<><>::
-shambler.gd::GDScript::9107931782729739543::1776084787::0::1::::<>CharacterBody3D<><>0<>0<><>::
+shambler.gd::GDScript::9107931782729739543::1776158892::0::1::::<>CharacterBody3D<><>0<>0<><>::
 shy.gd::GDScript::8286618611507328913::1775969062::0::1::::<>CharacterBody3D<><>0<>0<><>::
-statue.gd::GDScript::998346533100298730::1775199632::0::1::::<>CharacterBody3D<><>0<>0<><>::
+statue.gd::GDScript::998346533100298730::1776158892::0::1::::<>CharacterBody3D<><>0<>0<><>::

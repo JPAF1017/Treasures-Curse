@@ -23,6 +23,10 @@ radius = 3.4501953
 height = 7.4506836
 radius = 5.6401367
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_up45c"]
+height = 0.94317627
+radius = 3.1938477
+
 [node name="Knight" type="CharacterBody3D" unique_id=1412719762]
 script = ExtResource("1_wmydh")
 
@@ -58,3 +62,9 @@ shape = SubResource("CylinderShape3D_jn7en")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sweetspot" unique_id=70883572]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7253418, 0)
 shape = SubResource("CylinderShape3D_80syu")
+
+[node name="SlideSlash" type="Area3D" parent="." unique_id=2138442012]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlideSlash" unique_id=1560234348]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3774438, 1.8365757)
+shape = SubResource("CylinderShape3D_up45c")

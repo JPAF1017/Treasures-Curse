@@ -20,6 +20,7 @@ const CHARGE_SPEED = 10.0  # Speed when running forward to lunge
 const LUNGE_DURATION = 0.5  # Maximum duration of a lunge in seconds
 const LUNGE_DECEL_TIME = 0.75  # Time to decelerate after lunge ends (seconds)
 const LUNGE_DAMAGE = 10.0
+const LUNGE_KNOCKBACK_STRENGTH = 15.0
 const CIRCLE_RADIUS = 3.0  # Radius of the circle to walk in when idle
 const CIRCLE_SPEED = 1.0  # Speed of rotation around the circle (radians per second)
 const BUMP_STEP_VELOCITY = 2.0
@@ -937,19 +938,19 @@ func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
 
 	if target.has_method("apply_damage"):
 		target.call("apply_damage", damage)
-		return
-	if target.has_method("take_damage"):
+	elif target.has_method("take_damage"):
 		target.call("take_damage", damage)
-		return
+	else:
+		var current_health = target.get("health")
+		if current_health != null:
+			var next_health := maxf(float(current_health) - damage, 0.0)
+			target.set("health", next_health)
+			if target.has_method("_update_health_ui"):
+				target.call("_update_health_ui")
 
-	var current_health = target.get("health")
-	if current_health == null:
-		return
-
-	var next_health := maxf(float(current_health) - damage, 0.0)
-	target.set("health", next_health)
-	if target.has_method("_update_health_ui"):
-		target.call("_update_health_ui")
+	if target.has_method("apply_knockback"):
+		var knock_dir := (target.global_position - global_position).normalized()
+		target.call("apply_knockback", knock_dir, LUNGE_KNOCKBACK_STRENGTH)
 
 func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_player: float, delta: float) -> bool:
 	var spacing_active := not can_lunge and not is_backing_up and not is_charging and not is_lunging and not is_decelerating
