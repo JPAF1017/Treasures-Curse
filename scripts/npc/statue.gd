@@ -307,13 +307,8 @@ func _physics_process(delta):
 						memory_source = "LAST_SEEN"
 					else:
 						_log_memory_state(has_line_of_sight, memory_source, player.global_position, last_visible_player_position, trail_target, global_position, true)
-						velocity.x = 0
-						velocity.z = 0
-						_set_idle_pose()
-						is_moving = false
+						pursuit_target = global_position
 						wall_follow_mode = 0
-						move_and_slide()
-						return
 
 				if absf(player.global_position.y - last_visible_player_position.y) > STAIR_VERTICAL_DELTA and last_reachable_target_position != Vector3.ZERO and (memory_source == "LAST_SEEN" or memory_source == "TRAIL" or memory_source == "PATH_CACHE"):
 					pursuit_target = last_reachable_target_position
@@ -362,8 +357,53 @@ func _physics_process(delta):
 				velocity.z = 0
 				_set_idle_pose()
 				is_moving = false
+		elif trail_memory_timer > 0.0:
+			# Player out of detection range — continue along memorized trail
+			var trail_result: Dictionary = {"has_target": false, "target": last_visible_player_position}
+			var has_trail_target := false
+			if path_cache_timer > 0.0 and not cached_nav_path.is_empty():
+				var cached_result := NavigationUtils.get_cached_path_target(global_position, cached_nav_path, TRAIL_REACHED_DISTANCE)
+				has_trail_target = bool(cached_result.get("has_target", false))
+				if has_trail_target:
+					trail_result = cached_result
+
+			if not has_trail_target:
+				trail_result = NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+				has_trail_target = trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false))
+			var memory_target: Vector3 = last_visible_player_position
+			var memory_source := "LAST_SEEN"
+			if has_trail_target:
+				memory_target = trail_result["target"]
+				memory_source = "PATH_CACHE" if path_cache_timer > 0.0 else "TRAIL"
+			memory_target = NavigationUtils.snap_position_to_navigation(self, memory_target)
+			_log_memory_state(false, memory_source, player.global_position if player and is_instance_valid(player) else Vector3.ZERO, last_visible_player_position, memory_target if has_trail_target else Vector3.ZERO, memory_target)
+
+			var to_memory = memory_target - global_position
+			to_memory.y = 0
+			if to_memory.length() > 0.4:
+				var memory_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, memory_target, space_state, wall_follow_mode)
+				var memory_dir: Vector3 = memory_result["direction"]
+				wall_follow_mode = memory_result["wall_follow_mode"]
+				if memory_dir.length_squared() > 0.001:
+					velocity.x = memory_dir.x * WALK_SPEED
+					velocity.z = memory_dir.z * WALK_SPEED
+					var target_rotation = atan2(memory_dir.x, memory_dir.z)
+					rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
+					_set_animation("walking")
+					is_moving = true
+					was_trying_to_move = true
+				else:
+					velocity.x = 0
+					velocity.z = 0
+					_set_idle_pose()
+					is_moving = false
+			else:
+				velocity.x = 0
+				velocity.z = 0
+				_set_idle_pose()
+				is_moving = false
 		else:
-			# Player too close or out of range, stop moving
+			# Player too close or out of range with no memory, stop moving
 			velocity.x = 0
 			velocity.z = 0
 			_set_idle_pose()

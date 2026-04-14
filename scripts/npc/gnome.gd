@@ -372,13 +372,8 @@ func _update_pursuit_movement(delta: float, move_speed: float) -> void:
 				memory_source = "LAST_SEEN"
 			else:
 				_log_memory_state(has_line_of_sight, memory_source, target_player.global_position if has_target else Vector3.ZERO, last_visible_player_position, trail_target, global_position, true)
-				velocity.x = 0.0
-				velocity.z = 0.0
-				if not is_player_in_detect and not is_player_in_chase:
-					target_player = null
-				memorized_target_trail.clear()
+				pursuit_target = global_position
 				wall_follow_mode = 0
-				return
 
 		if has_target and absf(target_player.global_position.y - last_visible_player_position.y) > STAIR_VERTICAL_DELTA and last_reachable_target_position != Vector3.ZERO and (memory_source == "LAST_SEEN" or memory_source == "TRAIL" or memory_source == "PATH_CACHE"):
 			pursuit_target = last_reachable_target_position
@@ -608,9 +603,6 @@ func _on_detect_body_exited(body: Node3D) -> void:
 	trail_memory_timer = TRAIL_MEMORY_TIME
 	los_state_initialized = false
 	los_loss_grace_timer = 0.0
-	path_cache_timer = 0.0
-	cached_nav_path.clear()
-	last_reachable_target_position = Vector3.ZERO
 	if not is_player_in_chase:
 		target_player = null
 
@@ -654,9 +646,6 @@ func _on_chase_body_exited(body: Node3D) -> void:
 	trail_memory_timer = TRAIL_MEMORY_TIME
 	los_state_initialized = false
 	los_loss_grace_timer = 0.0
-	path_cache_timer = 0.0
-	cached_nav_path.clear()
-	last_reachable_target_position = Vector3.ZERO
 	if not is_player_in_detect:
 		target_player = null
 
