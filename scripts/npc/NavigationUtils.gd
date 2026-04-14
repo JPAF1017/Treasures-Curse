@@ -254,12 +254,12 @@ static func snap_position_to_navigation(
 	var nav_map: RID = world.navigation_map
 	if not nav_map.is_valid():
 		return position
-	var snapped := NavigationServer3D.map_get_closest_point(nav_map, position)
-	if snapped == Vector3.INF:
+	var snapped_pos := NavigationServer3D.map_get_closest_point(nav_map, position)
+	if snapped_pos == Vector3.INF:
 		return position
-	if snapped.distance_to(position) > max_snap_distance:
+	if snapped_pos.distance_to(position) > max_snap_distance:
 		return position
-	return snapped
+	return snapped_pos
 
 static func build_short_path_cache(
 	character: CharacterBody3D,
@@ -312,7 +312,7 @@ static func _get_path_follow_direction(character: CharacterBody3D, path: PackedV
 static func find_path_direction_to_target(
 	character: CharacterBody3D,
 	target_position: Vector3,
-	space_state: PhysicsDirectSpaceState3D,
+	_space_state: PhysicsDirectSpaceState3D,
 	wall_follow_mode: int = 0
 ) -> Dictionary:
 	if character == null:

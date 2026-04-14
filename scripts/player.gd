@@ -27,6 +27,7 @@ const JUMP_AIR_LOOP_SPEED = 0.45
 const BUMP_STEP_VELOCITY = 2.2
 const BUMP_STEP_COOLDOWN = 0.12
 const SENSITIVITY = 0.003
+const STUN_SENSITIVITY_MULTIPLIER = 0.08
 const BOB_FREQ = 2.0
 const BOB_AMP = 0.08
 const BASE_FOV = 75.0
@@ -71,6 +72,7 @@ var jump_air_loop_forward: bool = true
 var stamina_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 var stamina_color_low: Color = Color(1.0, 0.3, 0.3, 1.0)
 var health_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
+var stun_timer: float = 0.0
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
@@ -159,8 +161,9 @@ func _configure_vision_area():
 #camera function
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
-		head.rotate_y(-event.relative.x * SENSITIVITY)
-		camera.rotate_x(-event.relative.y * SENSITIVITY)
+		var sens := SENSITIVITY * STUN_SENSITIVITY_MULTIPLIER if stun_timer > 0.0 else SENSITIVITY
+		head.rotate_y(-event.relative.x * sens)
+		camera.rotate_x(-event.relative.y * sens)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(90))
 		_sync_visual_rotation_to_head()
 	elif event is InputEventMouseButton:
@@ -192,7 +195,8 @@ func _physics_process(delta):
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
-	var is_movement_locked := _is_movement_locked()
+	stun_timer = max(stun_timer - delta, 0.0)
+	var is_movement_locked := _is_movement_locked() or stun_timer > 0.0
 	var input_dir := Vector2.ZERO
 	if not is_movement_locked:
 		input_dir = Input.get_vector("a", "d", "w", "s")
@@ -397,14 +401,14 @@ func _on_attack_area_entered(area: Area3D) -> void:
 		return
 	if area == null:
 		return
-	print("[AttackDebug] area entered: %s parent=%s" % [area.name, area.get_parent().name if area.get_parent() else "<none>"])
+	print("[AttackDebug] area entered: %s parent=%s" % [area.name, area.get_parent().name if area.get_parent() else &"<none>"])
 
 func _on_attack_area_exited(area: Area3D) -> void:
 	if not debug_attack_overlap_logs:
 		return
 	if area == null:
 		return
-	print("[AttackDebug] area exited: %s parent=%s" % [area.name, area.get_parent().name if area.get_parent() else "<none>"])
+	print("[AttackDebug] area exited: %s parent=%s" % [area.name, area.get_parent().name if area.get_parent() else &"<none>"])
 
 func _on_attack_body_entered(body: Node3D) -> void:
 	if not debug_attack_overlap_logs:
@@ -843,6 +847,18 @@ func apply_damage(amount: float) -> void:
 		return
 	health = maxf(health - amount, 0.0)
 	_update_health_ui()
+
+func apply_stun_state(duration: float) -> void:
+	stun_timer = maxf(stun_timer, duration)
+
+func apply_knockback(direction: Vector3, strength: float) -> void:
+	var knock_dir := direction
+	knock_dir.y = 0.0
+	if knock_dir.length_squared() > 0.001:
+		knock_dir = knock_dir.normalized()
+	velocity.x += knock_dir.x * strength
+	velocity.z += knock_dir.z * strength
+	velocity.y = maxf(velocity.y, strength * 0.3)
 
 func _setup_stamina_palette_colors() -> void:
 	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D

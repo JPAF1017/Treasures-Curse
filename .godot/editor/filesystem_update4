@@ -1,3 +1,7 @@
 res://entities/shambler.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 res://scripts/npc/shambler.gd
+res://scripts/player.gd
+res://scripts/npc/charger.gd
+res://scripts/npc/gnome.gd
+res://scripts/npc/NavigationUtils.gd

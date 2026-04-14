@@ -36,10 +36,19 @@ const WALK_MOVE_RANGES: Array[Vector2i] = [
 const CROUCH_DETECTION_RAY_LENGTH := 8.0
 const HIT_REACTION_DURATION := 0.3
 const DEATH_LINGER_TIME := 5.0
+const KICK_DAMAGE := 10.0
+const KICK_KNOCKBACK_STRENGTH := 15.0
+const SWING_DAMAGE := 20.0
+const SMASH_DAMAGE := 20.0
+const SMASH_STUN_DURATION := 4.0
+const ATTACK1_ACTIVE_FRAMES := Vector2i(33, 37)
+const ATTACK2_ACTIVE_FRAMES := Vector2i(26, 32)
+const ATTACK3_ACTIVE_FRAMES := Vector2i(44, 53)
 
 @export var health: int = 60
 @export var facing_offset_degrees: float = 0
 @export var walk_animation_fps: float = 30.0
+@export var attack_animation_fps: float = 30.0
 @export var debug_memory_logs: bool = false
 
 var move_direction: Vector3 = Vector3.ZERO
@@ -68,6 +77,8 @@ var cached_nav_path: Array[Vector3] = []
 var last_reachable_target_position: Vector3 = Vector3.ZERO
 var is_dead: bool = false
 var hit_reaction_timer: float = 0.0
+var current_attack_type: int = 0
+var has_dealt_damage_this_attack: bool = false
 
 func _ready() -> void:
 	randomize()
@@ -450,6 +461,10 @@ func _update_attack_movement(delta: float) -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
 	
+	# Try to deal damage during attack animation
+	if is_attacking and not has_dealt_damage_this_attack:
+		_try_apply_attack_damage()
+	
 	# Face the target and play animation only when initiating attack (not during animation)
 	if not is_attacking:
 		if target_player and is_instance_valid(target_player):
@@ -524,7 +539,56 @@ func _play_random_attack_animation() -> void:
 		animation_player.speed_scale = 1.0
 		animation_player.play(attack_name)
 		is_attacking = true
+		current_attack_type = attack_number
+		has_dealt_damage_this_attack = false
 		print("[Shambler] Playing %s" % attack_name)
+
+func _try_apply_attack_damage() -> void:
+	if attack_range_area == null:
+		return
+	if current_attack_type == 1 and not _is_in_attack_active_frames(ATTACK1_ACTIVE_FRAMES):
+		return
+	if current_attack_type == 2 and not _is_in_attack_active_frames(ATTACK2_ACTIVE_FRAMES):
+		return
+	if current_attack_type == 3 and not _is_in_attack_active_frames(ATTACK3_ACTIVE_FRAMES):
+		return
+	for body in attack_range_area.get_overlapping_bodies():
+		if body is CharacterBody3D and body.is_in_group("player"):
+			_apply_attack_effect(body)
+			has_dealt_damage_this_attack = true
+			return
+
+func _apply_attack_effect(target: CharacterBody3D) -> void:
+	match current_attack_type:
+		1:  # Kick: knockback + 10 damage
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", KICK_DAMAGE)
+			if target.has_method("apply_knockback"):
+				var knock_dir := (target.global_position - global_position).normalized()
+				target.call("apply_knockback", knock_dir, KICK_KNOCKBACK_STRENGTH)
+		2:  # Swing: 20 damage
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", SWING_DAMAGE)
+		3:  # Heavy smash: 20 damage + stun
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", SMASH_DAMAGE)
+			if target.has_method("apply_stun_state"):
+				target.call("apply_stun_state", SMASH_STUN_DURATION)
+
+func _is_in_attack_active_frames(frame_range: Vector2i) -> bool:
+	if animation_player == null or not animation_player.is_playing():
+		return false
+	if attack_animation_fps <= 0.0:
+		return false
+	var anim := animation_player.get_animation(animation_player.current_animation)
+	if anim == null:
+		return false
+	var total_frames := int(round(anim.length * attack_animation_fps))
+	if total_frames < 1:
+		total_frames = 1
+	var current_frame := int(round(animation_player.current_animation_position * attack_animation_fps))
+	current_frame = int(posmod(current_frame, total_frames))
+	return current_frame >= frame_range.x and current_frame <= frame_range.y
 
 func _is_in_walk_move_frame_window() -> bool:
 	if animation_player == null:

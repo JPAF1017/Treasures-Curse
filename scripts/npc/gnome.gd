@@ -294,7 +294,6 @@ func _is_body_overlapping_area(area: Area3D, body: Node3D) -> bool:
 func _update_pursuit_movement(delta: float, move_speed: float) -> void:
 	var has_target := _has_valid_target_player()
 	var has_line_of_sight := false
-	var space_state := get_world_3d().direct_space_state
 
 	if has_target:
 		var target_eye := target_player.global_position + Vector3(0, 1.0, 0)
@@ -425,10 +424,10 @@ func _update_attack_range_state(delta: float) -> void:
 		velocity.z = 0.0
 		var cooldown_target := attack_range_player if _has_valid_attack_range_player() else target_player
 		if cooldown_target and is_instance_valid(cooldown_target):
-			var to_player := cooldown_target.global_position - global_position
-			to_player.y = 0.0
-			if to_player.length_squared() > 0.001:
-				_face_direction(to_player.normalized(), delta)
+			var dir_to_player := cooldown_target.global_position - global_position
+			dir_to_player.y = 0.0
+			if dir_to_player.length_squared() > 0.001:
+				_face_direction(dir_to_player.normalized(), delta)
 		return
 
 	if _has_valid_grabbed_player() and not _can_grab_player_on_ground(grabbed_player):

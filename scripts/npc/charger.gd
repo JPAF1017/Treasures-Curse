@@ -365,8 +365,7 @@ func _physics_process(delta):
 		var away_dir = -memorized_direction
 		
 		# Face the player while walking backwards
-		var target_rotation = _yaw_with_facing_offset(memorized_direction)
-		rotation.y = lerp_angle(rotation.y, target_rotation, delta * 8.0)
+		rotation.y = lerp_angle(rotation.y, _yaw_with_facing_offset(memorized_direction), delta * 8.0)
 		
 		# Move backwards
 		velocity.x = away_dir.x * BACKUP_SPEED
@@ -512,9 +511,8 @@ func _physics_process(delta):
 		if not is_lunging and not is_decelerating and not is_backing_up and not is_charging:
 			# Calculate target rotation
 			if direction_to_player.length() > 0.1:
-				var target_rotation = _yaw_with_facing_offset(direction_to_player)
 				# Smoothly rotate to face the player
-				rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
+				rotation.y = lerp_angle(rotation.y, _yaw_with_facing_offset(direction_to_player), delta * _get_turn_speed(5.0))
 		
 		# Move toward player if not too close
 		if _update_cooldown_chase_movement(direction_to_player, distance_to_player, delta):
@@ -544,8 +542,7 @@ func _physics_process(delta):
 					_debug_nav_log("Path dir chosen | dist %.2f | wall_follow %d" % [distance_to_player, wall_follow_mode])
 					velocity.x = path_direction.x * SPEED
 					velocity.z = path_direction.z * SPEED
-					var target_rotation = _yaw_with_facing_offset(path_direction)
-					rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
+					rotation.y = lerp_angle(rotation.y, _yaw_with_facing_offset(path_direction), delta * _get_turn_speed(5.0))
 				else:
 					_debug_nav_log("No path dir | LOS %s | on_wall %s | slides %d | dist %.2f" % [str(has_line_of_sight), str(is_on_wall()), get_slide_collision_count(), distance_to_player], true)
 					velocity.x = direction_to_player.x * SPEED * 0.4
@@ -644,8 +641,7 @@ func _physics_process(delta):
 				direction = direction.normalized()
 				
 				# Rotate to face the direction of movement
-				var target_rotation = _yaw_with_facing_offset(direction)
-				rotation.y = lerp_angle(rotation.y, target_rotation, delta * 5.0)
+				rotation.y = lerp_angle(rotation.y, _yaw_with_facing_offset(direction), delta * 5.0)
 				
 				# Move along the circle
 				velocity.x = direction.x * SPEED * 0.5  # Move at half speed when circling
@@ -978,8 +974,7 @@ func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_p
 		velocity.z = away_dir.z * COOLDOWN_RETREAT_SPEED
 
 		# Keep facing the player while backing away to maintain pressure.
-		var target_rotation = atan2(direction_to_player.x, direction_to_player.z)
-		rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
+		rotation.y = lerp_angle(rotation.y, atan2(direction_to_player.x, direction_to_player.z), delta * _get_turn_speed(5.0))
 		if animation_player and animation_player.has_animation("walk"):
 			if not animation_player.is_playing() or animation_player.current_animation != "walk":
 				animation_player.play("walk")
@@ -992,8 +987,7 @@ func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_p
 
 	velocity.x = direction_to_player.x * SPEED
 	velocity.z = direction_to_player.z * SPEED
-	var target_rotation = atan2(direction_to_player.x, direction_to_player.z)
-	rotation.y = lerp_angle(rotation.y, target_rotation, delta * _get_turn_speed(5.0))
+	rotation.y = lerp_angle(rotation.y, atan2(direction_to_player.x, direction_to_player.z), delta * _get_turn_speed(5.0))
 
 	if animation_player and animation_player.has_animation("walk"):
 		if not animation_player.is_playing() or animation_player.current_animation != "walk":
