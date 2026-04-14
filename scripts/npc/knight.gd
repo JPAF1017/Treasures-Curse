@@ -165,6 +165,8 @@ func _face_direction(direction: Vector3, delta: float) -> void:
 		transform.basis = Basis.from_euler(Vector3(0, new_angle, 0))
 
 func _play_animation() -> void:
+	if animation_player and animation_player.current_animation == "hit" and animation_player.is_playing():
+		return
 	if is_idle:
 		_play_idle_animation()
 	elif is_on_floor():

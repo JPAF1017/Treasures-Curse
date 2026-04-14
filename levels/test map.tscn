@@ -2,12 +2,9 @@
 
 [ext_resource type="PackedScene" uid="uid://ds38umkop3txm" path="res://entities/player.tscn" id="1_yyqp4"]
 [ext_resource type="Script" uid="uid://bqeu73gvoygbb" path="res://addons/SimpleDungeons/DungeonGenerator3D.gd" id="2_rasb4"]
-[ext_resource type="PackedScene" uid="uid://dfh2o4rqmfxq8" path="res://assets/rooms/spawn_gnome.tscn" id="5_003he"]
 [ext_resource type="PackedScene" uid="uid://bw0184ufe88px" path="res://assets/rooms/stair.tscn" id="6_4d616"]
 [ext_resource type="PackedScene" uid="uid://cjx3o3ukf7pbc" path="res://assets/rooms/spawn_knight.tscn" id="6_lh33e"]
-[ext_resource type="PackedScene" uid="uid://dmh06o2y4u65n" path="res://assets/rooms/spawn_shambler.tscn" id="7_7c0te"]
 [ext_resource type="PackedScene" uid="uid://cjnmq8wqhrf84" path="res://assets/rooms/start_room.tscn" id="7_yyqp4"]
-[ext_resource type="PackedScene" uid="uid://wxbfj11sq1id" path="res://assets/rooms/spawn_charger.tscn" id="8_jm5gf"]
 [ext_resource type="PackedScene" uid="uid://dvdly7xo8rxig" path="res://assets/rooms/corridor.tscn" id="9_73k1s"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav01"]
@@ -55,17 +52,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0)
 [node name="Corridor3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1044300545 instance=ExtResource("9_73k1s")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, -5, 0)
 
-[node name="SpawnGnome" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1980513556 instance=ExtResource("5_003he")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20, -5, 20)
-
 [node name="SpawnKnight" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2090395072 instance=ExtResource("6_lh33e")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20, -5, 8.742278e-07)
-
-[node name="SpawnShambler" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1056765254 instance=ExtResource("7_7c0te")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.371139e-07, -5, -10)
-
-[node name="SpawnCharger" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=217259191 instance=ExtResource("8_jm5gf")]
-transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, 20, -5, 20)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)

@@ -7,6 +7,22 @@
 radius = 0.9658203
 height = 5.577881
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_wmydh"]
+height = 4.4401855
+radius = 1.5419922
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_gk8bk"]
+height = 10.369629
+radius = 21.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_jn7en"]
+height = 6.038307
+radius = 3.4501953
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_80syu"]
+height = 7.4506836
+radius = 5.6401367
+
 [node name="Knight" type="CharacterBody3D" unique_id=1412719762]
 script = ExtResource("1_wmydh")
 
@@ -21,6 +37,24 @@ transform = Transform3D(0.9625, 0, 0, 0, 0.9625, 0, 0, 0, 0.9625, 0, 0, 0)
 collision_layer = 2
 collision_mask = 0
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=1991447203]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7876916, 0.092847146)
-shape = SubResource("CapsuleShape3D_kmc1q")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=831834983]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7455587, 0)
+shape = SubResource("CylinderShape3D_wmydh")
+
+[node name="Detection" type="Area3D" parent="." unique_id=534292688]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Detection" unique_id=162935871]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2282715, 0)
+shape = SubResource("CylinderShape3D_gk8bk")
+
+[node name="Distance" type="Area3D" parent="." unique_id=749832625]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Distance" unique_id=732686064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.650875, 0)
+shape = SubResource("CylinderShape3D_jn7en")
+
+[node name="Sweetspot" type="Area3D" parent="." unique_id=615290510]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Sweetspot" unique_id=70883572]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7253418, 0)
+shape = SubResource("CylinderShape3D_80syu")

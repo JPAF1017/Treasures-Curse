@@ -5,3 +5,6 @@ res://scripts/player.gd
 res://scripts/npc/charger.gd
 res://scripts/npc/gnome.gd
 res://scripts/npc/NavigationUtils.gd
+res://entities/knight.tscn
+res://scripts/npc/knight.gd
+res://levels/test map.tscn
