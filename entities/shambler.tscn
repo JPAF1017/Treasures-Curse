@@ -15,6 +15,9 @@ radius = 23.861328
 height = 4.201782
 radius = 1.2744141
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_bhth7"]
+size = Vector3(1, 4.2387695, 2.5722656)
+
 [node name="Shambler" type="CharacterBody3D" unique_id=856872376]
 script = ExtResource("1_bhth7")
 
@@ -36,3 +39,9 @@ shape = SubResource("CylinderShape3D_o6p7n")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="AttackRange" unique_id=587817702]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0273697, 0.3348999, 0)
 shape = SubResource("CylinderShape3D_bhth7")
+
+[node name="Hurtbox" type="Area3D" parent="." unique_id=169462129]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=1234105519]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.015136, 0.3578086, 0.0234375)
+shape = SubResource("BoxShape3D_bhth7")

@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
+const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 
 const GRAVITY := 20.0
 const WALK_SPEED := 3.0
@@ -33,7 +34,10 @@ const WALK_MOVE_RANGES: Array[Vector2i] = [
 	Vector2i(93, 116),
 ]
 const CROUCH_DETECTION_RAY_LENGTH := 8.0
+const HIT_REACTION_DURATION := 0.3
+const DEATH_LINGER_TIME := 5.0
 
+@export var health: int = 60
 @export var facing_offset_degrees: float = 0
 @export var walk_animation_fps: float = 30.0
 @export var debug_memory_logs: bool = false
@@ -62,6 +66,8 @@ var los_loss_grace_timer: float = 0.0
 var path_cache_timer: float = 0.0
 var cached_nav_path: Array[Vector3] = []
 var last_reachable_target_position: Vector3 = Vector3.ZERO
+var is_dead: bool = false
+var hit_reaction_timer: float = 0.0
 
 func _ready() -> void:
 	randomize()
@@ -82,6 +88,18 @@ func _ready() -> void:
 	_play_walk_animation()
 
 func _physics_process(delta: float) -> void:
+	if is_dead:
+		return
+
+	hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
+	if hit_reaction_timer > 0.0:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_hit_animation()
+		EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
+		move_and_slide()
+		return
+
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	los_memory_timer = max(los_memory_timer - delta, 0.0)
 	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
@@ -545,6 +563,57 @@ func _is_frame_in_range(frame: int, start_frame: int, end_frame: int, total_fram
 
 	# Wrap-around range (e.g. 116 -> 34 in a looping animation).
 	return frame >= start or frame <= finish
+
+func apply_damage(amount: float) -> void:
+	if is_dead:
+		return
+	if amount <= 0.0:
+		return
+
+	health = maxi(health - int(round(amount)), 0)
+	if health <= 0:
+		_die()
+		return
+
+	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	_play_hit_animation()
+
+func take_damage(amount: float) -> void:
+	apply_damage(amount)
+
+func _die() -> void:
+	if is_dead:
+		return
+
+	is_dead = true
+	health = 0
+	hit_reaction_timer = 0.0
+	is_attacking = false
+	velocity = Vector3.ZERO
+
+	var areas_to_disable: Array[Area3D] = []
+	if detect_area:
+		areas_to_disable.append(detect_area)
+	if attack_range_area:
+		areas_to_disable.append(attack_range_area)
+
+	await EnemyDeathLinger.run_death_linger(
+		self,
+		animation_player,
+		DEATH_LINGER_TIME,
+		areas_to_disable,
+		[&"death", &"die"]
+	)
+
+func _play_hit_animation() -> void:
+	if not animation_player:
+		return
+	for anim_name in [&"hurt", &"hit", &"damage"]:
+		if animation_player.has_animation(anim_name):
+			if animation_player.current_animation != String(anim_name):
+				animation_player.speed_scale = 1.0
+				animation_player.play(anim_name)
+			return
 
 func _is_target_in_front_of_entity(target: Node3D) -> bool:
 	# Check if target is roughly in front of the shambler (within 120-degree cone)
