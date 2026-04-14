@@ -80,6 +80,7 @@ var damage_action_cooldown_timer: float = 0.0
 var stun_walk_visual_active: bool = false
 var grab_escape_jump_count: int = 0
 var grab_reacquire_timer: float = 0.0
+var has_dealt_damage_this_attack: bool = false
 
 func _ready() -> void:
 	randomize()
@@ -506,6 +507,8 @@ func _play_attack_animation() -> void:
 		return
 
 	if attack_swing_cooldown_timer > 0.0:
+		if not has_dealt_damage_this_attack and animation_player.current_animation == "attack" and animation_player.is_playing():
+			_try_frame_gated_attack_damage()
 		return
 
 	if animation_player.has_animation("attack"):
@@ -513,11 +516,24 @@ func _play_attack_animation() -> void:
 			animation_player.speed_scale = 1.0
 			animation_player.play("attack")
 			attack_swing_cooldown_timer = ATTACK_SWING_COOLDOWN
-			_try_apply_attack_swing_damage()
+			has_dealt_damage_this_attack = false
 	elif animation_player.has_animation("run"):
 		if animation_player.current_animation != "run" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("run")
+
+func _try_frame_gated_attack_damage() -> void:
+	if has_dealt_damage_this_attack:
+		return
+	if not animation_player or not animation_player.is_playing():
+		return
+	var anim := animation_player.get_animation("attack")
+	if anim == null:
+		return
+	if animation_player.current_animation_position < anim.length * 0.5:
+		return
+	_try_apply_attack_swing_damage()
+	has_dealt_damage_this_attack = true
 
 func _try_apply_attack_swing_damage() -> void:
 	if attack_range_area == null:
