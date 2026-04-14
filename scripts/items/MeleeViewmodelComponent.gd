@@ -18,6 +18,7 @@ const SHAKE_INTENSITY := 0.006
 var _swing_active: bool = false
 var _swing_time: float = 0.0
 const SWING_DURATION := 0.2
+const SWING_RETURN_DURATION := 1
 const SWING_ANGLE := 90.0
 
 
@@ -90,16 +91,17 @@ func update_bob(player: Node, delta: float, base_position: Vector3) -> void:
 
 	if _swing_active:
 		_swing_time += delta
-		var t := clampf(_swing_time / SWING_DURATION, 0.0, 1.0)
+		var forward_time := SWING_DURATION * 0.4
 		var swing_curve: float
-		if t < 0.4:
-			swing_curve = t / 0.4
+		if _swing_time < forward_time:
+			swing_curve = _swing_time / forward_time
 		else:
-			swing_curve = 1.0 - ((t - 0.4) / 0.6)
+			var return_t := clampf((_swing_time - forward_time) / SWING_RETURN_DURATION, 0.0, 1.0)
+			swing_curve = 1.0 - return_t
+			if return_t >= 1.0:
+				_swing_active = false
 		var swing_angle := deg_to_rad(-SWING_ANGLE) * swing_curve
 		_instance.rotation.x += swing_angle
-		if t >= 1.0:
-			_swing_active = false
 
 
 func start_swing() -> void:
