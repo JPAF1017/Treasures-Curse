@@ -172,6 +172,8 @@ func _unhandled_input(event):
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
+				if stamina <= 0.0:
+					return
 				var selected_item := _get_selected_primary_item()
 				if selected_item == null or not bool(selected_item.call("begin_primary_action", self)):
 					return
@@ -1036,6 +1038,13 @@ func _update_jump_animation_phase(delta: float) -> bool:
 		return false
 
 	if jump_phase == JUMP_PHASE_NONE:
+		return false
+
+	# End jump phase immediately on landing so attacks aren't blocked
+	if is_on_floor():
+		jump_phase = JUMP_PHASE_NONE
+		jump_air_loop_frame = float(JUMP_AIR_LOOP_MIN_FRAME)
+		jump_air_loop_forward = true
 		return false
 
 	if animation_player.current_animation != "jump":

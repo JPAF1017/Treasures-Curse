@@ -1,7 +1,10 @@
 extends CharacterBody3D
 
+const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
+
 const GRAVITY = 20.0
 const WALK_SPEED = 2.0
+const FLY_SPEED = 3.5
 const DIR_CHANGE_MIN = 1.5
 const DIR_CHANGE_MAX = 4.0
 const WALK_BEFORE_IDLE_MIN = 1.5
@@ -9,39 +12,49 @@ const WALK_BEFORE_IDLE_MAX = 4.5
 const IDLE_DURATION_MIN = 0.6
 const IDLE_DURATION_MAX = 1.8
 const FLOAT_HEIGHT_MIN = 1.5
-const FLOAT_HEIGHT_MAX = 1.5
+const FLOAT_HEIGHT_MAX = 3.0
 const FLOAT_SPEED = 3.0
-const FLOAT_DURATION_MIN = 5.0
-const FLOAT_DURATION_MAX = 8.0
-const GROUND_WAIT_MIN = 5.0
-const GROUND_WAIT_MAX = 5.0
-const POSITION_SHIFT_EPSILON = 0.01
 const GROUND_RAYCAST_DISTANCE = 50.0
 const ASCENT_STOP_EPSILON = 0.02
+const HIT_REACTION_DURATION = 0.3
+const DEATH_LINGER_TIME = 5.0
+const FLY_THRESHOLD = 10
+const CHASE_SPEED = 3.0
+const CHASE_FLY_SPEED = 5.0
+const BITE_DAMAGE = 10.0
+const BITE_KNOCKBACK = 6.0
+const BITE_ACTIVE_FRAMES = Vector2i(8, 24)
+const BITE_ANIMATION_FPS = 30.0
+const BITE_COOLDOWN = 3.0
 
+@export var health: int = 20
 var move_direction: Vector3 = Vector3.ZERO
 var direction_change_timer: float = 0.0
 var walk_before_idle_timer: float = 0.0
 var idle_timer: float = 0.0
 var is_idle: bool = false
+var is_dead: bool = false
+var hit_reaction_timer: float = 0.0
 var animation_player: AnimationPlayer = null
 var ground_collision: CollisionShape3D = null
 var vert_fly_collision: CollisionShape3D = null
 var hor_fly_collision: CollisionShape3D = null
-var target_float_height: float = 0.0
+var hurtbox_ground: Area3D = null
+var hurtbox_vert_fly: Area3D = null
 var ground_height: float = 0.0
 var is_floating: bool = false
-var float_timer: float = 0.0
-var max_float_duration: float = 0.0
-var float_target_height_set: bool = false
-var float_cooldown: float = 0.0
-var is_descending: bool = false
-var is_preparing_to_fly: bool = false
-var is_landing: bool = false
-var transition_anim_timer: float = 0.0
 var target_height_above_ground: float = 0.0
-var last_logged_state: String = ""
-var last_logged_position: Vector3 = Vector3.INF
+var is_preparing_to_fly: bool = false
+var transition_anim_timer: float = 0.0
+var has_taken_off: bool = false
+var is_falling_dead: bool = false
+var detection_area: Area3D = null
+var bite_area: Area3D = null
+var players_in_detection: Array = []
+var target_player: Node3D = null
+var is_biting: bool = false
+var has_dealt_bite_damage: bool = false
+var bite_cooldown_timer: float = 0.0
 
 func _ready() -> void:
 	randomize()
@@ -49,9 +62,24 @@ func _ready() -> void:
 	ground_collision = $ground
 	vert_fly_collision = $vertFly
 	hor_fly_collision = $horFly
+	var hurtbox: Node3D = get_node_or_null("Hurtbox")
+	if hurtbox:
+		hurtbox_ground = hurtbox.get_node_or_null("Ground")
+		hurtbox_vert_fly = hurtbox.get_node_or_null("VertFly")
+	if hurtbox_ground:
+		hurtbox_ground.add_to_group("hurtbox")
+		hurtbox_ground.collision_layer = 2
+		hurtbox_ground.collision_mask = 0
+	if hurtbox_vert_fly:
+		hurtbox_vert_fly.add_to_group("hurtbox")
+		hurtbox_vert_fly.collision_layer = 2
+		hurtbox_vert_fly.collision_mask = 0
+	detection_area = get_node_or_null("Detection")
+	bite_area = get_node_or_null("Attacks/Bite")
+	if detection_area:
+		detection_area.body_entered.connect(_on_detection_body_entered)
+		detection_area.body_exited.connect(_on_detection_body_exited)
 	ground_height = global_position.y
-	target_float_height = ground_height
-	target_height_above_ground = FLOAT_HEIGHT_MIN
 	_pick_new_direction()
 	_reset_direction_timer()
 	_reset_walk_before_idle_timer()
@@ -59,104 +87,130 @@ func _ready() -> void:
 	_play_walk_animation()
 
 func _physics_process(delta: float) -> void:
-	# Update float cooldown
-	if float_cooldown > 0.0:
-		float_cooldown -= delta
-
-	# Let transition labels exist only for the animation clip duration.
-	if transition_anim_timer > 0.0:
-		transition_anim_timer = max(transition_anim_timer - delta, 0.0)
-		if transition_anim_timer <= 0.0:
-			is_preparing_to_fly = false
-			is_landing = false
-	
-	# Handle gravity or floating
-	if is_floating and float_timer > 0.0:
-		# During ascent: actively move to target height
-		if not float_target_height_set:
-			# Sample ground below and set desired hover height above that ground.
-			_update_ground_height_from_raycast()
-			target_height_above_ground = randf_range(FLOAT_HEIGHT_MIN, FLOAT_HEIGHT_MAX)
-			target_float_height = ground_height + target_height_above_ground
-			float_target_height_set = true
-			is_descending = false
-			print("[FLY FLOAT START] TargetWorldY: %.2f, TargetAboveGround: %.2f, Current: %.2f, Ground: %.2f, Duration: %.2f" % [target_float_height, target_height_above_ground, global_position.y, ground_height, float_timer])
-		
-		# Re-sample ground while airborne so hover height remains relative to terrain below.
-		_update_ground_height_from_raycast()
-		var desired_world_height = ground_height + target_height_above_ground
-		var height_diff = desired_world_height - global_position.y
-
-		# Stop ascending once we have reached configured hover height above ground.
-		if height_diff <= ASCENT_STOP_EPSILON:
-			velocity.y = 0.0
-		else:
-			velocity.y = height_diff * FLOAT_SPEED
-
-		float_timer -= delta
-	elif is_floating and float_timer <= 0.0 and not is_descending:
-		# During descent: start landing animation and descent at the same time.
-		is_landing = true
-		is_descending = true
-		velocity.x = 0.0
-		velocity.z = 0.0
-		_play_landing_animation()
-	elif is_descending:
-		# Apply gravity during descent
+	if is_dead and is_falling_dead:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		velocity.y -= GRAVITY * delta
-		print("[FLY DESCENDING] Pos: %.2f, Falling" % global_position.y)
-		
-		# Check if we've reached ground (only during descent)
+		move_and_slide()
 		if is_on_floor():
-			print("[FLY LANDING] Reached ground! Cooldown for 2 seconds.")
-			is_floating = false
-			is_descending = false
-			is_landing = false
-			is_preparing_to_fly = false
-			transition_anim_timer = 0.0
-			float_target_height_set = false
-			float_cooldown = 2.0
-			velocity.y = 0.0
-	else:
-		# Not floating: apply normal gravity
+			is_falling_dead = false
+			_finish_death()
+		return
+	if is_dead:
+		return
+
+	_update_target_player()
+	bite_cooldown_timer = max(bite_cooldown_timer - delta, 0.0)
+
+	# Bite attack — plays to completion
+	if is_biting:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		if not is_floating:
+			if not is_on_floor():
+				velocity.y -= GRAVITY * delta
+			else:
+				velocity.y = 0.0
+		if not has_dealt_bite_damage:
+			_try_apply_bite_damage()
+		if animation_player and not animation_player.is_playing():
+			is_biting = false
+			has_dealt_bite_damage = false
+			bite_cooldown_timer = BITE_COOLDOWN
+		move_and_slide()
+		return
+
+	hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
+	var hit_anim_playing := animation_player and (
+		(animation_player.current_animation == "hitReaction" and animation_player.is_playing()) or
+		(animation_player.current_animation == "idleFlyHitReaction" and animation_player.is_playing())
+	)
+	if hit_reaction_timer > 0.0 or hit_anim_playing:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_hit_animation()
+		if not is_floating:
+			if not is_on_floor():
+				velocity.y -= GRAVITY * delta
+			else:
+				velocity.y = 0.0
+		move_and_slide()
+		return
+
+	# Trigger flight when HP drops to threshold
+	if not has_taken_off and health <= FLY_THRESHOLD and health > 0:
+		_start_flying()
+
+	# Handle takeoff transition animation
+	if is_preparing_to_fly:
+		transition_anim_timer = max(transition_anim_timer - delta, 0.0)
+		velocity.x = 0.0
+		velocity.z = 0.0
 		if not is_on_floor():
 			velocity.y -= GRAVITY * delta
 		else:
 			velocity.y = 0.0
-	
-	_update_wander_state(delta)
-	_update_collision_mode()
-	_move_and_log()
-
-func _update_wander_state(delta: float) -> void:
-	# While landing/descending, do not allow movement-state changes until grounded.
-	if is_landing or is_descending:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		if transition_anim_timer <= 0.0:
+			is_preparing_to_fly = false
+			is_floating = true
+			_update_ground_height_from_raycast()
+			target_height_above_ground = randf_range(FLOAT_HEIGHT_MIN, FLOAT_HEIGHT_MAX)
+		move_and_slide()
 		return
 
-	var can_ground_wander := is_on_floor() and not is_floating and not is_descending and not is_preparing_to_fly and not is_landing
+	# Check for bite attack
+	if not is_biting and _can_bite():
+		_start_bite()
+		move_and_slide()
+		return
 
-	# Start floating if not already (and cooldown has expired)
-	if can_ground_wander and not is_idle and float_cooldown <= 0.0:
-		if randf() < 0.02:  # Random chance each frame to start floating
-			is_preparing_to_fly = true
-			is_floating = true
-			is_descending = false
-			is_landing = false
-			float_target_height_set = false
-			max_float_duration = randf_range(FLOAT_DURATION_MIN, FLOAT_DURATION_MAX)
-			float_timer = max_float_duration
-			# Stop movement immediately
-			velocity.x = 0.0
-			velocity.z = 0.0
-			move_direction = Vector3.ZERO
-			_play_takeoff_animation()
-			print("Preparing to fly for %.2f seconds" % max_float_duration)
-	
-	if is_idle and can_ground_wander:
+	if is_floating:
+		if target_player:
+			_update_chase_float_state(delta)
+		else:
+			_update_float_state(delta)
+	else:
+		# Ground gravity
+		if not is_on_floor():
+			velocity.y -= GRAVITY * delta
+		else:
+			velocity.y = 0.0
+		if target_player:
+			_update_chase_ground_state(delta)
+		else:
+			_update_wander_state(delta)
+
+	_update_collision_mode()
+	move_and_slide()
+
+func _update_float_state(delta: float) -> void:
+	# Hover at target height above ground
+	_update_ground_height_from_raycast()
+	var desired_world_height = ground_height + target_height_above_ground
+	var height_diff = desired_world_height - global_position.y
+	if abs(height_diff) <= ASCENT_STOP_EPSILON:
+		velocity.y = 0.0
+	else:
+		velocity.y = height_diff * FLOAT_SPEED
+
+	# Wander while flying
+	direction_change_timer -= delta
+	if direction_change_timer <= 0.0:
+		_pick_new_direction()
+		_reset_direction_timer()
+
+	velocity.x = move_direction.x * FLY_SPEED
+	velocity.z = move_direction.z * FLY_SPEED
+
+	if move_direction.length_squared() > 0.001:
+		_face_direction(move_direction, delta)
+
+	_play_air_animation()
+
+func _update_wander_state(delta: float) -> void:
+	var can_wander := is_on_floor()
+
+	if is_idle and can_wander:
 		idle_timer = max(idle_timer - delta, 0.0)
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -167,16 +221,15 @@ func _update_wander_state(delta: float) -> void:
 			_pick_new_direction()
 			_reset_direction_timer()
 		return
-	elif is_idle and not can_ground_wander:
-		# Never keep idle state active while airborne or during flight transitions.
+	elif is_idle and not can_wander:
 		is_idle = false
 
-	if can_ground_wander:
+	if can_wander:
 		walk_before_idle_timer = max(walk_before_idle_timer - delta, 0.0)
 	else:
 		walk_before_idle_timer = max(walk_before_idle_timer, 0.1)
 
-	if can_ground_wander and walk_before_idle_timer <= 0.0:
+	if can_wander and walk_before_idle_timer <= 0.0:
 		is_idle = true
 		idle_timer = randf_range(IDLE_DURATION_MIN, IDLE_DURATION_MAX)
 		velocity.x = 0.0
@@ -195,14 +248,190 @@ func _update_wander_state(delta: float) -> void:
 	if move_direction.length_squared() > 0.001:
 		_face_direction(move_direction, delta)
 
-	# While transition clip is active, do not override it with other animations.
-	if is_preparing_to_fly or is_landing:
-		pass
-	# Walk animation should only run while grounded.
-	elif is_on_floor() and not is_floating and not is_descending:
-		_play_walk_animation()
+	_play_walk_animation()
+
+func _update_chase_ground_state(delta: float) -> void:
+	if not target_player or not is_instance_valid(target_player):
+		target_player = null
+		return
+	var dir := (target_player.global_position - global_position)
+	dir.y = 0.0
+	if dir.length_squared() > 0.001:
+		dir = dir.normalized()
+		velocity.x = dir.x * CHASE_SPEED
+		velocity.z = dir.z * CHASE_SPEED
+		_face_direction(dir, delta)
 	else:
-		_play_air_animation()
+		velocity.x = 0.0
+		velocity.z = 0.0
+	_play_walk_animation()
+
+func _update_chase_float_state(delta: float) -> void:
+	if not target_player or not is_instance_valid(target_player):
+		target_player = null
+		return
+	# Hover
+	_update_ground_height_from_raycast()
+	var desired_world_height = ground_height + target_height_above_ground
+	var height_diff = desired_world_height - global_position.y
+	if abs(height_diff) <= ASCENT_STOP_EPSILON:
+		velocity.y = 0.0
+	else:
+		velocity.y = height_diff * FLOAT_SPEED
+	# Chase horizontally
+	var dir := (target_player.global_position - global_position)
+	dir.y = 0.0
+	if dir.length_squared() > 0.001:
+		dir = dir.normalized()
+		velocity.x = dir.x * CHASE_FLY_SPEED
+		velocity.z = dir.z * CHASE_FLY_SPEED
+		_face_direction(dir, delta)
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	_play_air_animation()
+
+func _start_flying() -> void:
+	has_taken_off = true
+	is_preparing_to_fly = true
+	is_idle = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+	move_direction = Vector3.ZERO
+	_play_takeoff_animation()
+
+# --- Damage / Death ---
+
+func apply_damage(amount: float) -> void:
+	if is_dead:
+		return
+	if amount <= 0.0:
+		return
+	health = maxi(health - int(round(amount)), 0)
+	if health <= 0:
+		_die()
+		return
+	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	_play_hit_animation()
+
+func take_damage(amount: float) -> void:
+	apply_damage(amount)
+
+# --- Detection / Targeting ---
+
+func _on_detection_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player") and body not in players_in_detection:
+		players_in_detection.append(body)
+
+func _on_detection_body_exited(body: Node3D) -> void:
+	players_in_detection.erase(body)
+	if target_player == body:
+		target_player = null
+
+func _update_target_player() -> void:
+	# Remove invalid entries
+	players_in_detection = players_in_detection.filter(func(p): return is_instance_valid(p))
+	if players_in_detection.is_empty():
+		target_player = null
+		return
+	var closest: Node3D = null
+	var closest_dist := INF
+	for p in players_in_detection:
+		var d := global_position.distance_squared_to(p.global_position)
+		if d < closest_dist:
+			closest_dist = d
+			closest = p
+	target_player = closest
+
+# --- Bite Attack ---
+
+func _can_bite() -> bool:
+	if not bite_area:
+		return false
+	if bite_cooldown_timer > 0.0:
+		return false
+	for body in bite_area.get_overlapping_bodies():
+		if body.is_in_group("player"):
+			return true
+	return false
+
+func _start_bite() -> void:
+	is_biting = true
+	has_dealt_bite_damage = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+	if animation_player and animation_player.has_animation("bite"):
+		animation_player.speed_scale = 1.0
+		animation_player.play("bite")
+
+func _try_apply_bite_damage() -> void:
+	if not _is_in_bite_active_frames():
+		return
+	if not bite_area:
+		return
+	for body in bite_area.get_overlapping_bodies():
+		if body.is_in_group("player"):
+			if body.has_method("apply_damage"):
+				body.apply_damage(BITE_DAMAGE)
+			if body.has_method("apply_knockback"):
+				var kb_dir := (body.global_position - global_position).normalized()
+				body.apply_knockback(kb_dir, BITE_KNOCKBACK)
+			has_dealt_bite_damage = true
+			return
+
+func _is_in_bite_active_frames() -> bool:
+	if not animation_player or animation_player.current_animation != "bite":
+		return false
+	var anim := animation_player.get_animation("bite")
+	if not anim:
+		return false
+	var total_frames := int(round(anim.length * BITE_ANIMATION_FPS))
+	var current_frame := int(round(animation_player.current_animation_position * BITE_ANIMATION_FPS))
+	current_frame = int(posmod(current_frame, total_frames))
+	return current_frame >= BITE_ACTIVE_FRAMES.x and current_frame <= BITE_ACTIVE_FRAMES.y
+
+func _die() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	health = 0
+	hit_reaction_timer = 0.0
+	is_idle = false
+	var was_floating := is_floating
+	is_floating = false
+	is_preparing_to_fly = false
+	velocity = Vector3.ZERO
+
+	if was_floating:
+		# Fall to the ground first
+		is_falling_dead = true
+		if ground_collision:
+			ground_collision.disabled = false
+		if hor_fly_collision:
+			hor_fly_collision.disabled = true
+		if animation_player and animation_player.has_animation("idleFlyDeath"):
+			animation_player.speed_scale = 1.0
+			animation_player.play("idleFlyDeath")
+	else:
+		await EnemyDeathLinger.run_death_linger(
+			self,
+			animation_player,
+			DEATH_LINGER_TIME,
+			[],
+			[&"death"]
+		)
+
+func _finish_death() -> void:
+	velocity = Vector3.ZERO
+	await EnemyDeathLinger.run_death_linger(
+		self,
+		null,
+		DEATH_LINGER_TIME,
+		[],
+		[]
+	)
+
+# --- Movement helpers ---
 
 func _pick_new_direction() -> void:
 	var angle := randf_range(0.0, TAU)
@@ -223,6 +452,8 @@ func _face_direction(direction: Vector3, delta: float) -> void:
 		var new_angle := current_angle + angle_diff * delta * turn_speed
 		transform.basis = Basis.from_euler(Vector3(0, new_angle, 0))
 
+# --- Animations ---
+
 func _play_walk_animation() -> void:
 	if animation_player and animation_player.has_animation("walk"):
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
@@ -232,7 +463,6 @@ func _play_walk_animation() -> void:
 func _play_idle_animation() -> void:
 	if not animation_player:
 		return
-
 	if animation_player.has_animation("idle"):
 		if animation_player.current_animation != "idle" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
@@ -243,8 +473,6 @@ func _play_idle_animation() -> void:
 func _play_air_animation() -> void:
 	if not animation_player:
 		return
-
-	# Prefer a dedicated flying/air animation when available.
 	if animation_player.has_animation("idleFly"):
 		if animation_player.current_animation != "idleFly" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
@@ -258,42 +486,36 @@ func _play_air_animation() -> void:
 			animation_player.speed_scale = 1.0
 			animation_player.play("idle")
 
+func _play_hit_animation() -> void:
+	if not animation_player:
+		return
+	var anim_name: String
+	if is_floating:
+		anim_name = "idleFlyHitReaction"
+	else:
+		anim_name = "hitReaction"
+	if not animation_player.has_animation(anim_name):
+		return
+	if animation_player.current_animation != anim_name or not animation_player.is_playing():
+		animation_player.speed_scale = 1.0
+		animation_player.play(anim_name)
+		animation_player.seek(0.0, true)
+
 func _play_takeoff_animation() -> void:
 	transition_anim_timer = 0.0
 	if not animation_player:
-		print("[FLY ANIM] prepareToFly (takeoff) NOT played: AnimationPlayer missing")
 		return
-
 	if animation_player.has_animation("prepareToFly"):
-		print("[FLY ANIM] prepareToFly PLAY takeoff at t=%d pos=(%.2f, %.2f, %.2f)" % [
-			Time.get_ticks_msec(),
-			global_position.x,
-			global_position.y,
-			global_position.z,
-		])
 		animation_player.speed_scale = 1.0
 		animation_player.play("prepareToFly")
 		transition_anim_timer = animation_player.get_animation("prepareToFly").length
 	else:
-		print("[FLY ANIM] prepareToFly (takeoff) NOT played: animation missing")
-
-func _play_landing_animation() -> void:
-	transition_anim_timer = 0.0
-	if not animation_player:
-		print("[FLY ANIM] prepareToFly (landing reverse) NOT played: AnimationPlayer missing")
-		return
-
-	if animation_player.has_animation("prepareToFly"):
-		print("[FLY ANIM] prepareToFly PLAY landing_reverse at t=%d pos=(%.2f, %.2f, %.2f)" % [
-			Time.get_ticks_msec(),
-			global_position.x,
-			global_position.y,
-			global_position.z,
-		])
-		animation_player.play_backwards("prepareToFly")
-		transition_anim_timer = animation_player.get_animation("prepareToFly").length
-	else:
-		print("[FLY ANIM] prepareToFly (landing reverse) NOT played: animation missing")
+		# No takeoff animation — go straight to flying
+		transition_anim_timer = 0.0
+		is_preparing_to_fly = false
+		is_floating = true
+		_update_ground_height_from_raycast()
+		target_height_above_ground = randf_range(FLOAT_HEIGHT_MIN, FLOAT_HEIGHT_MAX)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
@@ -304,70 +526,30 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 			return result
 	return null
 
+# --- Collision ---
+
 func _update_collision_mode() -> void:
 	if not ground_collision or not hor_fly_collision:
 		return
-
-	# Switch collision EARLY: use ground collision when landing/descending starts
-	# This ensures ground collision is active BEFORE the creature reaches the floor
-	var use_hor_fly := is_floating and not is_landing and not is_descending and is_on_floor() == false
-	var old_ground_disabled := ground_collision.disabled
-	var old_horfly_disabled := hor_fly_collision.disabled
-	
-	ground_collision.disabled = use_hor_fly
-	hor_fly_collision.disabled = not use_hor_fly
-	
-	# Log state changes
-	if ground_collision.disabled != old_ground_disabled or hor_fly_collision.disabled != old_horfly_disabled:
-		print("[COLLISION] floating=%s landing=%s descending=%s on_floor=%s => ground=%s horFly=%s" % [
-			is_floating, is_landing, is_descending, is_on_floor(),
-			"DISABLED" if ground_collision.disabled else "ENABLED",
-			"DISABLED" if hor_fly_collision.disabled else "ENABLED"
-		])
+	var use_fly := is_floating and not is_on_floor()
+	ground_collision.disabled = use_fly
+	hor_fly_collision.disabled = not use_fly
+	if hurtbox_ground:
+		hurtbox_ground.monitoring = not use_fly
+		hurtbox_ground.monitorable = not use_fly
+	if hurtbox_vert_fly:
+		hurtbox_vert_fly.monitoring = use_fly
+		hurtbox_vert_fly.monitorable = use_fly
 
 func _update_ground_height_from_raycast() -> void:
-	var space_state := get_world_3d().direct_space_state
+	var space := get_world_3d().direct_space_state
 	var ray_start := global_position + Vector3.UP * 0.5
 	var ray_end := global_position + Vector3.DOWN * GROUND_RAYCAST_DISTANCE
 	var query := PhysicsRayQueryParameters3D.create(ray_start, ray_end)
 	query.exclude = [self]
-	var hit := space_state.intersect_ray(query)
+	var hit := space.intersect_ray(query)
 	if not hit.is_empty():
 		ground_height = hit.position.y
-
-func _move_and_log() -> void:
-	move_and_slide()
-	_log_state_change_if_needed()
-	_log_position_shift_if_needed()
-
-func _get_fly_state() -> String:
-	if is_preparing_to_fly:
-		return "preparing_to_fly"
-	if is_landing:
-		return "landing_animation"
-	if is_descending:
-		return "descending"
-	if is_floating:
-		return "floating"
-	if is_idle:
-		return "idle"
-	return "walking"
-
-func _log_state_change_if_needed() -> void:
-	var current_state := _get_fly_state()
-	if current_state != last_logged_state:
-		print("[FLY STATE] %s -> %s" % [last_logged_state if last_logged_state != "" else "(init)", current_state])
-		last_logged_state = current_state
-
-func _log_position_shift_if_needed() -> void:
-	if last_logged_position == Vector3.INF:
-		last_logged_position = global_position
-		print("[FLY POS] x=%.2f y=%.2f z=%.2f" % [global_position.x, global_position.y, global_position.z])
-		return
-
-	if global_position.distance_to(last_logged_position) >= POSITION_SHIFT_EPSILON:
-		print("[FLY POS] x=%.2f y=%.2f z=%.2f" % [global_position.x, global_position.y, global_position.z])
-		last_logged_position = global_position
 
 func angle_difference(from: float, to: float) -> float:
 	var diff := fmod(to - from + PI, TAU) - PI

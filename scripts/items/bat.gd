@@ -185,7 +185,8 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 		return false
 
 	if animation_player.current_animation != SWING_ANIMATION_NAME:
-		animation_player.play(SWING_ANIMATION_NAME)
+		_reset_swing_state(player)
+		return false
 
 	var swing_animation := animation_player.get_animation(SWING_ANIMATION_NAME)
 	if swing_animation == null:

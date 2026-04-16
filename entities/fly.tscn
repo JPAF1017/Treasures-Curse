@@ -7,10 +7,23 @@
 radius = 1.809082
 height = 6.775635
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_xmgs0"]
+height = 4.0
+radius = 4.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_sdhai"]
+height = 8.0
+radius = 3.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_7f8s3"]
+radius = 0.8334961
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_i83ti"]
+height = 10.369629
+radius = 21.0
+
 [node name="Fly" type="CharacterBody3D" unique_id=789065429]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
-collision_layer = 3
-collision_mask = 3
 script = ExtResource("1_xmgs0")
 
 [node name="fly" parent="." unique_id=1948640078 instance=ExtResource("1_m7jbi")]
@@ -22,10 +35,35 @@ shape = SubResource("CapsuleShape3D_m7jbi")
 
 [node name="vertFly" type="CollisionShape3D" parent="." unique_id=327179974]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.22302628, 2.0407906, 0.54855835)
+visible = false
 shape = SubResource("CapsuleShape3D_m7jbi")
 disabled = true
 
-[node name="horFly" type="CollisionShape3D" parent="." unique_id=1567313334]
-transform = Transform3D(0.5, 0, 0, 0, -2.1855694e-08, -0.5, 0, 0.5, -2.1855694e-08, 0.28656864, 2.2305582, -0.099350095)
-shape = SubResource("CapsuleShape3D_m7jbi")
-disabled = true
+[node name="Hurtbox" type="Node3D" parent="." unique_id=72133127]
+visible = false
+
+[node name="Ground" type="Area3D" parent="Hurtbox" unique_id=2092639428]
+
+[node name="ground" type="CollisionShape3D" parent="Hurtbox/Ground" unique_id=1233431068]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 1.5, 0.28836048)
+shape = SubResource("CylinderShape3D_xmgs0")
+
+[node name="VertFly" type="Area3D" parent="Hurtbox" unique_id=1487016495]
+
+[node name="vertFly" type="CollisionShape3D" parent="Hurtbox/VertFly" unique_id=1418063356]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.22302628, 1.5407906, 0.54855835)
+shape = SubResource("CylinderShape3D_sdhai")
+
+[node name="Attacks" type="Node3D" parent="." unique_id=1724948960]
+
+[node name="Bite" type="Area3D" parent="Attacks" unique_id=1270317919]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/Bite" unique_id=106032100]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0048945, 2.4534283)
+shape = SubResource("CylinderShape3D_7f8s3")
+
+[node name="Detection" type="Area3D" parent="." unique_id=862142689]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Detection" unique_id=204863473]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2282715, 0)
+shape = SubResource("CylinderShape3D_i83ti")
