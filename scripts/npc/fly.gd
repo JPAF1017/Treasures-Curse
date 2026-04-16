@@ -1,6 +1,8 @@
 extends CharacterBody3D
 
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
+const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
+const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 2.0
@@ -26,6 +28,19 @@ const BITE_KNOCKBACK = 6.0
 const BITE_ACTIVE_FRAMES = Vector2i(8, 24)
 const BITE_ANIMATION_FPS = 30.0
 const BITE_COOLDOWN = 3.0
+const BUMP_STEP_VELOCITY = 2.0
+const BUMP_STEP_COOLDOWN = 0.15
+const LOS_MEMORY_TIME = 10.0
+const TRAIL_MEMORY_TIME = 5.0
+const TRAIL_SAMPLE_INTERVAL = 0.2
+const TRAIL_POINT_SPACING = 0.7
+const TRAIL_REACHED_DISTANCE = 0.8
+const TRAIL_MAX_POINTS = 28
+const LOS_LOSS_GRACE_TIME = 0.35
+const STAIR_VERTICAL_DELTA = 1.6
+const PATH_CACHE_TIME = 1.5
+const PATH_CACHE_MAX_POINTS = 10
+const STAIR_TRAIL_MAX_POINTS = 14
 
 @export var health: int = 20
 var move_direction: Vector3 = Vector3.ZERO
@@ -55,9 +70,24 @@ var target_player: Node3D = null
 var is_biting: bool = false
 var has_dealt_bite_damage: bool = false
 var bite_cooldown_timer: float = 0.0
+var space_state: PhysicsDirectSpaceState3D = null
+var bump_step_timer: float = 0.0
+var los_memory_timer: float = 0.0
+var last_visible_player_position: Vector3 = Vector3.ZERO
+var trail_memory_timer: float = 0.0
+var trail_sample_timer: float = 0.0
+var memorized_target_trail: Array[Vector3] = []
+var los_state_initialized: bool = false
+var previous_has_line_of_sight: bool = false
+var los_loss_grace_timer: float = 0.0
+var path_cache_timer: float = 0.0
+var cached_nav_path: Array[Vector3] = []
+var last_reachable_target_position: Vector3 = Vector3.ZERO
+var wall_follow_mode: int = 0
 
 func _ready() -> void:
 	randomize()
+	space_state = get_world_3d().direct_space_state
 	animation_player = _find_animation_player(self)
 	ground_collision = $ground
 	vert_fly_collision = $vertFly
@@ -101,6 +131,11 @@ func _physics_process(delta: float) -> void:
 
 	_update_target_player()
 	bite_cooldown_timer = max(bite_cooldown_timer - delta, 0.0)
+	los_memory_timer = max(los_memory_timer - delta, 0.0)
+	trail_memory_timer = max(trail_memory_timer - delta, 0.0)
+	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
+	los_loss_grace_timer = max(los_loss_grace_timer - delta, 0.0)
+	path_cache_timer = max(path_cache_timer - delta, 0.0)
 
 	# Bite attack — plays to completion
 	if is_biting:
@@ -164,9 +199,11 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	var pursuit_target := _compute_pursuit_target()
+
 	if is_floating:
-		if target_player:
-			_update_chase_float_state(delta)
+		if target_player or pursuit_target != Vector3.ZERO:
+			_update_chase_float_state(delta, pursuit_target)
 		else:
 			_update_float_state(delta)
 	else:
@@ -175,11 +212,12 @@ func _physics_process(delta: float) -> void:
 			velocity.y -= GRAVITY * delta
 		else:
 			velocity.y = 0.0
-		if target_player:
-			_update_chase_ground_state(delta)
+		if target_player or pursuit_target != Vector3.ZERO:
+			_update_chase_ground_state(delta, pursuit_target)
 		else:
 			_update_wander_state(delta)
 
+	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
 	_update_collision_mode()
 	move_and_slide()
 
@@ -250,26 +288,29 @@ func _update_wander_state(delta: float) -> void:
 
 	_play_walk_animation()
 
-func _update_chase_ground_state(delta: float) -> void:
-	if not target_player or not is_instance_valid(target_player):
-		target_player = null
-		return
-	var dir := (target_player.global_position - global_position)
-	dir.y = 0.0
-	if dir.length_squared() > 0.001:
-		dir = dir.normalized()
-		velocity.x = dir.x * CHASE_SPEED
-		velocity.z = dir.z * CHASE_SPEED
-		_face_direction(dir, delta)
-	else:
+func _update_chase_ground_state(delta: float, pursuit_target: Vector3) -> void:
+	var dir_to_target := pursuit_target - global_position
+	dir_to_target.y = 0.0
+	if dir_to_target.length() <= 0.4:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_play_idle_animation()
+		return
+	var path_result := NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
+	var path_dir: Vector3 = path_result["direction"]
+	wall_follow_mode = path_result["wall_follow_mode"]
+	if path_dir.length_squared() > 0.001:
+		velocity.x = path_dir.x * CHASE_SPEED
+		velocity.z = path_dir.z * CHASE_SPEED
+		_face_direction(path_dir, delta)
+	else:
+		var fallback := dir_to_target.normalized()
+		velocity.x = fallback.x * CHASE_SPEED * 0.4
+		velocity.z = fallback.z * CHASE_SPEED * 0.4
+		_face_direction(fallback, delta)
 	_play_walk_animation()
 
-func _update_chase_float_state(delta: float) -> void:
-	if not target_player or not is_instance_valid(target_player):
-		target_player = null
-		return
+func _update_chase_float_state(delta: float, pursuit_target: Vector3) -> void:
 	# Hover
 	_update_ground_height_from_raycast()
 	var desired_world_height = ground_height + target_height_above_ground
@@ -278,17 +319,26 @@ func _update_chase_float_state(delta: float) -> void:
 		velocity.y = 0.0
 	else:
 		velocity.y = height_diff * FLOAT_SPEED
-	# Chase horizontally
-	var dir := (target_player.global_position - global_position)
-	dir.y = 0.0
-	if dir.length_squared() > 0.001:
-		dir = dir.normalized()
-		velocity.x = dir.x * CHASE_FLY_SPEED
-		velocity.z = dir.z * CHASE_FLY_SPEED
-		_face_direction(dir, delta)
-	else:
+	# Chase horizontally with pathfinding
+	var dir_to_target := pursuit_target - global_position
+	dir_to_target.y = 0.0
+	if dir_to_target.length() <= 0.4:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_play_air_animation()
+		return
+	var path_result := NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
+	var path_dir: Vector3 = path_result["direction"]
+	wall_follow_mode = path_result["wall_follow_mode"]
+	if path_dir.length_squared() > 0.001:
+		velocity.x = path_dir.x * CHASE_FLY_SPEED
+		velocity.z = path_dir.z * CHASE_FLY_SPEED
+		_face_direction(path_dir, delta)
+	else:
+		var fallback := dir_to_target.normalized()
+		velocity.x = fallback.x * CHASE_FLY_SPEED * 0.4
+		velocity.z = fallback.z * CHASE_FLY_SPEED * 0.4
+		_face_direction(fallback, delta)
 	_play_air_animation()
 
 func _start_flying() -> void:
@@ -327,6 +377,11 @@ func _on_detection_body_exited(body: Node3D) -> void:
 	players_in_detection.erase(body)
 	if target_player == body:
 		target_player = null
+		los_state_initialized = false
+		los_loss_grace_timer = 0.0
+		path_cache_timer = 0.0
+		cached_nav_path.clear()
+		last_reachable_target_position = Vector3.ZERO
 
 func _update_target_player() -> void:
 	# Remove invalid entries
@@ -341,7 +396,105 @@ func _update_target_player() -> void:
 		if d < closest_dist:
 			closest_dist = d
 			closest = p
+	if closest != target_player:
+		los_state_initialized = false
+		previous_has_line_of_sight = false
+		los_loss_grace_timer = 0.0
+		path_cache_timer = 0.0
+		cached_nav_path.clear()
+		last_reachable_target_position = Vector3.ZERO
+		memorized_target_trail.clear()
 	target_player = closest
+
+# --- Pursuit / Pathfinding ---
+
+func _compute_pursuit_target() -> Vector3:
+	if not target_player or not is_instance_valid(target_player):
+		# No active target — check memory trail
+		if trail_memory_timer > 0.0:
+			if path_cache_timer > 0.0 and not cached_nav_path.is_empty():
+				var cached_result := NavigationUtils.get_cached_path_target(global_position, cached_nav_path, TRAIL_REACHED_DISTANCE)
+				if bool(cached_result.get("has_target", false)):
+					return NavigationUtils.snap_position_to_navigation(self, cached_result["target"])
+			var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+			if bool(trail_result.get("has_target", false)):
+				return NavigationUtils.snap_position_to_navigation(self, trail_result["target"])
+			if last_visible_player_position != Vector3.ZERO:
+				var to_last := last_visible_player_position - global_position
+				to_last.y = 0.0
+				if to_last.length() > 0.4:
+					return NavigationUtils.snap_position_to_navigation(self, last_visible_player_position)
+		return Vector3.ZERO
+
+	# Has active target — run LOS + memory system
+	var has_los := NavigationUtils.has_line_of_sight_to(self, target_player.global_position + Vector3(0, 1.0, 0), space_state, [self, target_player])
+	var los_state := EnemyPerceptionMemory.update_los_trail_state(
+		has_los,
+		{
+			"los_state_initialized": los_state_initialized,
+			"previous_has_line_of_sight": previous_has_line_of_sight,
+			"trail_memory_timer": trail_memory_timer,
+			"trail_sample_timer": trail_sample_timer,
+			"los_loss_grace_timer": los_loss_grace_timer,
+		},
+		memorized_target_trail,
+		last_visible_player_position,
+		{
+			"trail_memory_time": TRAIL_MEMORY_TIME,
+			"trail_point_spacing": TRAIL_POINT_SPACING,
+			"trail_max_points": TRAIL_MAX_POINTS,
+			"los_loss_grace_time": LOS_LOSS_GRACE_TIME,
+			"stair_vertical_delta": STAIR_VERTICAL_DELTA,
+			"stair_trail_max_points": STAIR_TRAIL_MAX_POINTS,
+		}
+	)
+	has_los = bool(los_state.get("effective_has_line_of_sight", has_los))
+	los_state_initialized = bool(los_state.get("los_state_initialized", los_state_initialized))
+	previous_has_line_of_sight = bool(los_state.get("previous_has_line_of_sight", previous_has_line_of_sight))
+	los_loss_grace_timer = float(los_state.get("los_loss_grace_timer", los_loss_grace_timer))
+	trail_memory_timer = float(los_state.get("trail_memory_timer", trail_memory_timer))
+	trail_sample_timer = float(los_state.get("trail_sample_timer", trail_sample_timer))
+
+	if has_los:
+		var snapped := NavigationUtils.snap_position_to_navigation(self, target_player.global_position)
+		last_visible_player_position = snapped
+		last_reachable_target_position = snapped
+		cached_nav_path = NavigationUtils.build_short_path_cache(self, snapped, PATH_CACHE_MAX_POINTS)
+		path_cache_timer = PATH_CACHE_TIME
+		los_memory_timer = LOS_MEMORY_TIME
+		trail_memory_timer = TRAIL_MEMORY_TIME
+		if trail_sample_timer <= 0.0:
+			NavigationUtils.append_trail_point(memorized_target_trail, snapped, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+			trail_sample_timer = TRAIL_SAMPLE_INTERVAL
+		return NavigationUtils.snap_position_to_navigation(self, target_player.global_position)
+
+	# Lost LOS — use memory hierarchy
+	var pursuit := last_visible_player_position
+	var vertical_mismatch := absf(target_player.global_position.y - last_visible_player_position.y) > STAIR_VERTICAL_DELTA
+	if vertical_mismatch:
+		memorized_target_trail.clear()
+		cached_nav_path.clear()
+		path_cache_timer = 0.0
+		if last_reachable_target_position != Vector3.ZERO:
+			pursuit = last_reachable_target_position
+
+	if path_cache_timer > 0.0 and not cached_nav_path.is_empty():
+		var cached_result := NavigationUtils.get_cached_path_target(global_position, cached_nav_path, TRAIL_REACHED_DISTANCE)
+		if bool(cached_result.get("has_target", false)):
+			return NavigationUtils.snap_position_to_navigation(self, cached_result["target"])
+
+	var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+	if trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false)):
+		pursuit = trail_result["target"]
+
+	if absf(target_player.global_position.y - last_visible_player_position.y) > STAIR_VERTICAL_DELTA and last_reachable_target_position != Vector3.ZERO:
+		pursuit = last_reachable_target_position
+		NavigationUtils.prune_trail_for_stairs(memorized_target_trail, last_visible_player_position.y, STAIR_VERTICAL_DELTA, STAIR_TRAIL_MAX_POINTS)
+
+	if trail_memory_timer <= 0.0:
+		return Vector3.ZERO
+
+	return NavigationUtils.snap_position_to_navigation(self, pursuit)
 
 # --- Bite Attack ---
 
