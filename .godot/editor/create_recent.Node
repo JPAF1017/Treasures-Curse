@@ -1,10 +1,10 @@
 CollisionShape3D
 Area3D
+Node3D
 RigidBody3D
 CollisionPolygon3D
 Label
 Control
-Node3D
 NinePatchRect
 TextureRect
 MenuBar

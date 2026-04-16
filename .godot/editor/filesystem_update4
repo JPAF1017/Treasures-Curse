@@ -1,1 +1,3 @@
-res://scripts/items/MeleeViewmodelComponent.gd
+res://entities/knight.tscn
+res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://scripts/npc/knight.gd

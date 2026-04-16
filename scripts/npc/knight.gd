@@ -5,7 +5,7 @@ const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd"
 const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
 
 const GRAVITY = 20.0
-const WALK_SPEED = 2.0
+const WALK_SPEED = 4.0
 const RUN_SPEED = 7
 const DIR_CHANGE_MIN = 1.5
 const DIR_CHANGE_MAX = 4.0
@@ -32,6 +32,22 @@ const STAIR_VERTICAL_DELTA = 1.6
 const PATH_CACHE_TIME = 1.5
 const PATH_CACHE_MAX_POINTS = 10
 const STAIR_TRAIL_MAX_POINTS = 14
+const SLIDE_ATTACK_COOLDOWN = 30.0
+const SLIDE_ATTACK_SPEED = 9.0
+const SLIDE_ATTACK_DURATION = 0.6
+const SLIDE_ATTACK_DAMAGE = 25.0
+const SLIDE_ATTACK_KNOCKBACK = 12.0
+const SLIDE_ATTACK_ACTIVE_FRAMES = Vector2i(44, 53)
+const SLIDE_ATTACK_ANIMATION_FPS = 30.0
+const ATTACK_COOLDOWN = 2.0
+const ATTACK_ANIMATION_FPS = 30.0
+const KICK_DAMAGE = 10.0
+const KICK_KNOCKBACK_STRENGTH = 20.0
+const KICK_ACTIVE_FRAMES = Vector2i(18, 26)
+const VERT_SLASH_DAMAGE = 20.0
+const VERT_SLASH_ACTIVE_FRAMES = Vector2i(24, 30)
+const HEAVY_SMASH_DAMAGE = 50.0
+const HEAVY_SMASH_ACTIVE_FRAMES = Vector2i(58, 68)
 
 var move_direction: Vector3 = Vector3.ZERO
 var direction_change_timer: float = 0.0
@@ -55,6 +71,27 @@ const STRAFE_LINGER_TIME = 1.0
 var players_in_distance: Array[Node3D] = []
 var is_retreating: bool = false
 var _was_retreating: bool = false
+
+# Slide attack
+var slide_attack_cooldown_timer: float = 0.0
+var is_slide_attacking: bool = false
+var slide_attack_timer: float = 0.0
+var slide_attack_direction: Vector3 = Vector3.ZERO
+var has_dealt_slide_damage: bool = false
+var slide_slash_area: Area3D = null
+var slide_slash_activate_area: Area3D = null
+var players_in_slide_activate: Array[Node3D] = []
+
+# Melee attacks (VertSlash, Kick, HeavySmash)
+var attack_cooldown_timer: float = 0.0
+var is_attacking: bool = false
+var current_attack_type: int = 0 # 1=kick, 2=vertSlash, 3=heavySmash
+var has_dealt_damage_this_attack: bool = false
+var attacks_activation_area: Area3D = null
+var vert_slash_area: Area3D = null
+var kick_area: Area3D = null
+var heavy_smash_area: Area3D = null
+var players_in_attacks_activation: Array[Node3D] = []
 
 # Pathfinding / perception
 var space_state: PhysicsDirectSpaceState3D = null
@@ -90,6 +127,22 @@ func _ready() -> void:
 	var distance: Area3D = $Distance
 	distance.body_entered.connect(_on_distance_body_entered)
 	distance.body_exited.connect(_on_distance_body_exited)
+	var slide_slash_node: Node3D = get_node_or_null("SlideSlash")
+	if slide_slash_node:
+		slide_slash_area = slide_slash_node.get_node_or_null("SlideSlash")
+		slide_slash_activate_area = slide_slash_node.get_node_or_null("SlideSlashActivate")
+	if slide_slash_activate_area:
+		slide_slash_activate_area.body_entered.connect(_on_slide_activate_body_entered)
+		slide_slash_activate_area.body_exited.connect(_on_slide_activate_body_exited)
+	var attacks_node: Node3D = get_node_or_null("Attacks")
+	if attacks_node:
+		vert_slash_area = attacks_node.get_node_or_null("VertSlash")
+		kick_area = attacks_node.get_node_or_null("Kick")
+		heavy_smash_area = attacks_node.get_node_or_null("HeavySmash")
+		attacks_activation_area = attacks_node.get_node_or_null("AttacksActivation")
+	if attacks_activation_area:
+		attacks_activation_area.body_entered.connect(_on_attacks_activation_body_entered)
+		attacks_activation_area.body_exited.connect(_on_attacks_activation_body_exited)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -101,6 +154,8 @@ func _physics_process(delta: float) -> void:
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
 	los_loss_grace_timer = max(los_loss_grace_timer - delta, 0.0)
 	path_cache_timer = max(path_cache_timer - delta, 0.0)
+	slide_attack_cooldown_timer = max(slide_attack_cooldown_timer - delta, 0.0)
+	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
 
 	# Apply gravity
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
@@ -114,6 +169,40 @@ func _physics_process(delta: float) -> void:
 		return
 	
 	_update_target()
+
+	# Slide attack in progress takes priority
+	if is_slide_attacking:
+		_update_slide_attack(delta)
+		_play_animation()
+		move_and_slide()
+		return
+
+	# Check if we should initiate a slide attack
+	if _can_start_slide_attack():
+		_start_slide_attack()
+		_update_slide_attack(delta)
+		_play_animation()
+		move_and_slide()
+		return
+
+	# Melee attack in progress — let animation finish
+	if is_attacking and animation_player:
+		if not animation_player.is_playing():
+			is_attacking = false
+			attack_cooldown_timer = ATTACK_COOLDOWN
+	if is_attacking:
+		_update_attack_state(delta)
+		_play_animation()
+		move_and_slide()
+		return
+
+	# Check if we should initiate a melee attack
+	if _can_start_melee_attack():
+		_start_melee_attack(delta)
+		_play_animation()
+		move_and_slide()
+		return
+
 	if target_player and _is_player_in_distance(target_player):
 		_update_retreat_state(delta)
 	elif target_player and _is_player_in_sweetspot(target_player):
@@ -441,7 +530,11 @@ func _face_direction(direction: Vector3, delta: float) -> void:
 func _play_animation() -> void:
 	if animation_player and animation_player.current_animation == "hit" and animation_player.is_playing():
 		return
-	if is_retreating and is_on_floor():
+	if is_slide_attacking:
+		_play_slide_attack_animation()
+	elif is_attacking:
+		pass # Attack animation already playing, don't interrupt
+	elif is_retreating and is_on_floor():
 		_play_retreat_animation()
 	elif is_strafing and is_on_floor():
 		_play_strafe_animation()
@@ -524,6 +617,23 @@ func _play_hit_animation() -> void:
 		animation_player.play("hit")
 		animation_player.seek(0.0, true)
 
+func _play_slide_attack_animation() -> void:
+	if not animation_player:
+		return
+	# Use "slideSlash" if available, otherwise speed up "run"
+	if animation_player.has_animation("slideSlash"):
+		if animation_player.current_animation != "slideSlash" or not animation_player.is_playing():
+			animation_player.speed_scale = 1.0
+			animation_player.play("slideSlash")
+	elif animation_player.has_animation("run"):
+		if animation_player.current_animation != "run" or not animation_player.is_playing():
+			animation_player.speed_scale = 1.8
+			animation_player.play("run")
+	elif animation_player.has_animation("walk"):
+		if animation_player.current_animation != "walk" or not animation_player.is_playing():
+			animation_player.speed_scale = 2.5
+			animation_player.play("walk")
+
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
 		return node
@@ -536,3 +646,236 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 func angle_difference(from: float, to: float) -> float:
 	var diff := fmod(to - from + PI, TAU) - PI
 	return diff if diff >= -PI else diff + TAU
+
+# --- Slide Attack ---
+
+func _on_slide_activate_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player") and body not in players_in_slide_activate:
+		players_in_slide_activate.append(body)
+
+func _on_slide_activate_body_exited(body: Node3D) -> void:
+	players_in_slide_activate.erase(body)
+
+func _can_start_slide_attack() -> bool:
+	if slide_attack_cooldown_timer > 0.0:
+		return false
+	if not target_player or not is_instance_valid(target_player):
+		return false
+	players_in_slide_activate = players_in_slide_activate.filter(func(p): return is_instance_valid(p))
+	if target_player not in players_in_slide_activate:
+		return false
+	if not is_on_floor():
+		return false
+	return true
+
+func _start_slide_attack() -> void:
+	is_slide_attacking = true
+	slide_attack_timer = SLIDE_ATTACK_DURATION
+	has_dealt_slide_damage = false
+	is_idle = false
+	is_strafing = false
+	is_retreating = false
+
+	var to_player := (target_player.global_position - global_position)
+	to_player.y = 0.0
+	if to_player.length_squared() > 0.001:
+		slide_attack_direction = to_player.normalized()
+	else:
+		slide_attack_direction = -transform.basis.z.normalized()
+
+	_log_attack("slide_attack started direction=(%.2f, %.2f, %.2f)" % [slide_attack_direction.x, slide_attack_direction.y, slide_attack_direction.z])
+	_play_slide_attack_animation()
+
+func _update_slide_attack(delta: float) -> void:
+	# Face slide direction
+	if slide_attack_direction.length_squared() > 0.001:
+		_face_direction(slide_attack_direction, delta)
+
+	# Slide forward
+	velocity.x = slide_attack_direction.x * SLIDE_ATTACK_SPEED
+	velocity.z = slide_attack_direction.z * SLIDE_ATTACK_SPEED
+
+	# Try to deal damage
+	if not has_dealt_slide_damage:
+		_try_apply_slide_damage()
+
+	# End slide attack when animation finishes
+	var anim_playing := animation_player and animation_player.current_animation == "slideSlash" and animation_player.is_playing()
+	if not anim_playing:
+		_end_slide_attack()
+
+func _is_in_slide_active_frames() -> bool:
+	if not animation_player or animation_player.current_animation != "slideSlash":
+		return false
+	var pos := animation_player.current_animation_position
+	var current_frame := int(pos * SLIDE_ATTACK_ANIMATION_FPS)
+	return current_frame >= SLIDE_ATTACK_ACTIVE_FRAMES.x and current_frame <= SLIDE_ATTACK_ACTIVE_FRAMES.y
+
+func _try_apply_slide_damage() -> void:
+	if slide_slash_area == null:
+		return
+	if not _is_in_slide_active_frames():
+		return
+	for body in slide_slash_area.get_overlapping_bodies():
+		if body is CharacterBody3D and body.is_in_group("player"):
+			if body.has_method("apply_damage"):
+				body.call("apply_damage", SLIDE_ATTACK_DAMAGE)
+				_log_attack("slide_attack hit player damage=%.1f" % SLIDE_ATTACK_DAMAGE)
+			if body.has_method("apply_knockback"):
+				var knock_dir := (body.global_position - global_position).normalized()
+				body.call("apply_knockback", knock_dir, SLIDE_ATTACK_KNOCKBACK)
+			has_dealt_slide_damage = true
+			return
+
+func _end_slide_attack() -> void:
+	is_slide_attacking = false
+	slide_attack_timer = 0.0
+	slide_attack_cooldown_timer = SLIDE_ATTACK_COOLDOWN
+	velocity.x = 0.0
+	velocity.z = 0.0
+	_log_attack("slide_attack ended cooldown=%.1fs" % SLIDE_ATTACK_COOLDOWN)
+
+# --- Melee Attacks (Kick, VertSlash, HeavySmash) ---
+
+func _on_attacks_activation_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player") and body not in players_in_attacks_activation:
+		players_in_attacks_activation.append(body)
+
+func _on_attacks_activation_body_exited(body: Node3D) -> void:
+	players_in_attacks_activation.erase(body)
+
+func _can_start_melee_attack() -> bool:
+	if attack_cooldown_timer > 0.0:
+		return false
+	if is_attacking or is_slide_attacking:
+		return false
+	if not target_player or not is_instance_valid(target_player):
+		return false
+	players_in_attacks_activation = players_in_attacks_activation.filter(func(p): return is_instance_valid(p))
+	if target_player not in players_in_attacks_activation:
+		return false
+	if not is_on_floor():
+		return false
+	return true
+
+func _start_melee_attack(delta: float) -> void:
+	is_attacking = true
+	has_dealt_damage_this_attack = false
+	is_idle = false
+	is_strafing = false
+	is_retreating = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+
+	# Face the target
+	var to_player := (target_player.global_position - global_position)
+	to_player.y = 0.0
+	if to_player.length_squared() > 0.001:
+		_face_direction(to_player.normalized(), delta)
+
+	# Pick a random attack: 1=kick, 2=vertSlash, 3=heavySmash
+	# Kick is more frequent when slide attack is off cooldown
+	if slide_attack_cooldown_timer <= 0.0:
+		var roll := randi_range(1, 5)
+		if roll <= 3:
+			current_attack_type = 1 # kick (60%)
+		elif roll == 4:
+			current_attack_type = 2 # vertSlash (20%)
+		else:
+			current_attack_type = 3 # heavySmash (20%)
+	else:
+		current_attack_type = randi_range(1, 3)
+	var attack_name: String
+	match current_attack_type:
+		1:
+			attack_name = "kick"
+		2:
+			attack_name = "vertSlash"
+		3:
+			attack_name = "heavySmash"
+		_:
+			attack_name = "kick"
+
+	if animation_player and animation_player.has_animation(attack_name):
+		animation_player.speed_scale = 1.0
+		animation_player.play(attack_name)
+		_log_attack("melee_attack started type=%s" % attack_name)
+	else:
+		# Animation missing, cancel attack
+		is_attacking = false
+		attack_cooldown_timer = ATTACK_COOLDOWN
+		_log_attack("melee_attack cancelled — animation '%s' not found" % attack_name)
+
+func _update_attack_state(delta: float) -> void:
+	velocity.x = 0.0
+	velocity.z = 0.0
+
+	# Try to deal damage during active frames
+	if not has_dealt_damage_this_attack:
+		_try_apply_melee_damage()
+
+func _get_active_attack_area() -> Area3D:
+	match current_attack_type:
+		1:
+			return kick_area
+		2:
+			return vert_slash_area
+		3:
+			return heavy_smash_area
+	return null
+
+func _get_active_frames_for_attack() -> Vector2i:
+	match current_attack_type:
+		1:
+			return KICK_ACTIVE_FRAMES
+		2:
+			return VERT_SLASH_ACTIVE_FRAMES
+		3:
+			return HEAVY_SMASH_ACTIVE_FRAMES
+	return Vector2i(0, 0)
+
+func _is_in_melee_active_frames() -> bool:
+	if animation_player == null or not animation_player.is_playing():
+		return false
+	if ATTACK_ANIMATION_FPS <= 0.0:
+		return false
+	var anim := animation_player.get_animation(animation_player.current_animation)
+	if anim == null:
+		return false
+	var total_frames := int(round(anim.length * ATTACK_ANIMATION_FPS))
+	if total_frames < 1:
+		total_frames = 1
+	var current_frame := int(round(animation_player.current_animation_position * ATTACK_ANIMATION_FPS))
+	current_frame = int(posmod(current_frame, total_frames))
+	var frame_range := _get_active_frames_for_attack()
+	return current_frame >= frame_range.x and current_frame <= frame_range.y
+
+func _try_apply_melee_damage() -> void:
+	var area := _get_active_attack_area()
+	if area == null:
+		return
+	if not _is_in_melee_active_frames():
+		return
+	for body in area.get_overlapping_bodies():
+		if body is CharacterBody3D and body.is_in_group("player"):
+			_apply_melee_effect(body)
+			has_dealt_damage_this_attack = true
+			return
+
+func _apply_melee_effect(target: CharacterBody3D) -> void:
+	match current_attack_type:
+		1: # Kick: 10 damage + knockback
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", KICK_DAMAGE)
+				_log_attack("kick hit player damage=%.1f" % KICK_DAMAGE)
+			if target.has_method("apply_knockback"):
+				var knock_dir := (target.global_position - global_position).normalized()
+				target.call("apply_knockback", knock_dir, KICK_KNOCKBACK_STRENGTH)
+		2: # VertSlash: 20 damage
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", VERT_SLASH_DAMAGE)
+				_log_attack("vertSlash hit player damage=%.1f" % VERT_SLASH_DAMAGE)
+		3: # HeavySmash: 50 damage
+			if target.has_method("apply_damage"):
+				target.call("apply_damage", HEAVY_SMASH_DAMAGE)
+				_log_attack("heavySmash hit player damage=%.1f" % HEAVY_SMASH_DAMAGE)

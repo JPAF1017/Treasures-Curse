@@ -27,6 +27,26 @@ radius = 5.6401367
 height = 0.94317627
 radius = 3.1938477
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_oo3l6"]
+height = 7.421875
+radius = 2.121582
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_u7a6i"]
+height = 0.6156006
+radius = 2.2675781
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_406ae"]
+height = 1.1494141
+radius = 1.5688477
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_8203k"]
+height = 0.8306885
+radius = 2.6328125
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_scv0e"]
+height = 4.5024414
+radius = 1.2490234
+
 [node name="Knight" type="CharacterBody3D" unique_id=1412719762]
 script = ExtResource("1_wmydh")
 
@@ -38,6 +58,7 @@ shape = SubResource("CapsuleShape3D_kmc1q")
 transform = Transform3D(0.9625, 0, 0, 0, 0.9625, 0, 0, 0, 0.9625, 0, 0, 0)
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=1902234001]
+visible = false
 collision_layer = 2
 collision_mask = 0
 
@@ -46,6 +67,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7455587, 0)
 shape = SubResource("CylinderShape3D_wmydh")
 
 [node name="Detection" type="Area3D" parent="." unique_id=534292688]
+visible = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Detection" unique_id=162935871]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2282715, 0)
@@ -58,13 +80,50 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.650875, 0)
 shape = SubResource("CylinderShape3D_jn7en")
 
 [node name="Sweetspot" type="Area3D" parent="." unique_id=615290510]
+visible = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sweetspot" unique_id=70883572]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7253418, 0)
 shape = SubResource("CylinderShape3D_80syu")
 
-[node name="SlideSlash" type="Area3D" parent="." unique_id=2138442012]
+[node name="SlideSlash" type="Node3D" parent="." unique_id=201716189]
+visible = false
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SlideSlash" unique_id=1560234348]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3774438, 1.8365757)
+[node name="SlideSlash" type="Area3D" parent="SlideSlash" unique_id=2138442012]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlideSlash/SlideSlash" unique_id=1560234348]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5844865, 1.8365757)
 shape = SubResource("CylinderShape3D_up45c")
+
+[node name="SlideSlashActivate" type="Area3D" parent="SlideSlash" unique_id=2055347115]
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="SlideSlash/SlideSlashActivate" unique_id=804577945]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7109375, 10.684658)
+shape = SubResource("CylinderShape3D_oo3l6")
+
+[node name="Attacks" type="Node3D" parent="." unique_id=492817670]
+visible = false
+
+[node name="VertSlash" type="Area3D" parent="Attacks" unique_id=130420135]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/VertSlash" unique_id=1597691952]
+transform = Transform3D(0.7572231, 0.65315634, 0, -0.65315634, 0.7572231, 0, 0, 0, 1, 0.27588367, 3.825262, 2.2747896)
+shape = SubResource("CylinderShape3D_u7a6i")
+
+[node name="Kick" type="Area3D" parent="Attacks" unique_id=1937662523]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/Kick" unique_id=790488915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1910028, 2.5248983)
+shape = SubResource("CylinderShape3D_406ae")
+
+[node name="HeavySmash" type="Area3D" parent="Attacks" unique_id=91207444]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/HeavySmash" unique_id=744476651]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, -0.024841309, 2.7858272, 2.532607)
+shape = SubResource("CylinderShape3D_8203k")
+
+[node name="AttacksActivation" type="Area3D" parent="Attacks" unique_id=1799660221]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/AttacksActivation" unique_id=697835094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.728839, 2.307773)
+shape = SubResource("CylinderShape3D_scv0e")
