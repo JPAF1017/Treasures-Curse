@@ -1,7 +1,6 @@
 extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
-const EnemyPerceptionMemory := preload("res://scripts/npc/EnemyPerceptionMemoryComponent.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 1.5
@@ -16,18 +15,13 @@ const ATTACK_ACTIVE_FRAMES = Vector2i(38, 44)
 const ATTACK_ANIMATION_FPS = 30.0
 const BUMP_STEP_VELOCITY = 2.0
 const BUMP_STEP_COOLDOWN = 0.15
-const LOS_MEMORY_TIME = 10.0
+const LOS_MEMORY_TIME = 5.0
 const TRAIL_MEMORY_TIME = 5.0
 const TRAIL_SAMPLE_INTERVAL = 0.2
 const TRAIL_POINT_SPACING = 0.7
 const TRAIL_REACHED_DISTANCE = 0.8
-const MEMORY_TARGET_REACHED_DISTANCE = 0.6
 const TRAIL_MAX_POINTS = 28
-const LOS_LOSS_GRACE_TIME = 0.35
-const STAIR_VERTICAL_DELTA = 1.6
-const PATH_CACHE_TIME = 1.5
-const PATH_CACHE_MAX_POINTS = 10
-const STAIR_TRAIL_MAX_POINTS = 14
+const LOS_LOSS_CHASE_TIME = 5.0
 const MEMORY_LOG_INTERVAL = 0.25
 const NAV_LOG_INTERVAL = 0.25
 @export var turn_speed: float = 3.0
@@ -46,6 +40,11 @@ var move_direction: Vector3 = Vector3.ZERO
 var direction_change_timer: float = 0.0
 var animation_player: AnimationPlayer = null
 var scream_sound: AudioStreamPlayer3D = null
+var chase_sound: AudioStreamPlayer3D = null
+var attack_sounds: Array[AudioStreamPlayer3D] = []
+var breath_sounds: Array[AudioStreamPlayer3D] = []
+var breath_timer: float = 0.0
+const BREATH_INTERVAL = 1.5
 var seen_area: Area3D = null
 var attack_range_area: Area3D = null
 var current_state: State = State.WANDER
@@ -56,27 +55,32 @@ var attack_cooldown_timer: float = 0.0
 var is_player_in_attack_range: bool = false
 var attack_count: int = 0
 var has_dealt_damage_this_attack: bool = false
+var has_played_attack_sound: bool = false
 var bump_step_timer: float = 0.0
 var wall_follow_mode: int = 0  # 0 = none, 1 = left, -1 = right
-var los_memory_timer: float = 0.0
+var los_lost_timer: float = 0.0
 var last_visible_target_position: Vector3 = Vector3.ZERO
-var trail_memory_timer: float = 0.0
 var trail_sample_timer: float = 0.0
 var memorized_target_trail: Array[Vector3] = []
 var memory_log_timer: float = 0.0
 var nav_log_timer: float = 0.0
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
-var los_loss_grace_timer: float = 0.0
-var path_cache_timer: float = 0.0
-var cached_nav_path: Array[Vector3] = []
-var last_reachable_target_position: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	randomize()
 	floor_snap_length = 0.7
 	animation_player = _find_animation_player(self)
-	scream_sound = get_node_or_null("ScreamSound")
+	scream_sound = get_node_or_null("Sounds/ScreamSound")
+	chase_sound = get_node_or_null("Sounds/ChaseSound")
+	for i in range(1, 5):
+		var snd := get_node_or_null("Sounds/AttackSound%d" % i) as AudioStreamPlayer3D
+		if snd:
+			attack_sounds.append(snd)
+	for i in range(1, 6):
+		var snd := get_node_or_null("Sounds/BreathSound%d" % i) as AudioStreamPlayer3D
+		if snd:
+			breath_sounds.append(snd)
 	seen_area = get_node_or_null("Seen")
 	attack_range_area = get_node_or_null("AttackRange")
 	if seen_area:
@@ -95,11 +99,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
-	los_memory_timer = max(los_memory_timer - delta, 0.0)
-	trail_memory_timer = max(trail_memory_timer - delta, 0.0)
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
-	los_loss_grace_timer = max(los_loss_grace_timer - delta, 0.0)
-	path_cache_timer = max(path_cache_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
 	nav_log_timer = max(nav_log_timer - delta, 0.0)
 
@@ -134,6 +134,11 @@ func _update_wander_state(delta: float) -> void:
 	if move_direction.length_squared() > 0.001:
 		_face_direction(move_direction, delta)
 
+	breath_timer -= delta
+	if breath_timer <= 0.0 and not _is_any_breath_playing():
+		_play_random_breath_sound()
+		breath_timer = BREATH_INTERVAL
+
 	_play_walk_animation()
 
 func _update_scream_state(delta: float) -> void:
@@ -164,133 +169,93 @@ func _update_chase_state(delta: float) -> void:
 
 	var space_state := get_world_3d().direct_space_state
 	var has_line_of_sight := NavigationUtils.has_line_of_sight_to(self, target_player.global_position + Vector3(0, 1.0, 0), space_state, [self, target_player])
-	var los_state := EnemyPerceptionMemory.update_los_trail_state(
-		has_line_of_sight,
-		{
-			"los_state_initialized": los_state_initialized,
-			"previous_has_line_of_sight": previous_has_line_of_sight,
-			"trail_memory_timer": trail_memory_timer,
-			"trail_sample_timer": trail_sample_timer,
-			"los_loss_grace_timer": los_loss_grace_timer,
-		},
-		memorized_target_trail,
-		last_visible_target_position,
-		{
-			"trail_memory_time": TRAIL_MEMORY_TIME,
-			"trail_point_spacing": TRAIL_POINT_SPACING,
-			"trail_max_points": TRAIL_MAX_POINTS,
-			"los_loss_grace_time": LOS_LOSS_GRACE_TIME,
-			"stair_vertical_delta": STAIR_VERTICAL_DELTA,
-			"stair_trail_max_points": STAIR_TRAIL_MAX_POINTS,
-		}
-	)
-	has_line_of_sight = bool(los_state.get("effective_has_line_of_sight", has_line_of_sight))
-	los_state_initialized = bool(los_state.get("los_state_initialized", los_state_initialized))
-	previous_has_line_of_sight = bool(los_state.get("previous_has_line_of_sight", previous_has_line_of_sight))
-	los_loss_grace_timer = float(los_state.get("los_loss_grace_timer", los_loss_grace_timer))
-	trail_memory_timer = float(los_state.get("trail_memory_timer", trail_memory_timer))
-	trail_sample_timer = float(los_state.get("trail_sample_timer", trail_sample_timer))
-	var los_transition := String(los_state.get("transition", ""))
-	if los_transition == "LOS_LOST":
-		_log_memory_state(has_line_of_sight, "LOS_LOST", target_player.global_position, last_visible_target_position, memorized_target_trail[0] if not memorized_target_trail.is_empty() else Vector3.ZERO, last_visible_target_position, true)
+
+	# Track LOS transitions
+	if not los_state_initialized:
+		previous_has_line_of_sight = has_line_of_sight
+		los_state_initialized = true
+	if has_line_of_sight and not previous_has_line_of_sight:
+		# Regained LOS - reset lost timer
+		los_lost_timer = 0.0
+	elif not has_line_of_sight and previous_has_line_of_sight:
+		# Just lost LOS - start the countdown and record trail
+		los_lost_timer = LOS_LOSS_CHASE_TIME
+		memorized_target_trail.clear()
+		NavigationUtils.append_trail_point(memorized_target_trail, last_visible_target_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+	previous_has_line_of_sight = has_line_of_sight
 
 	if has_line_of_sight:
-		var snapped_visible := NavigationUtils.snap_position_to_navigation(self, target_player.global_position)
-		last_visible_target_position = snapped_visible
-		last_reachable_target_position = snapped_visible
-		cached_nav_path = NavigationUtils.build_short_path_cache(self, snapped_visible, PATH_CACHE_MAX_POINTS)
-		path_cache_timer = PATH_CACHE_TIME
-		los_memory_timer = LOS_MEMORY_TIME
-		trail_memory_timer = TRAIL_MEMORY_TIME
+		los_lost_timer = 0.0
+		last_visible_target_position = target_player.global_position
 		if trail_sample_timer <= 0.0:
-			NavigationUtils.append_trail_point(memorized_target_trail, snapped_visible, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
+			NavigationUtils.append_trail_point(memorized_target_trail, target_player.global_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
 			trail_sample_timer = TRAIL_SAMPLE_INTERVAL
 
-	if has_line_of_sight and _is_target_in_attack_range() and attack_cooldown_timer <= 0.0:
-		_start_attacking()
-		return
+		if _is_target_in_attack_range() and attack_cooldown_timer <= 0.0:
+			_start_attacking()
+			return
 
-	var pursuit_target := target_player.global_position
-	var trail_target := Vector3.ZERO
-	var memory_source := "LOS"
-	if not has_line_of_sight:
-		memory_source = "LAST_SEEN"
-		var skip_trail_memory := false
-		var vertical_mismatch := absf(target_player.global_position.y - last_visible_target_position.y) > STAIR_VERTICAL_DELTA
-		if vertical_mismatch:
-			memorized_target_trail.clear()
-			cached_nav_path.clear()
-			path_cache_timer = 0.0
-			skip_trail_memory = true
-			if last_reachable_target_position != Vector3.ZERO:
-				pursuit_target = last_reachable_target_position
-				memory_source = "LAST_REACHABLE"
+		# Chase directly toward the player
+		var to_player := target_player.global_position - global_position
+		to_player.y = 0.0
+		if to_player.length() > 0.3:
+			var path_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, target_player.global_position, space_state, wall_follow_mode)
+			var path_dir: Vector3 = path_result["direction"]
+			wall_follow_mode = path_result["wall_follow_mode"]
+			if path_dir.length_squared() > 0.001:
+				velocity.x = path_dir.x * RUN_SPEED
+				velocity.z = path_dir.z * RUN_SPEED
+				_face_direction(path_dir, delta, run_turn_speed)
 			else:
-				pursuit_target = last_visible_target_position
-
-		if not skip_trail_memory and path_cache_timer > 0.0 and not cached_nav_path.is_empty():
-			var cached_result := NavigationUtils.get_cached_path_target(global_position, cached_nav_path, TRAIL_REACHED_DISTANCE)
-			if bool(cached_result.get("has_target", false)):
-				pursuit_target = cached_result["target"]
-				memory_source = "PATH_CACHE"
-		if not skip_trail_memory and memorized_target_trail.is_empty():
-			NavigationUtils.append_trail_point(memorized_target_trail, last_visible_target_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
-		if not skip_trail_memory and memory_source != "PATH_CACHE":
-			var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
-			if trail_memory_timer > 0.0 and bool(trail_result.get("has_target", false)):
-				trail_target = trail_result["target"]
-				pursuit_target = trail_target
-				memory_source = "TRAIL"
-			elif trail_memory_timer > 0.0:
-				pursuit_target = last_visible_target_position
-				memory_source = "LAST_SEEN"
-			else:
-				_log_memory_state(has_line_of_sight, memory_source, target_player.global_position, last_visible_target_position, trail_target, global_position, true)
-				_return_to_wander()
-				return
-
-		if absf(target_player.global_position.y - last_visible_target_position.y) > STAIR_VERTICAL_DELTA and last_reachable_target_position != Vector3.ZERO and (memory_source == "LAST_SEEN" or memory_source == "TRAIL" or memory_source == "PATH_CACHE"):
-			pursuit_target = last_reachable_target_position
-			memory_source = "LAST_REACHABLE"
-			NavigationUtils.prune_trail_for_stairs(memorized_target_trail, last_visible_target_position.y, STAIR_VERTICAL_DELTA, STAIR_TRAIL_MAX_POINTS)
-
-		pursuit_target = NavigationUtils.snap_position_to_navigation(self, pursuit_target)
-	else:
-		pursuit_target = NavigationUtils.snap_position_to_navigation(self, pursuit_target)
-
-	_log_memory_state(has_line_of_sight, memory_source, target_player.global_position, last_visible_target_position, trail_target, pursuit_target)
-
-	var to_target := pursuit_target - global_position
-	to_target.y = 0.0
-
-	if to_target.length() <= MEMORY_TARGET_REACHED_DISTANCE:
-		velocity.x = 0.0
-		velocity.z = 0.0
-		if memory_source != "LOS":
-			trail_memory_timer = minf(trail_memory_timer, 0.25)
-		_log_navigation_state(memory_source, target_player.global_position, pursuit_target, Vector3.ZERO, Vector3.ZERO, 0.0, true)
+				var chase_dir := to_player.normalized()
+				velocity.x = chase_dir.x * RUN_SPEED * 0.4
+				velocity.z = chase_dir.z * RUN_SPEED * 0.4
+				_face_direction(chase_dir, delta, run_turn_speed)
+		else:
+			velocity.x = 0.0
+			velocity.z = 0.0
 		_play_run_animation()
-		return
-
-	var chase_dir := to_target.normalized()
-	var path_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
-	var path_dir: Vector3 = path_result["direction"]
-	wall_follow_mode = path_result["wall_follow_mode"]
-	if path_dir.length_squared() > 0.001:
-		velocity.x = path_dir.x * RUN_SPEED
-		velocity.z = path_dir.z * RUN_SPEED
-		_log_navigation_state(memory_source, target_player.global_position, pursuit_target, chase_dir, path_dir, to_target.length())
-		_face_direction(path_dir, delta, run_turn_speed)
 	else:
-		velocity.x = chase_dir.x * RUN_SPEED * 0.4
-		velocity.z = chase_dir.z * RUN_SPEED * 0.4
-		_log_navigation_state(memory_source, target_player.global_position, pursuit_target, chase_dir, path_dir, to_target.length(), true)
-		_face_direction(chase_dir, delta, run_turn_speed)
-	_play_run_animation()
+		# No LOS - follow the trail to last known position
+		los_lost_timer -= delta
+		if los_lost_timer <= 0.0:
+			_return_to_wander()
+			return
+
+		var pursuit_target := last_visible_target_position
+		var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+		if bool(trail_result.get("has_target", false)):
+			pursuit_target = trail_result["target"]
+
+		var to_target := pursuit_target - global_position
+		to_target.y = 0.0
+
+		if to_target.length() <= 0.6:
+			# Reached last known position, give up
+			_return_to_wander()
+			return
+
+		var path_result: Dictionary = NavigationUtils.find_path_direction_to_target(self, pursuit_target, space_state, wall_follow_mode)
+		var path_dir: Vector3 = path_result["direction"]
+		wall_follow_mode = path_result["wall_follow_mode"]
+		if path_dir.length_squared() > 0.001:
+			velocity.x = path_dir.x * RUN_SPEED
+			velocity.z = path_dir.z * RUN_SPEED
+			_face_direction(path_dir, delta, run_turn_speed)
+		else:
+			var chase_dir := to_target.normalized()
+			velocity.x = chase_dir.x * RUN_SPEED * 0.4
+			velocity.z = chase_dir.z * RUN_SPEED * 0.4
+			_face_direction(chase_dir, delta, run_turn_speed)
+		_play_run_animation()
 
 func _update_attack_state(delta: float) -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
+
+	if not has_played_attack_sound and _is_at_or_past_frame(ATTACK_ACTIVE_FRAMES.x):
+		_play_random_attack_sound()
+		has_played_attack_sound = true
 
 	if not has_dealt_damage_this_attack:
 		_try_apply_attack_damage()
@@ -324,23 +289,50 @@ func _play_run_animation() -> void:
 		if animation_player.current_animation != "run" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("run")
+			if chase_sound and not chase_sound.playing:
+				chase_sound.play()
 	elif animation_player.has_animation("walk"):
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("walk")
+			if chase_sound and not chase_sound.playing:
+				chase_sound.play()
 
 func _play_attack_animation() -> void:
 	if not animation_player:
 		return
 
-	if animation_player.has_animation("attack"):
-		if animation_player.current_animation != "attack" or not animation_player.is_playing():
-			animation_player.speed_scale = attack_animation_speed
-			animation_player.play("attack")
-	else:
+	if not animation_player.has_animation("attack"):
 		push_warning("Shy missing 'attack' animation; using run fallback")
-		# Fallback keeps behavior functional if attack clip is missing.
 		_play_run_animation()
+		return
+
+	animation_player.speed_scale = attack_animation_speed
+	animation_player.play("attack")
+
+func _is_at_or_past_frame(frame: int) -> bool:
+	if animation_player == null or not animation_player.is_playing():
+		return false
+	var current_frame := int(round(animation_player.current_animation_position * ATTACK_ANIMATION_FPS))
+	return current_frame >= frame
+
+func _play_random_attack_sound() -> void:
+	if attack_sounds.is_empty():
+		return
+	var snd: AudioStreamPlayer3D = attack_sounds[randi() % attack_sounds.size()]
+	snd.play()
+
+func _play_random_breath_sound() -> void:
+	if breath_sounds.is_empty():
+		return
+	var snd: AudioStreamPlayer3D = breath_sounds[randi() % breath_sounds.size()]
+	snd.play()
+
+func _is_any_breath_playing() -> bool:
+	for snd in breath_sounds:
+		if snd.playing:
+			return true
+	return false
 
 func _on_seen_area_entered(area: Area3D) -> void:
 	if not area.is_in_group("player_vision"):
@@ -354,12 +346,8 @@ func _on_seen_area_entered(area: Area3D) -> void:
 		return
 
 	target_player = player_node
-	los_loss_grace_timer = 0.0
-	path_cache_timer = 0.0
-	cached_nav_path.clear()
-	last_reachable_target_position = Vector3.ZERO
+	los_lost_timer = 0.0
 	last_visible_target_position = target_player.global_position
-	trail_memory_timer = TRAIL_MEMORY_TIME
 	trail_sample_timer = 0.0
 	memorized_target_trail.clear()
 	NavigationUtils.append_trail_point(memorized_target_trail, target_player.global_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
@@ -407,6 +395,7 @@ func _start_attacking() -> void:
 	velocity.z = 0.0
 	attack_cooldown_timer = ATTACK_COOLDOWN
 	has_dealt_damage_this_attack = false
+	has_played_attack_sound = false
 	_play_attack_animation()
 
 func _on_animation_finished(anim_name: StringName) -> void:
@@ -428,6 +417,8 @@ func _return_to_wander() -> void:
 	should_wander_after_scream = true
 	velocity.x = 0.0
 	velocity.z = 0.0
+	if chase_sound and chase_sound.playing:
+		chase_sound.stop()
 	_play_scream_animation()
 
 func _finish_wandering() -> void:
@@ -437,13 +428,11 @@ func _finish_wandering() -> void:
 	is_player_in_attack_range = false
 	attack_cooldown_timer = 0.0
 	attack_count = 0
-	trail_memory_timer = 0.0
 	trail_sample_timer = 0.0
-	los_loss_grace_timer = 0.0
-	path_cache_timer = 0.0
-	cached_nav_path.clear()
-	last_reachable_target_position = Vector3.ZERO
+	los_lost_timer = 0.0
 	memorized_target_trail.clear()
+	if chase_sound and chase_sound.playing:
+		chase_sound.stop()
 	_pick_new_direction()
 	_reset_direction_timer()
 	_play_walk_animation()
@@ -544,7 +533,7 @@ func _log_memory_state(
 	if not force and memory_log_timer > 0.0:
 		return
 	memory_log_timer = MEMORY_LOG_INTERVAL
-	print("[ShyMemory] source=%s los=%s player=%s last_seen=%s trail_target=%s pursuit=%s trail_size=%d trail_timer=%.2f los_timer=%.2f" % [
+	print("[ShyMemory] source=%s los=%s player=%s last_seen=%s trail_target=%s pursuit=%s trail_size=%d los_lost_timer=%.2f" % [
 		source,
 		str(has_los),
 		_format_vec3(player_pos),
@@ -552,8 +541,7 @@ func _log_memory_state(
 		_format_vec3(trail_target),
 		_format_vec3(pursuit_target),
 		memorized_target_trail.size(),
-		trail_memory_timer,
-		los_memory_timer,
+		los_lost_timer,
 	])
 
 func _log_navigation_state(

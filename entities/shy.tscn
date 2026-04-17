@@ -2,7 +2,17 @@
 
 [ext_resource type="PackedScene" uid="uid://cpeiqwo1rd3t8" path="res://assets/entities/shy.glb" id="1_6ts47"]
 [ext_resource type="Script" uid="uid://dqcdnr501prpx" path="res://scripts/npc/shy.gd" id="1_c53tr"]
-[ext_resource type="AudioStream" uid="uid://cuaba0i3cve0" path="res://sounds/scream.mp3" id="3_scream"]
+[ext_resource type="AudioStream" uid="uid://cuaba0i3cve0" path="res://sounds/shy/scream.mp3" id="3_scream"]
+[ext_resource type="AudioStream" uid="uid://c5ugd2j5g0krf" path="res://sounds/shy/chasing.mp3" id="4_chase"]
+[ext_resource type="AudioStream" uid="uid://di6ed25tv0s3n" path="res://sounds/shy/attack1.mp3" id="5_atk1"]
+[ext_resource type="AudioStream" uid="uid://6g2tkhhti7vc" path="res://sounds/shy/attack2.mp3" id="6_atk2"]
+[ext_resource type="AudioStream" uid="uid://gtcdbl3127g6" path="res://sounds/shy/attack3.mp3" id="7_atk3"]
+[ext_resource type="AudioStream" uid="uid://do1q6ueiwetmu" path="res://sounds/shy/attack4.mp3" id="8_atk4"]
+[ext_resource type="AudioStream" uid="uid://b7tolqpmg1ol" path="res://sounds/shy/breath1.mp3" id="9_br1"]
+[ext_resource type="AudioStream" uid="uid://t7q2yy60n61n" path="res://sounds/shy/breath2.mp3" id="10_br2"]
+[ext_resource type="AudioStream" uid="uid://djky4igajmit7" path="res://sounds/shy/breath3.mp3" id="11_br3"]
+[ext_resource type="AudioStream" uid="uid://ckdye3fr0dbw3" path="res://sounds/shy/breath4.mp3" id="12_br4"]
+[ext_resource type="AudioStream" uid="uid://ng6j1h8rcju7" path="res://sounds/shy/breath5.mp3" id="13_br5"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c53tr"]
 radius = 0.58496094
@@ -35,11 +45,6 @@ collision_mask = 8
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1.3008728, 0)
 shape = SubResource("CylinderShape3D_gxw0q")
 
-[node name="ScreamSound" type="AudioStreamPlayer3D" parent="." unique_id=561401848]
-stream = ExtResource("3_scream")
-volume_db = 9.333
-max_distance = 40.0
-
 [node name="AttackRange" type="Area3D" parent="." unique_id=211271832]
 collision_layer = 0
 collision_mask = 2
@@ -47,3 +52,56 @@ collision_mask = 2
 [node name="CollisionShape3D" type="CollisionShape3D" parent="AttackRange" unique_id=51066275]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -2, 1.220581, 0)
 shape = SubResource("CylinderShape3D_4mnaj")
+
+[node name="Sounds" type="Node3D" parent="." unique_id=2089246713]
+
+[node name="ScreamSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=561401848]
+stream = ExtResource("3_scream")
+volume_db = 9.333
+max_distance = 40.0
+
+[node name="ChaseSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1033393228]
+stream = ExtResource("4_chase")
+volume_db = -4.727
+max_distance = 40.0
+
+[node name="AttackSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1366344378]
+stream = ExtResource("5_atk1")
+max_distance = 40.0
+
+[node name="AttackSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=597771081]
+stream = ExtResource("6_atk2")
+max_distance = 40.0
+
+[node name="AttackSound3" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1437798025]
+stream = ExtResource("7_atk3")
+max_distance = 40.0
+
+[node name="AttackSound4" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1852790618]
+stream = ExtResource("8_atk4")
+max_distance = 40.0
+
+[node name="BreathSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=12300180]
+stream = ExtResource("9_br1")
+volume_db = -4.0
+max_distance = 40.0
+
+[node name="BreathSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1649587748]
+stream = ExtResource("10_br2")
+volume_db = -4.0
+max_distance = 40.0
+
+[node name="BreathSound3" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1666911364]
+stream = ExtResource("11_br3")
+volume_db = -4.0
+max_distance = 40.0
+
+[node name="BreathSound4" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1314994392]
+stream = ExtResource("12_br4")
+volume_db = -4.0
+max_distance = 40.0
+
+[node name="BreathSound5" type="AudioStreamPlayer3D" parent="Sounds" unique_id=530945046]
+stream = ExtResource("13_br5")
+volume_db = -4.0
+max_distance = 40.0
