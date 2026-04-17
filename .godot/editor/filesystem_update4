@@ -1,10 +1,5 @@
-res://entities/knight.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://scripts/npc/knight.gd
-res://scripts/npc/fly.gd
+res://scripts/npc/shy.gd
 res://levels/test map.tscn
-res://entities/fly.tscn
-res://scripts/player.gd
-res://scripts/items/axe.gd
-res://scripts/items/bat.gd
-res://scripts/items/shovel.gd
+res://entities/shy.tscn
+res://scripts/npc/NavigationUtils.gd

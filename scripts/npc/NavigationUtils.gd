@@ -312,7 +312,7 @@ static func _get_path_follow_direction(character: CharacterBody3D, path: PackedV
 static func find_path_direction_to_target(
 	character: CharacterBody3D,
 	target_position: Vector3,
-	_space_state: PhysicsDirectSpaceState3D,
+	space_state: PhysicsDirectSpaceState3D,
 	wall_follow_mode: int = 0
 ) -> Dictionary:
 	if character == null:
@@ -332,6 +332,14 @@ static func find_path_direction_to_target(
 		if desired_direction.length_squared() <= 0.001:
 			return { "direction": Vector3.ZERO, "wall_follow_mode": wall_follow_mode }
 		desired_direction = desired_direction.normalized()
+
+	# Validate the nav-mesh direction with clearance checks.
+	# If the path direction is blocked (wall corner, narrow gap, etc.),
+	# fall back to raycast-based obstacle avoidance with wall-following.
+	if space_state != null:
+		var clearance := _evaluate_direction_clearance(character, desired_direction, space_state, PATH_RAYCAST_DISTANCE)
+		if not bool(clearance.get("clear", false)):
+			return find_path_direction(character, desired_direction, space_state, wall_follow_mode)
 
 	return { "direction": desired_direction, "wall_follow_mode": 0 }
 

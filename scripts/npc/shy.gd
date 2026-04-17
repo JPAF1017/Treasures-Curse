@@ -10,6 +10,10 @@ const DIR_CHANGE_MIN = 1.2
 const DIR_CHANGE_MAX = 3.0
 const ATTACK_COOLDOWN = 3.0
 const MAX_ATTACKS_BEFORE_WANDER = 13
+const ATTACK_DAMAGE = 20.0
+const ATTACK_KNOCKBACK_STRENGTH = 15.0
+const ATTACK_ACTIVE_FRAMES = Vector2i(38, 44)
+const ATTACK_ANIMATION_FPS = 30.0
 const BUMP_STEP_VELOCITY = 2.0
 const BUMP_STEP_COOLDOWN = 0.15
 const LOS_MEMORY_TIME = 10.0
@@ -41,6 +45,7 @@ enum State {
 var move_direction: Vector3 = Vector3.ZERO
 var direction_change_timer: float = 0.0
 var animation_player: AnimationPlayer = null
+var scream_sound: AudioStreamPlayer3D = null
 var seen_area: Area3D = null
 var attack_range_area: Area3D = null
 var current_state: State = State.WANDER
@@ -50,6 +55,7 @@ var scream_timer: float = 0.0
 var attack_cooldown_timer: float = 0.0
 var is_player_in_attack_range: bool = false
 var attack_count: int = 0
+var has_dealt_damage_this_attack: bool = false
 var bump_step_timer: float = 0.0
 var wall_follow_mode: int = 0  # 0 = none, 1 = left, -1 = right
 var los_memory_timer: float = 0.0
@@ -70,6 +76,7 @@ func _ready() -> void:
 	randomize()
 	floor_snap_length = 0.7
 	animation_player = _find_animation_player(self)
+	scream_sound = get_node_or_null("ScreamSound")
 	seen_area = get_node_or_null("Seen")
 	attack_range_area = get_node_or_null("AttackRange")
 	if seen_area:
@@ -285,6 +292,9 @@ func _update_attack_state(delta: float) -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
 
+	if not has_dealt_damage_this_attack:
+		_try_apply_attack_damage()
+
 	# Attack is non-interruptible: finish the current animation even if target exits range.
 
 func _pick_new_direction() -> void:
@@ -363,6 +373,12 @@ func _start_screaming() -> void:
 
 	if animation_player and animation_player.has_animation("scream"):
 		animation_player.play("scream")
+		if scream_sound and scream_sound.stream:
+			var anim_length := animation_player.get_animation("scream").length if animation_player.get_animation("scream") else 0.0
+			var sound_length := scream_sound.stream.get_length()
+			if anim_length > 0.0 and sound_length > 0.0:
+				scream_sound.pitch_scale = sound_length / anim_length
+			scream_sound.play()
 		var scream_animation := animation_player.get_animation("scream")
 		if scream_animation:
 			scream_timer = scream_animation.length
@@ -390,6 +406,7 @@ func _start_attacking() -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
 	attack_cooldown_timer = ATTACK_COOLDOWN
+	has_dealt_damage_this_attack = false
 	_play_attack_animation()
 
 func _on_animation_finished(anim_name: StringName) -> void:
@@ -457,6 +474,34 @@ func _on_attack_range_body_exited(body: Node3D) -> void:
 	if body is CharacterBody3D and body.is_in_group("player") and body == target_player:
 		is_player_in_attack_range = false
 		print("Player exited shy attack range")
+
+func _try_apply_attack_damage() -> void:
+	if attack_range_area == null:
+		return
+	if not _is_in_attack_active_frames():
+		return
+	for body in attack_range_area.get_overlapping_bodies():
+		if body is CharacterBody3D and body.is_in_group("player"):
+			if body.has_method("apply_damage"):
+				body.call("apply_damage", ATTACK_DAMAGE)
+			if body.has_method("apply_knockback"):
+				var knock_dir := (body.global_position - global_position).normalized()
+				body.call("apply_knockback", knock_dir, ATTACK_KNOCKBACK_STRENGTH)
+			has_dealt_damage_this_attack = true
+			return
+
+func _is_in_attack_active_frames() -> bool:
+	if animation_player == null or not animation_player.is_playing():
+		return false
+	var anim := animation_player.get_animation(animation_player.current_animation)
+	if anim == null:
+		return false
+	var total_frames := int(round(anim.length * ATTACK_ANIMATION_FPS))
+	if total_frames < 1:
+		total_frames = 1
+	var current_frame := int(round(animation_player.current_animation_position * ATTACK_ANIMATION_FPS))
+	current_frame = int(posmod(current_frame, total_frames))
+	return current_frame >= ATTACK_ACTIVE_FRAMES.x and current_frame <= ATTACK_ACTIVE_FRAMES.y
 
 func _is_target_in_attack_range() -> bool:
 	if attack_range_area == null:
