@@ -48,7 +48,6 @@ var hit_reaction_timer: float = 0.0
 var animation_player: AnimationPlayer = null
 var ground_collision: CollisionShape3D = null
 var vert_fly_collision: CollisionShape3D = null
-var hor_fly_collision: CollisionShape3D = null
 var hurtbox_ground: Area3D = null
 var hurtbox_vert_fly: Area3D = null
 var ground_height: float = 0.0
@@ -81,7 +80,6 @@ func _ready() -> void:
 	animation_player = _find_animation_player(self)
 	ground_collision = $ground
 	vert_fly_collision = $vertFly
-	hor_fly_collision = $horFly
 	var hurtbox: Node3D = get_node_or_null("Hurtbox")
 	if hurtbox:
 		hurtbox_ground = hurtbox.get_node_or_null("Ground")
@@ -509,8 +507,9 @@ func _die() -> void:
 		is_falling_dead = true
 		if ground_collision:
 			ground_collision.disabled = false
-		if hor_fly_collision:
-			hor_fly_collision.disabled = true
+		# hor_fly_collision removed (no longer needed)
+		# if hor_fly_collision:
+		#	hor_fly_collision.disabled = true
 		if animation_player and animation_player.has_animation("idleFlyDeath"):
 			animation_player.speed_scale = 1.0
 			animation_player.play("idleFlyDeath")
@@ -631,11 +630,10 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 # --- Collision ---
 
 func _update_collision_mode() -> void:
-	if not ground_collision or not hor_fly_collision:
+	if not ground_collision:
 		return
 	var use_fly := is_floating and not is_on_floor()
 	ground_collision.disabled = use_fly
-	hor_fly_collision.disabled = not use_fly
 	if hurtbox_ground:
 		hurtbox_ground.monitoring = not use_fly
 		hurtbox_ground.monitorable = not use_fly
