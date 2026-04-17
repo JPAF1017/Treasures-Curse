@@ -13,6 +13,8 @@ const ATTACK_DAMAGE = 20.0
 const ATTACK_KNOCKBACK_STRENGTH = 15.0
 const ATTACK_ACTIVE_FRAMES = Vector2i(38, 44)
 const ATTACK_ANIMATION_FPS = 30.0
+const RUN_ANIMATION_FPS = 30.0
+const STEP_FRAMES: Array[int] = [7, 16, 24, 34]
 const BUMP_STEP_VELOCITY = 2.0
 const BUMP_STEP_COOLDOWN = 0.15
 const LOS_MEMORY_TIME = 5.0
@@ -43,6 +45,7 @@ var scream_sound: AudioStreamPlayer3D = null
 var chase_sound: AudioStreamPlayer3D = null
 var attack_sounds: Array[AudioStreamPlayer3D] = []
 var breath_sounds: Array[AudioStreamPlayer3D] = []
+var step_sounds: Array[AudioStreamPlayer3D] = []
 var breath_timer: float = 0.0
 const BREATH_INTERVAL = 1.5
 var seen_area: Area3D = null
@@ -66,6 +69,8 @@ var memory_log_timer: float = 0.0
 var nav_log_timer: float = 0.0
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
+var last_run_frame: int = -1
+var triggered_step_frames: Array[int] = []
 
 func _ready() -> void:
 	randomize()
@@ -81,6 +86,10 @@ func _ready() -> void:
 		var snd := get_node_or_null("Sounds/BreathSound%d" % i) as AudioStreamPlayer3D
 		if snd:
 			breath_sounds.append(snd)
+	for i in range(1, 4):
+		var snd := get_node_or_null("Sounds/StepSound%d" % i) as AudioStreamPlayer3D
+		if snd:
+			step_sounds.append(snd)
 	seen_area = get_node_or_null("Seen")
 	attack_range_area = get_node_or_null("AttackRange")
 	if seen_area:
@@ -107,6 +116,8 @@ func _physics_process(delta: float) -> void:
 		attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
 
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
+
+	_update_step_sounds()
 
 	if current_state == State.SCREAMING:
 		_update_scream_state(delta)
@@ -322,6 +333,25 @@ func _play_random_attack_sound() -> void:
 	var snd: AudioStreamPlayer3D = attack_sounds[randi() % attack_sounds.size()]
 	snd.play()
 
+func _update_step_sounds() -> void:
+	if step_sounds.is_empty():
+		return
+	if animation_player == null or not animation_player.is_playing():
+		return
+	if animation_player.current_animation != "run":
+		last_run_frame = -1
+		triggered_step_frames.clear()
+		return
+	var current_frame := int(animation_player.current_animation_position * RUN_ANIMATION_FPS)
+	if current_frame < last_run_frame:
+		triggered_step_frames.clear()
+	last_run_frame = current_frame
+	for frame in STEP_FRAMES:
+		if current_frame >= frame and frame not in triggered_step_frames:
+			triggered_step_frames.append(frame)
+			step_sounds[randi() % step_sounds.size()].play()
+			break
+
 func _play_random_breath_sound() -> void:
 	if breath_sounds.is_empty():
 		return
@@ -386,6 +416,7 @@ func _start_chasing() -> void:
 
 	current_state = State.CHASING
 	los_state_initialized = false
+	los_lost_timer = LOS_LOSS_CHASE_TIME
 	scream_timer = 0.0
 	_play_run_animation()
 
