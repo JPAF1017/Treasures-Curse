@@ -78,6 +78,7 @@ var step_sounds: Array[AudioStreamPlayer3D] = []
 var step_triggered_frame1: bool = false
 var step_triggered_frame59: bool = false
 var prev_walk_anim_position: float = 0.0
+var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	randomize()
@@ -107,8 +108,9 @@ func _physics_process(delta: float) -> void:
 
 	hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
 	if hit_reaction_timer > 0.0:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		velocity.x = knockback_velocity.x
+		velocity.z = knockback_velocity.z
+		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, delta * 12.0)
 		EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
 		move_and_slide()
 		return
@@ -119,6 +121,7 @@ func _physics_process(delta: float) -> void:
 		player_in_attack_range = false
 		los_lost_timer = 0.0
 		los_state_initialized = false
+		knockback_velocity = Vector3.ZERO
 		velocity.x = 0.0
 		velocity.z = 0.0
 		_play_stunned_walk_animation()
@@ -480,8 +483,8 @@ func _play_run_animation() -> void:
 			animation_player.play("run")
 	elif animation_player.has_animation("walk"):
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
-			animation_player.speed_scale = 1.6
 			animation_player.play("walk")
+		animation_player.speed_scale = 1.6
 
 func _play_random_attack_animation() -> void:
 	if not animation_player:
@@ -612,6 +615,13 @@ func apply_damage(amount: float) -> void:
 
 func take_damage(amount: float) -> void:
 	apply_damage(amount)
+
+func apply_knockback(direction: Vector3, strength: float) -> void:
+	if is_dead:
+		return
+	knockback_velocity.x = direction.x * strength
+	knockback_velocity.z = direction.z * strength
+	velocity.y = maxf(velocity.y, strength * 0.15)
 
 func _die() -> void:
 	if is_dead:
