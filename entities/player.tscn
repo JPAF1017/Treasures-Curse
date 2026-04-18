@@ -28,6 +28,7 @@ height = 12.0
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 3
 script = ExtResource("1_u63mc")
+debug_attack_overlap_logs = false
 
 [node name="Attack" type="Area3D" parent="." unique_id=756317047]
 collision_layer = 0
@@ -60,7 +61,6 @@ collision_mask = 2
 shape = SubResource("CapsuleShape3D_vision")
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
-light_color = Color(0.36282945, 0.36282945, 0.36282945, 1)
 light_volumetric_fog_energy = 0.5
 spot_range = 43.3203
 spot_attenuation = 0.8

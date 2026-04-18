@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://d207knqhtqb1p" path="res://scripts/npc/shambler.gd" id="1_bhth7"]
 [ext_resource type="PackedScene" uid="uid://brqj4rm1gwdto" path="res://assets/entities/shambler.glb" id="1_o6p7n"]
+[ext_resource type="AudioStream" uid="uid://clswi6rotlwcd" path="res://sounds/shambler/step1.mp3" id="2_step1"]
+[ext_resource type="AudioStream" uid="uid://cu0cv2re800de" path="res://sounds/shambler/step2.mp3" id="3_step2"]
+[ext_resource type="AudioStream" uid="uid://ufsoklr6p8e3" path="res://sounds/shambler/step3.mp3" id="4_step3"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_o6p7n"]
 radius = 1.2548828
@@ -22,10 +25,10 @@ size = Vector3(1, 4.2387695, 2.5722656)
 script = ExtResource("1_bhth7")
 
 [node name="shambler" parent="." unique_id=1058128852 instance=ExtResource("1_o6p7n")]
-transform = Transform3D(1.3113416e-07, 0, 1, 0, 1, 0, -1, 0, 1.3113416e-07, 0, -2, 0)
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 0.0050958907, -2, 0.0016005381)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=374876869]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46846187, 0)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.0050958907, 0.46846187, 0.0016005381)
 shape = SubResource("CapsuleShape3D_o6p7n")
 
 [node name="Detect" type="Area3D" parent="." unique_id=1053609574]
@@ -37,11 +40,31 @@ shape = SubResource("CylinderShape3D_o6p7n")
 [node name="AttackRange" type="Area3D" parent="." unique_id=936259757]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="AttackRange" unique_id=587817702]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0273697, 0.3348999, 0)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.0050958456, 0.3348999, 1.0289702)
 shape = SubResource("CylinderShape3D_bhth7")
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=169462129]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=1234105519]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.015136, 0.3578086, 0.0234375)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.018341564, 0.3578086, -1.0135355)
 shape = SubResource("BoxShape3D_bhth7")
+
+[node name="Sounds" type="Node3D" parent="." unique_id=220000001]
+
+[node name="StepSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=220000002]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.0050958907, 0, 0.0016005381)
+stream = ExtResource("2_step1")
+volume_db = 3.0
+max_distance = 30.0
+
+[node name="StepSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=220000003]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.0050958907, 0, 0.0016005381)
+stream = ExtResource("3_step2")
+volume_db = 3.0
+max_distance = 30.0
+
+[node name="StepSound3" type="AudioStreamPlayer3D" parent="Sounds" unique_id=220000004]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.0050958907, 0, 0.0016005381)
+stream = ExtResource("4_step3")
+volume_db = 3.0
+max_distance = 30.0

@@ -3,3 +3,6 @@ res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 res://levels/test map.tscn
 res://entities/statue.tscn
 res://scripts/npc/statue.gd
+res://assets/items/projectile.tscn
+res://scripts/npc/shambler.gd
+res://entities/shambler.tscn

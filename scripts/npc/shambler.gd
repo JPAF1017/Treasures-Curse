@@ -39,6 +39,8 @@ const SMASH_STUN_DURATION := 4.0
 const ATTACK1_ACTIVE_FRAMES := Vector2i(33, 37)
 const ATTACK2_ACTIVE_FRAMES := Vector2i(26, 32)
 const ATTACK3_ACTIVE_FRAMES := Vector2i(44, 53)
+const SOUND_STEP_FRAME_1_TIME := 1.0 / 30.0
+const SOUND_STEP_FRAME_59_TIME := 59.0 / 30.0
 
 @export var health: int = 60
 @export var facing_offset_degrees: float = 0
@@ -69,6 +71,10 @@ var is_dead: bool = false
 var hit_reaction_timer: float = 0.0
 var current_attack_type: int = 0
 var has_dealt_damage_this_attack: bool = false
+var step_sounds: Array[AudioStreamPlayer3D] = []
+var step_triggered_frame1: bool = false
+var step_triggered_frame59: bool = false
+var prev_walk_anim_position: float = 0.0
 
 func _ready() -> void:
 	randomize()
@@ -84,6 +90,7 @@ func _ready() -> void:
 	if attack_range_area:
 		attack_range_area.body_entered.connect(_on_attack_range_body_entered)
 		attack_range_area.body_exited.connect(_on_attack_range_body_exited)
+	_setup_step_sounds()
 	_pick_new_direction()
 	_reset_direction_timer()
 	_play_walk_animation()
@@ -136,6 +143,9 @@ func _physics_process(delta: float) -> void:
 		_update_wander_movement(delta)
 
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
+
+	if not is_attacking and hit_reaction_timer <= 0.0:
+		_update_step_sounds()
 
 	move_and_slide()
 
@@ -573,6 +583,8 @@ func apply_damage(amount: float) -> void:
 		return
 
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	is_attacking = false
+	attack_cooldown_timer = max(attack_cooldown_timer, ATTACK_COOLDOWN)
 	_play_hit_animation()
 
 func take_damage(amount: float) -> void:
@@ -633,6 +645,43 @@ func _is_target_in_front_of_entity(target: Node3D) -> bool:
 	# Dot product: > cos(60°) ≈ 0.5 means within ~120-degree cone
 	var dot_product := forward.normalized().dot(to_target.normalized())
 	return dot_product > 0.5  # ~120-degree cone of vision
+
+func _setup_step_sounds() -> void:
+	for i in range(1, 4):
+		var node := get_node_or_null("Sounds/StepSound%d" % i)
+		if node is AudioStreamPlayer3D:
+			step_sounds.append(node)
+
+func _update_step_sounds() -> void:
+	if not animation_player or animation_player.current_animation != "walk" or not animation_player.is_playing():
+		prev_walk_anim_position = 0.0
+		step_triggered_frame1 = false
+		step_triggered_frame59 = false
+		return
+
+	var pos := animation_player.current_animation_position
+
+	# Detect loop wrap (position jumped backwards)
+	if pos < prev_walk_anim_position - 0.1:
+		step_triggered_frame1 = false
+		step_triggered_frame59 = false
+
+	if pos >= SOUND_STEP_FRAME_1_TIME and not step_triggered_frame1:
+		step_triggered_frame1 = true
+		_play_random_step_sound()
+
+	if pos >= SOUND_STEP_FRAME_59_TIME and not step_triggered_frame59:
+		step_triggered_frame59 = true
+		_play_random_step_sound()
+
+	prev_walk_anim_position = pos
+
+func _play_random_step_sound() -> void:
+	if step_sounds.is_empty():
+		return
+	var snd: AudioStreamPlayer3D = step_sounds[randi() % step_sounds.size()]
+	if snd and not snd.playing:
+		snd.play()
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
