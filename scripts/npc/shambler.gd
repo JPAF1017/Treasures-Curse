@@ -41,6 +41,11 @@ const ATTACK2_ACTIVE_FRAMES := Vector2i(26, 32)
 const ATTACK3_ACTIVE_FRAMES := Vector2i(44, 53)
 const SOUND_STEP_FRAME_1_TIME := 1.0 / 30.0
 const SOUND_STEP_FRAME_59_TIME := 59.0 / 30.0
+const WANDER_SOUND_INTERVAL := 1.0
+const ATTACK1_SOUND_FRAME_TIME := 31.0 / 30.0
+const ATTACK2_SOUND_FRAME_TIME := 22.0 / 30.0
+const ATTACK3_SOUND_FRAME_TIME := 39.0 / 30.0
+const HIT_ANIMATION_START_TIME := 9.0 / 30.0
 const STUN_WALK_SPEED_SCALE := 0.4
 
 @export var health: int = 60
@@ -78,6 +83,10 @@ var step_sounds: Array[AudioStreamPlayer3D] = []
 var step_triggered_frame1: bool = false
 var step_triggered_frame59: bool = false
 var prev_walk_anim_position: float = 0.0
+var wander_sounds: Array[AudioStreamPlayer3D] = []
+var wander_sound_timer: float = 0.0
+var attack_sounds: Array[AudioStreamPlayer3D] = []
+var attack_sound_triggered: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
@@ -161,6 +170,9 @@ func _physics_process(delta: float) -> void:
 
 	if not is_attacking and hit_reaction_timer <= 0.0:
 		_update_step_sounds()
+
+	if is_attacking:
+		_update_attack_sounds()
 
 	move_and_slide()
 
@@ -499,6 +511,7 @@ func _play_random_attack_animation() -> void:
 		is_attacking = true
 		current_attack_type = attack_number
 		has_dealt_damage_this_attack = false
+		attack_sound_triggered = false
 
 func _try_apply_attack_damage() -> void:
 	if attack_range_area == null:
@@ -612,6 +625,7 @@ func apply_damage(amount: float) -> void:
 
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
 	_play_hit_animation()
+	_play_random_attack_sound()
 
 func take_damage(amount: float) -> void:
 	apply_damage(amount)
@@ -662,10 +676,12 @@ func _play_hit_animation() -> void:
 	for anim_name in [&"hurt", &"hit", &"damage"]:
 		if animation_player.has_animation(anim_name):
 			var anim_length: float = animation_player.get_animation(anim_name).length
-			hit_reaction_timer = max(hit_reaction_timer, anim_length)
+			var remaining_length := maxf(anim_length - HIT_ANIMATION_START_TIME, 0.0)
+			hit_reaction_timer = max(hit_reaction_timer, remaining_length)
 			if animation_player.current_animation != String(anim_name):
 				animation_player.speed_scale = 1.0
 				animation_player.play(anim_name)
+				animation_player.seek(HIT_ANIMATION_START_TIME, true)
 			return
 
 func _is_target_in_front_of_entity(target: Node3D) -> bool:
@@ -695,6 +711,14 @@ func _setup_step_sounds() -> void:
 		var node := get_node_or_null("Sounds/StepSound%d" % i)
 		if node is AudioStreamPlayer3D:
 			step_sounds.append(node)
+	for i in range(1, 6):
+		var node := get_node_or_null("Sounds/WanderSound%d" % i)
+		if node is AudioStreamPlayer3D:
+			wander_sounds.append(node)
+	for i in range(1, 7):
+		var node := get_node_or_null("Sounds/AttackSound%d" % i)
+		if node is AudioStreamPlayer3D:
+			attack_sounds.append(node)
 
 func _update_step_sounds() -> void:
 	if not animation_player or animation_player.current_animation != "walk" or not animation_player.is_playing():
@@ -718,12 +742,53 @@ func _update_step_sounds() -> void:
 		step_triggered_frame59 = true
 		_play_random_step_sound()
 
+	wander_sound_timer -= get_physics_process_delta_time()
+	if wander_sound_timer <= 0.0 and not _is_any_wander_sound_playing():
+		wander_sound_timer = WANDER_SOUND_INTERVAL
+		_play_random_wander_sound()
+
 	prev_walk_anim_position = pos
 
 func _play_random_step_sound() -> void:
 	if step_sounds.is_empty():
 		return
 	var snd: AudioStreamPlayer3D = step_sounds[randi() % step_sounds.size()]
+	if snd and not snd.playing:
+		snd.play()
+
+func _play_random_wander_sound() -> void:
+	if wander_sounds.is_empty():
+		return
+	var snd: AudioStreamPlayer3D = wander_sounds[randi() % wander_sounds.size()]
+	if snd and not snd.playing:
+		snd.play()
+
+func _is_any_wander_sound_playing() -> bool:
+	for snd in wander_sounds:
+		if snd and snd.playing:
+			return true
+	return false
+
+func _update_attack_sounds() -> void:
+	if not animation_player or not animation_player.is_playing():
+		return
+	if attack_sound_triggered:
+		return
+	var pos := animation_player.current_animation_position
+	var trigger_time: float
+	match current_attack_type:
+		1: trigger_time = ATTACK1_SOUND_FRAME_TIME
+		2: trigger_time = ATTACK2_SOUND_FRAME_TIME
+		3: trigger_time = ATTACK3_SOUND_FRAME_TIME
+		_: return
+	if pos >= trigger_time:
+		attack_sound_triggered = true
+		_play_random_attack_sound()
+
+func _play_random_attack_sound() -> void:
+	if attack_sounds.is_empty():
+		return
+	var snd: AudioStreamPlayer3D = attack_sounds[randi() % attack_sounds.size()]
 	if snd and not snd.playing:
 		snd.play()
 

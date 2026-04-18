@@ -5,6 +5,17 @@
 [ext_resource type="AudioStream" uid="uid://clswi6rotlwcd" path="res://sounds/shambler/step1.mp3" id="2_step1"]
 [ext_resource type="AudioStream" uid="uid://cu0cv2re800de" path="res://sounds/shambler/step2.mp3" id="3_step2"]
 [ext_resource type="AudioStream" uid="uid://ufsoklr6p8e3" path="res://sounds/shambler/step3.mp3" id="4_step3"]
+[ext_resource type="AudioStream" uid="uid://dggde1xmk1wx3" path="res://sounds/shambler/wander1.mp3" id="5_wander1"]
+[ext_resource type="AudioStream" uid="uid://bjgvxassylbwi" path="res://sounds/shambler/wander2.mp3" id="6_wander2"]
+[ext_resource type="AudioStream" uid="uid://bi5app7mwvqe7" path="res://sounds/shambler/wander3.mp3" id="7_wander3"]
+[ext_resource type="AudioStream" uid="uid://7v71jyi6r8j4" path="res://sounds/shambler/wander4.mp3" id="8_wander4"]
+[ext_resource type="AudioStream" uid="uid://d1naqxfftsdnt" path="res://sounds/shambler/wander5.mp3" id="9_wander5"]
+[ext_resource type="AudioStream" uid="uid://cx4gh3y230b0g" path="res://sounds/shambler/attack1.mp3" id="10_attack1"]
+[ext_resource type="AudioStream" uid="uid://cvogeksl32uhu" path="res://sounds/shambler/attack2.mp3" id="11_attack2"]
+[ext_resource type="AudioStream" uid="uid://gdn4thgo2dcj" path="res://sounds/shambler/attack3.mp3" id="12_attack3"]
+[ext_resource type="AudioStream" uid="uid://bndc5453d5hno" path="res://sounds/shambler/attack4.mp3" id="13_attack4"]
+[ext_resource type="AudioStream" uid="uid://ba7d0qdutj263" path="res://sounds/shambler/attack5.mp3" id="14_attack5"]
+[ext_resource type="AudioStream" uid="uid://b3m20yx5p0yff" path="res://sounds/shambler/attack6.mp3" id="15_attack6"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_o6p7n"]
 radius = 1.2548828
@@ -67,4 +78,48 @@ max_distance = 30.0
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.0050958907, 0, 0.0016005381)
 stream = ExtResource("4_step3")
 volume_db = 3.0
+max_distance = 30.0
+
+[node name="WanderSound1" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("5_wander1")
+max_distance = 30.0
+
+[node name="WanderSound2" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("6_wander2")
+max_distance = 30.0
+
+[node name="WanderSound3" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("7_wander3")
+max_distance = 30.0
+
+[node name="WanderSound4" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("8_wander4")
+max_distance = 30.0
+
+[node name="WanderSound5" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("9_wander5")
+max_distance = 30.0
+
+[node name="AttackSound1" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("10_attack1")
+max_distance = 30.0
+
+[node name="AttackSound2" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("11_attack2")
+max_distance = 30.0
+
+[node name="AttackSound3" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("12_attack3")
+max_distance = 30.0
+
+[node name="AttackSound4" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("13_attack4")
+max_distance = 30.0
+
+[node name="AttackSound5" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("14_attack5")
+max_distance = 30.0
+
+[node name="AttackSound6" type="AudioStreamPlayer3D" parent="Sounds"]
+stream = ExtResource("15_attack6")
 max_distance = 30.0
