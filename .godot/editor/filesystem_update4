@@ -7,3 +7,7 @@ res://assets/items/projectile.tscn
 res://scripts/npc/shambler.gd
 res://entities/shambler.tscn
 res://scripts/items/shovel.gd
+res://scripts/items/axe.gd
+res://scripts/items/bat.gd
+res://scripts/items/health.gd
+res://scripts/player.gd

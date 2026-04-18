@@ -321,11 +321,8 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, is_sprintin
 
 	if inventory_slot_index == selected_slot_index:
 		_equip_to_right_hand(player)
-		_set_item_visuals_visible(not is_sprinting)
-		if not is_sprinting:
-			_viewmodel.show(player, viewmodel_position, viewmodel_rotation_degrees, viewmodel_scale)
-		else:
-			_viewmodel.hide()
+		_set_item_visuals_visible(true)
+		_viewmodel.show(player, viewmodel_position, viewmodel_rotation_degrees, viewmodel_scale)
 	else:
 		_detach_from_hand(player)
 		_viewmodel.hide()

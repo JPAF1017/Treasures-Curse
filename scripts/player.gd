@@ -370,9 +370,11 @@ func _physics_process(delta):
 	_sync_visual_rotation_to_head()
 
 	# Step up tiny bumps while moving so movement stays smooth on uneven floors.
+	# Only step up against static geometry, not against NPCs or other characters.
 	if input_dir != Vector2.ZERO and is_on_floor() and is_on_wall() and velocity.y <= 0.0 and bump_step_timer <= 0.0:
-		velocity.y = BUMP_STEP_VELOCITY
-		bump_step_timer = BUMP_STEP_COOLDOWN
+		if not _is_wall_collision_with_character():
+			velocity.y = BUMP_STEP_VELOCITY
+			bump_step_timer = BUMP_STEP_COOLDOWN
 	
 	move_and_slide()
 	if tired_jump_active and is_on_floor():
@@ -473,6 +475,15 @@ func is_movement_locked_by_other(locker: Node) -> bool:
 	for source in movement_lock_sources:
 		if source != locker:
 			return true
+	return false
+
+func _is_wall_collision_with_character() -> bool:
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		if collision.get_collider() is CharacterBody3D:
+			var normal := collision.get_normal()
+			if absf(normal.y) < 0.5:
+				return true
 	return false
 
 #function for head bob
