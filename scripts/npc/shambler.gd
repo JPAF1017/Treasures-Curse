@@ -41,6 +41,7 @@ const ATTACK2_ACTIVE_FRAMES := Vector2i(26, 32)
 const ATTACK3_ACTIVE_FRAMES := Vector2i(44, 53)
 const SOUND_STEP_FRAME_1_TIME := 1.0 / 30.0
 const SOUND_STEP_FRAME_59_TIME := 59.0 / 30.0
+const STUN_WALK_SPEED_SCALE := 0.4
 
 @export var health: int = 60
 @export var facing_offset_degrees: float = 0
@@ -68,6 +69,8 @@ var memory_log_timer: float = 0.0
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
 var is_dead: bool = false
+var is_stunned: bool = false
+var stun_timer: float = 0.0
 var hit_reaction_timer: float = 0.0
 var current_attack_type: int = 0
 var has_dealt_damage_this_attack: bool = false
@@ -99,11 +102,26 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	stun_timer = max(stun_timer - delta, 0.0)
+	is_stunned = stun_timer > 0.0
+
 	hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
 	if hit_reaction_timer > 0.0:
 		velocity.x = 0.0
 		velocity.z = 0.0
-		_play_hit_animation()
+		EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
+		move_and_slide()
+		return
+
+	if is_stunned:
+		is_attacking = false
+		target_player = null
+		player_in_attack_range = false
+		los_lost_timer = 0.0
+		los_state_initialized = false
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_stunned_walk_animation()
 		EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
 		move_and_slide()
 		return
@@ -124,22 +142,16 @@ func _physics_process(delta: float) -> void:
 
 	# Continue attacking if animation is playing, even if player left attack range
 	if is_attacking:
-		print("[Shambler] MODE: ATTACK (finishing)")
 		_update_attack_movement(delta)
 	elif attack_cooldown_timer > 0.0 and target_player and is_instance_valid(target_player):
-		print("[Shambler] MODE: ATTACK_COOLDOWN (%.1fs left)" % [attack_cooldown_timer])
 		_update_chase_movement(delta)
 	elif player_in_attack_range and target_player and is_instance_valid(target_player) and NavigationUtils.has_line_of_sight_to(self, target_player.global_position, space_state, [self, target_player]) and _is_target_in_front_of_entity(target_player) and attack_cooldown_timer <= 0.0:
-		print("[Shambler] MODE: ATTACK")
 		_update_attack_movement(delta)
 	elif target_player and is_instance_valid(target_player):
-		print("[Shambler] MODE: CHASE (has target)")
 		_update_chase_movement(delta)
 	elif los_lost_timer > 0.0:
-		print("[Shambler] MODE: CHASE (memory, %.2f sec left)" % [los_lost_timer])
 		_update_chase_movement(delta)
 	else:
-		print("[Shambler] MODE: WANDER")
 		_update_wander_movement(delta)
 
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
@@ -455,8 +467,8 @@ func _reset_direction_timer() -> void:
 func _play_walk_animation() -> void:
 	if animation_player and animation_player.has_animation("walk"):
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
-			animation_player.speed_scale = 1.0
 			animation_player.play("walk")
+		animation_player.speed_scale = 1.0
 
 func _play_run_animation() -> void:
 	if not animation_player:
@@ -484,7 +496,6 @@ func _play_random_attack_animation() -> void:
 		is_attacking = true
 		current_attack_type = attack_number
 		has_dealt_damage_this_attack = false
-		print("[Shambler] Playing %s" % attack_name)
 
 func _try_apply_attack_damage() -> void:
 	if attack_range_area == null:
@@ -558,7 +569,6 @@ func _is_in_walk_move_frame_window() -> bool:
 			in_range = true
 			break
 
-	print("[Shambler] Frame: %d/%d | In Range: %s | Ranges: %s" % [current_frame, total_frames, in_range, WALK_MOVE_RANGES])
 	return in_range
 
 func _is_frame_in_range(frame: int, start_frame: int, end_frame: int, total_frames: int) -> bool:
@@ -570,6 +580,21 @@ func _is_frame_in_range(frame: int, start_frame: int, end_frame: int, total_fram
 
 	# Wrap-around range (e.g. 116 -> 34 in a looping animation).
 	return frame >= start or frame <= finish
+
+func apply_stun_state(duration: float) -> void:
+	if is_dead:
+		return
+	if duration <= 0.0:
+		return
+	stun_timer = max(stun_timer, duration)
+	is_stunned = true
+	is_attacking = false
+	target_player = null
+	player_in_attack_range = false
+	los_lost_timer = 0.0
+	los_state_initialized = false
+	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	_play_hit_animation()
 
 func apply_damage(amount: float) -> void:
 	if is_dead:
@@ -583,8 +608,6 @@ func apply_damage(amount: float) -> void:
 		return
 
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
-	is_attacking = false
-	attack_cooldown_timer = max(attack_cooldown_timer, ATTACK_COOLDOWN)
 	_play_hit_animation()
 
 func take_damage(amount: float) -> void:
@@ -614,11 +637,22 @@ func _die() -> void:
 		[&"death", &"die"]
 	)
 
+func _play_stunned_walk_animation() -> void:
+	if animation_player == null:
+		return
+	if not animation_player.has_animation("walk"):
+		return
+	if animation_player.current_animation != "walk" or not animation_player.is_playing():
+		animation_player.play("walk")
+	animation_player.speed_scale = STUN_WALK_SPEED_SCALE
+
 func _play_hit_animation() -> void:
 	if not animation_player:
 		return
 	for anim_name in [&"hurt", &"hit", &"damage"]:
 		if animation_player.has_animation(anim_name):
+			var anim_length: float = animation_player.get_animation(anim_name).length
+			hit_reaction_timer = max(hit_reaction_timer, anim_length)
 			if animation_player.current_animation != String(anim_name):
 				animation_player.speed_scale = 1.0
 				animation_player.play(anim_name)

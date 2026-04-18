@@ -393,9 +393,6 @@ func _apply_npc_stun(target: Node, player: Node, stun_duration: float) -> void:
 		return
 	if target.has_method("apply_stun_state"):
 		target.call("apply_stun_state", stun_duration)
-		if _has_property(target, "is_dead") and bool(target.get("is_dead")):
-			return
-		_apply_stun_wander_behavior(target)
 		return
 
 	var target_id := target.get_instance_id()

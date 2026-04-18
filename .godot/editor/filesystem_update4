@@ -6,3 +6,4 @@ res://scripts/npc/statue.gd
 res://assets/items/projectile.tscn
 res://scripts/npc/shambler.gd
 res://entities/shambler.tscn
+res://scripts/items/shovel.gd
