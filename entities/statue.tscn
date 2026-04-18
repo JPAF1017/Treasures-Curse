@@ -2,6 +2,11 @@
 
 [ext_resource type="Script" uid="uid://ohuverafit7o" path="res://scripts/npc/statue.gd" id="1_w3y7k"]
 [ext_resource type="PackedScene" uid="uid://vr0iu2dcb2hu" path="res://assets/entities/statue.glb" id="2_w8xee"]
+[ext_resource type="AudioStream" uid="uid://btq3ir1iumhms" path="res://sounds/statue/bones1.mp3" id="3_bones1"]
+[ext_resource type="AudioStream" uid="uid://camjqeg48py1f" path="res://sounds/statue/bones2.mp3" id="4_bones2"]
+[ext_resource type="AudioStream" uid="uid://du5hdbi2y2rv" path="res://sounds/statue/bones3.mp3" id="5_bones3"]
+[ext_resource type="AudioStream" uid="uid://d1huaspbd7tip" path="res://sounds/statue/bones4.mp3" id="6_bones4"]
+[ext_resource type="AudioStream" uid="uid://bjysepnwcd5wn" path="res://sounds/statue/bones5.mp3" id="7_bones5"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8l3l5"]
 radius = 0.58496094
@@ -11,20 +16,57 @@ height = 3.490265
 height = 41.74707
 radius = 54.192383
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_xslbu"]
+height = 5.737793
+radius = 1.9560547
+
 [node name="Statue" type="CharacterBody3D" unique_id=419128831]
 script = ExtResource("1_w3y7k")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1561579237]
-transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, 1.3412384, 0)
+transform = Transform3D(0.4658743, 0, -1.7386664, 0, 1.8, 0, 1.7386664, 0, 0.4658743, 0.29786092, 1.3412384, 0.22855672)
 shape = SubResource("CapsuleShape3D_8l3l5")
 debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)
 
 [node name="statue" parent="." unique_id=994587372 instance=ExtResource("2_w8xee")]
-transform = Transform3D(1.2557036, 0, -0.33646485, 0, 1.3, 0, 0.33646485, 0, 1.2557036, 0, -1.6871434, 0)
+transform = Transform3D(-2.9802322e-08, 0, -1.3, 0, 1.3, 0, 1.3, 0, -2.9802322e-08, 0.29786092, -1.6871434, 0.22855672)
 
 [node name="Area3D" type="Area3D" parent="." unique_id=1331381145]
 collision_layer = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1668928219]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.9262695, 0)
+transform = Transform3D(0.25881907, 0, -0.9659258, 0, 1, 0, 0.9659258, 0, 0.25881907, 0.29786092, 4.9262695, 0.22855672)
 shape = SubResource("CylinderShape3D_w8xee")
+
+[node name="Attack" type="Area3D" parent="." unique_id=528385884]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attack" unique_id=1267462548]
+transform = Transform3D(0.25881907, 0, -0.9659258, 0, 1, 0, 0.9659258, 0, 0.25881907, -0.89358276, 1.3498535, 0.54780316)
+shape = SubResource("CylinderShape3D_xslbu")
+
+[node name="Sounds" type="Node3D" parent="." unique_id=700000001]
+
+[node name="BonesSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=700000002]
+stream = ExtResource("3_bones1")
+volume_db = 6.667
+max_distance = 40.0
+
+[node name="BonesSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=700000003]
+stream = ExtResource("4_bones2")
+volume_db = 6.667
+max_distance = 40.0
+
+[node name="BonesSound3" type="AudioStreamPlayer3D" parent="Sounds" unique_id=700000004]
+stream = ExtResource("5_bones3")
+volume_db = 6.667
+max_distance = 40.0
+
+[node name="BonesSound4" type="AudioStreamPlayer3D" parent="Sounds" unique_id=700000005]
+stream = ExtResource("6_bones4")
+volume_db = 6.667
+max_distance = 40.0
+
+[node name="BonesSound5" type="AudioStreamPlayer3D" parent="Sounds" unique_id=700000006]
+stream = ExtResource("7_bones5")
+volume_db = 6.667
+max_distance = 40.0

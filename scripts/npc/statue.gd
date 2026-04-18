@@ -8,6 +8,8 @@ const GRAVITY = 20.0
 const DETECTION_RANGE = 50.0
 const VIEW_CONE_ANGLE = 60.0
 const WALK_IDLE_FRAME_TIME = 1.0 / 30.0  # Frame 1 at 30 FPS to avoid T-pose while idle
+const SOUND_FRAME_1_TIME = 1.0 / 30.0   # Frame 1 at 30 FPS
+const SOUND_FRAME_51_TIME = 51.0 / 30.0  # Frame 51 at 30 FPS
 const BUMP_STEP_VELOCITY = 2.0
 const BUMP_STEP_COOLDOWN = 0.15
 const LOS_MEMORY_TIME = 10
@@ -19,6 +21,8 @@ const TRAIL_REACHED_DISTANCE = 0.8
 const TRAIL_MAX_POINTS = 28
 const LOS_LOSS_CHASE_TIME = 5.0
 const MEMORY_LOG_INTERVAL = 0.25
+const ATTACK_DAMAGE = 20.0
+const ATTACK_INTERVAL = 2.0
 @export var debug_memory_logs: bool = false
 
 # References
@@ -26,6 +30,7 @@ var player: CharacterBody3D = null
 var player_camera: Camera3D = null
 var animation_player: AnimationPlayer = null
 var detection_area: Area3D = null
+var attack_area: Area3D = null
 var skeleton: Skeleton3D = null
 var head_bone_id: int = -1
 var is_moving = false
@@ -42,12 +47,21 @@ var memorized_target_trail: Array[Vector3] = []
 var memory_log_timer: float = 0.0
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
+var attack_timer: float = 0.0
+
+# Bone sounds
+var bones_sounds: Array[AudioStreamPlayer3D] = []
+var sound_triggered_frame1: bool = false
+var sound_triggered_frame51: bool = false
+var prev_anim_position: float = 0.0
 
 func _ready():
+	_setup_bone_sounds()
 	call_deferred("_setup_player_reference")
 	call_deferred("_setup_animation_player")
 	call_deferred("_setup_detection_area")
 	call_deferred("_setup_skeleton")
+	attack_area = get_node_or_null("Attack")
 	
 	# Configure CharacterBody3D for better corner and slope handling
 	floor_max_angle = deg_to_rad(46)  # Allow steeper slopes
@@ -119,6 +133,47 @@ func _setup_skeleton():
 			print("WARNING: Could not find head bone. Tried: ", head_bone_names)
 	else:
 		print("WARNING: Could not find Skeleton3D in statue!")
+
+func _setup_bone_sounds() -> void:
+	for i in range(1, 6):
+		var snd := get_node_or_null("Sounds/BonesSound%d" % i) as AudioStreamPlayer3D
+		if snd:
+			bones_sounds.append(snd)
+
+
+func _update_bone_sounds() -> void:
+	if not animation_player or not is_moving:
+		sound_triggered_frame1 = false
+		sound_triggered_frame51 = false
+		return
+	if animation_player.current_animation != "walking" or animation_player.speed_scale == 0.0:
+		sound_triggered_frame1 = false
+		sound_triggered_frame51 = false
+		return
+
+	var pos: float = animation_player.current_animation_position
+
+	# Detect animation loop (position wrapped back to start)
+	if pos < prev_anim_position - 0.1:
+		sound_triggered_frame1 = false
+		sound_triggered_frame51 = false
+
+	if pos >= SOUND_FRAME_1_TIME and not sound_triggered_frame1:
+		_play_random_bones_sound()
+		sound_triggered_frame1 = true
+
+	if pos >= SOUND_FRAME_51_TIME and not sound_triggered_frame51:
+		_play_random_bones_sound()
+		sound_triggered_frame51 = true
+
+	prev_anim_position = pos
+
+
+func _play_random_bones_sound() -> void:
+	if bones_sounds.is_empty():
+		return
+	bones_sounds[randi() % bones_sounds.size()].play()
+
 
 func _find_skeleton(node: Node) -> Skeleton3D:
 	# Recursively search for Skeleton3D
@@ -240,6 +295,12 @@ func _physics_process(delta):
 			velocity.z = 0
 			_freeze_animation()
 			is_moving = false
+		elif _is_player_in_attack_area():
+			# Player is within attack range - stop and wait to strike
+			velocity.x = 0
+			velocity.z = 0
+			_set_idle_pose()
+			is_moving = false
 		elif distance_to_player <= DETECTION_RANGE and distance_to_player > 1.5:
 			# Player NOT looking and in range - move toward player
 			if has_line_of_sight:
@@ -332,13 +393,54 @@ func _physics_process(delta):
 
 	# Step up tiny bumps while moving so statue keeps advancing on uneven ground.
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
-	
+
+	_process_attack(delta)
+
 	move_and_slide()
 
 func _process(_delta):
 	# Head tracking runs in _process AFTER animations update
 	# This ensures it's applied on top of animation data
 	_update_head_tracking()
+	_update_bone_sounds()
+
+
+func _is_player_in_attack_area() -> bool:
+	if attack_area == null or player == null:
+		return false
+	return attack_area.get_overlapping_bodies().has(player)
+
+
+func _process_attack(delta: float) -> void:
+	attack_timer = max(attack_timer - delta, 0.0)
+	if attack_timer > 0.0:
+		return
+	if attack_area == null or _is_player_looking_at_statue():
+		return
+	for body in attack_area.get_overlapping_bodies():
+		if body == player and is_instance_valid(player):
+			_apply_damage_to_player(player, ATTACK_DAMAGE)
+			_play_random_bones_sound()
+			attack_timer = ATTACK_INTERVAL
+			break
+
+
+func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	if target.has_method("apply_damage"):
+		target.call("apply_damage", damage)
+		return
+	if target.has_method("take_damage"):
+		target.call("take_damage", damage)
+		return
+	var current_health = target.get("health")
+	if current_health == null:
+		return
+	var next_health := maxf(float(current_health) - damage, 0.0)
+	target.set("health", next_health)
+	if target.has_method("_update_health_ui"):
+		target.call("_update_health_ui")
 
 func _update_head_tracking():
 	"""Make the statue's head look at the player (works even when frozen)"""

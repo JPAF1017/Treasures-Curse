@@ -1,11 +1,5 @@
+res://entities/player.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://scripts/npc/shy.gd
 res://levels/test map.tscn
-res://entities/shy.tscn
-res://scripts/npc/NavigationUtils.gd
-res://scripts/npc/charger.gd
-res://scripts/npc/fly.gd
-res://scripts/npc/gnome.gd
-res://scripts/npc/knight.gd
-res://scripts/npc/shambler.gd
+res://entities/statue.tscn
 res://scripts/npc/statue.gd
