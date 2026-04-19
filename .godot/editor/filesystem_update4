@@ -13,3 +13,4 @@ res://scripts/npc/shy.gd
 res://scripts/npc/statue.gd
 res://entities/charger.tscn
 res://entities/knight.tscn
+res://entities/fly.tscn

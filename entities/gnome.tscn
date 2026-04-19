@@ -62,22 +62,32 @@ shape = SubResource("CylinderShape3D_4707s")
 [node name="OinkSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=100000002]
 stream = ExtResource("3_oink1")
 volume_db = -16.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="OinkSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=100000003]
 stream = ExtResource("3_oink2")
 volume_db = -16.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="PainSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=100000004]
 stream = ExtResource("3_pain")
 volume_db = -16.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="GrabSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=100000005]
 stream = ExtResource("3_grab")
 volume_db = -25.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="AttackSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=100000006]
 stream = ExtResource("3_attack")
 volume_db = -16.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=724262519]
 collision_layer = 2

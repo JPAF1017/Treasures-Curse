@@ -18,15 +18,20 @@ const FLOAT_SPEED = 3.0
 const GROUND_RAYCAST_DISTANCE = 50.0
 const ASCENT_STOP_EPSILON = 0.02
 const HIT_REACTION_DURATION = 0.3
+const HIT_REACTION_FALLBACK_DURATION = 1.2
 const DEATH_LINGER_TIME = 5.0
 const FLY_THRESHOLD = 10
 const CHASE_SPEED = 3.0
 const CHASE_FLY_SPEED = 5.0
 const BITE_DAMAGE = 10.0
 const BITE_KNOCKBACK = 6.0
-const BITE_ACTIVE_FRAMES = Vector2i(8, 24)
+const BITE_ACTIVE_FRAMES = Vector2i(12, 17)
 const BITE_ANIMATION_FPS = 30.0
 const BITE_COOLDOWN = 3.0
+const NEEDLE_DAMAGE = 20.0
+const NEEDLE_ACTIVE_FRAMES = Vector2i(12, 17)
+const NEEDLE_ANIMATION_FPS = 30.0
+const NEEDLE_COOLDOWN = 3.5
 const BUMP_STEP_VELOCITY = 2.0
 const BUMP_STEP_COOLDOWN = 0.15
 const LOS_MEMORY_TIME = 10.0
@@ -64,6 +69,12 @@ var target_player: Node3D = null
 var is_biting: bool = false
 var has_dealt_bite_damage: bool = false
 var bite_cooldown_timer: float = 0.0
+var needle_area: Area3D = null
+var is_needle_attacking: bool = false
+var has_dealt_needle_damage: bool = false
+var needle_cooldown_timer: float = 0.0
+var is_stunned: bool = false
+var stun_timer: float = 0.0
 var space_state: PhysicsDirectSpaceState3D = null
 var bump_step_timer: float = 0.0
 var los_lost_timer: float = 0.0
@@ -95,6 +106,7 @@ func _ready() -> void:
 		hurtbox_vert_fly.collision_mask = 0
 	detection_area = get_node_or_null("Detection")
 	bite_area = get_node_or_null("Attacks/Bite")
+	needle_area = get_node_or_null("Attacks/Needle")
 	if detection_area:
 		detection_area.body_entered.connect(_on_detection_body_entered)
 		detection_area.body_exited.connect(_on_detection_body_exited)
@@ -120,7 +132,28 @@ func _physics_process(delta: float) -> void:
 
 	_update_target_player()
 	bite_cooldown_timer = max(bite_cooldown_timer - delta, 0.0)
+	needle_cooldown_timer = max(needle_cooldown_timer - delta, 0.0)
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
+
+	# Needle attack — plays to completion (flying only)
+	if is_needle_attacking:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_update_ground_height_from_raycast()
+		var desired_world_height = ground_height + target_height_above_ground
+		var height_diff = desired_world_height - global_position.y
+		if abs(height_diff) <= ASCENT_STOP_EPSILON:
+			velocity.y = 0.0
+		else:
+			velocity.y = height_diff * FLOAT_SPEED
+		if not has_dealt_needle_damage:
+			_try_apply_needle_damage()
+		if animation_player and not animation_player.is_playing():
+			is_needle_attacking = false
+			has_dealt_needle_damage = false
+			needle_cooldown_timer = NEEDLE_COOLDOWN
+		move_and_slide()
+		return
 
 	# Bite attack — plays to completion
 	if is_biting:
@@ -141,6 +174,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
+	if stun_timer > 0.0:
+		stun_timer = max(stun_timer - delta, 0.0)
+		if stun_timer <= 0.0:
+			is_stunned = false
 	var hit_anim_playing := animation_player and (
 		(animation_player.current_animation == "hitReaction" and animation_player.is_playing()) or
 		(animation_player.current_animation == "idleFlyHitReaction" and animation_player.is_playing())
@@ -148,12 +185,37 @@ func _physics_process(delta: float) -> void:
 	if hit_reaction_timer > 0.0 or hit_anim_playing:
 		velocity.x = 0.0
 		velocity.z = 0.0
-		_play_hit_animation()
-		if not is_floating:
-			if not is_on_floor():
-				velocity.y -= GRAVITY * delta
-			else:
+		if is_floating:
+			_update_ground_height_from_raycast()
+			var desired_world_height = ground_height + target_height_above_ground
+			var height_diff = desired_world_height - global_position.y
+			if abs(height_diff) <= ASCENT_STOP_EPSILON:
 				velocity.y = 0.0
+			else:
+				velocity.y = height_diff * FLOAT_SPEED
+		elif not is_on_floor():
+			velocity.y -= GRAVITY * delta
+		else:
+			velocity.y = 0.0
+		move_and_slide()
+		return
+
+	if is_stunned and stun_timer > 0.0:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_play_stun_animation()
+		if is_floating:
+			_update_ground_height_from_raycast()
+			var desired_world_height = ground_height + target_height_above_ground
+			var height_diff = desired_world_height - global_position.y
+			if abs(height_diff) <= ASCENT_STOP_EPSILON:
+				velocity.y = 0.0
+			else:
+				velocity.y = height_diff * FLOAT_SPEED
+		elif not is_on_floor():
+			velocity.y -= GRAVITY * delta
+		else:
+			velocity.y = 0.0
 		move_and_slide()
 		return
 
@@ -175,6 +237,12 @@ func _physics_process(delta: float) -> void:
 			is_floating = true
 			_update_ground_height_from_raycast()
 			target_height_above_ground = randf_range(FLOAT_HEIGHT_MIN, FLOAT_HEIGHT_MAX)
+		move_and_slide()
+		return
+
+	# Check for needle attack (flying only)
+	if not is_needle_attacking and not is_biting and _can_needle_attack():
+		_start_needle_attack()
 		move_and_slide()
 		return
 
@@ -304,6 +372,14 @@ func _update_chase_float_state(delta: float, pursuit_target: Vector3) -> void:
 		velocity.y = 0.0
 	else:
 		velocity.y = height_diff * FLOAT_SPEED
+	# Stop moving if player is already in needle range
+	if needle_area:
+		for body in needle_area.get_overlapping_bodies():
+			if body.is_in_group("player"):
+				velocity.x = 0.0
+				velocity.z = 0.0
+				_play_air_animation()
+				return
 	# Chase horizontally with pathfinding
 	var dir_to_target := pursuit_target - global_position
 	dir_to_target.y = 0.0
@@ -346,6 +422,22 @@ func apply_damage(amount: float) -> void:
 	if health <= 0:
 		_die()
 		return
+	is_biting = false
+	has_dealt_bite_damage = false
+	is_needle_attacking = false
+	has_dealt_needle_damage = false
+	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	_play_hit_animation()
+
+func apply_stun_state(duration: float) -> void:
+	if is_dead:
+		return
+	is_biting = false
+	has_dealt_bite_damage = false
+	is_needle_attacking = false
+	has_dealt_needle_damage = false
+	is_stunned = true
+	stun_timer = duration
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
 	_play_hit_animation()
 
@@ -447,6 +539,8 @@ func _compute_pursuit_target() -> Vector3:
 # --- Bite Attack ---
 
 func _can_bite() -> bool:
+	if is_floating:
+		return false
 	if not bite_area:
 		return false
 	if bite_cooldown_timer > 0.0:
@@ -491,12 +585,60 @@ func _is_in_bite_active_frames() -> bool:
 	current_frame = int(posmod(current_frame, total_frames))
 	return current_frame >= BITE_ACTIVE_FRAMES.x and current_frame <= BITE_ACTIVE_FRAMES.y
 
+# --- Needle Attack ---
+
+func _can_needle_attack() -> bool:
+	if not is_floating:
+		return false
+	if not needle_area:
+		return false
+	if needle_cooldown_timer > 0.0:
+		return false
+	for body in needle_area.get_overlapping_bodies():
+		if body.is_in_group("player"):
+			return true
+	return false
+
+func _start_needle_attack() -> void:
+	is_needle_attacking = true
+	has_dealt_needle_damage = false
+	velocity.x = 0.0
+	velocity.z = 0.0
+	if animation_player and animation_player.has_animation("needleAttack"):
+		animation_player.speed_scale = 1.0
+		animation_player.play("needleAttack")
+
+func _try_apply_needle_damage() -> void:
+	if not _is_in_needle_active_frames():
+		return
+	if not needle_area:
+		return
+	for body in needle_area.get_overlapping_bodies():
+		if body.is_in_group("player"):
+			if body.has_method("apply_damage"):
+				body.apply_damage(NEEDLE_DAMAGE)
+			has_dealt_needle_damage = true
+			return
+
+func _is_in_needle_active_frames() -> bool:
+	if not animation_player or animation_player.current_animation != "needleAttack":
+		return false
+	var anim := animation_player.get_animation("needleAttack")
+	if not anim:
+		return false
+	var total_frames := int(round(anim.length * NEEDLE_ANIMATION_FPS))
+	var current_frame := int(round(animation_player.current_animation_position * NEEDLE_ANIMATION_FPS))
+	current_frame = int(posmod(current_frame, total_frames))
+	return current_frame >= NEEDLE_ACTIVE_FRAMES.x and current_frame <= NEEDLE_ACTIVE_FRAMES.y
+
 func _die() -> void:
 	if is_dead:
 		return
 	is_dead = true
 	health = 0
 	hit_reaction_timer = 0.0
+	is_stunned = false
+	stun_timer = 0.0
 	is_idle = false
 	var was_floating := is_floating
 	is_floating = false
@@ -588,20 +730,48 @@ func _play_air_animation() -> void:
 			animation_player.speed_scale = 1.0
 			animation_player.play("idle")
 
-func _play_hit_animation() -> void:
+func _play_stun_animation() -> void:
 	if not animation_player:
 		return
 	var anim_name: String
 	if is_floating:
-		anim_name = "idleFlyHitReaction"
+		anim_name = "idleFly"
+		if not animation_player.has_animation(anim_name):
+			anim_name = "fly"
+			if not animation_player.has_animation(anim_name):
+				anim_name = "idle"
 	else:
-		anim_name = "hitReaction"
+		anim_name = "walk"
+		if not animation_player.has_animation(anim_name):
+			anim_name = "idle"
 	if not animation_player.has_animation(anim_name):
 		return
+	animation_player.speed_scale = 0.3
 	if animation_player.current_animation != anim_name or not animation_player.is_playing():
-		animation_player.speed_scale = 1.0
 		animation_player.play(anim_name)
-		animation_player.seek(0.0, true)
+
+func _play_hit_animation() -> void:
+	if not animation_player:
+		return
+	var anim_name: String
+	var fallback_anim: String
+	if is_floating:
+		anim_name = "idleFlyHitReaction"
+		fallback_anim = "idleFly"
+	else:
+		anim_name = "hitReaction"
+		fallback_anim = "walk"
+	if animation_player.has_animation(anim_name):
+		if animation_player.current_animation != anim_name:
+			animation_player.speed_scale = 1.0
+			animation_player.play(anim_name)
+			animation_player.seek(0.0, true)
+	elif animation_player.has_animation(fallback_anim):
+		if animation_player.current_animation != fallback_anim or animation_player.speed_scale != 0.3:
+			animation_player.speed_scale = 0.3
+			if animation_player.current_animation != fallback_anim or not animation_player.is_playing():
+				animation_player.play(fallback_anim)
+		hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_FALLBACK_DURATION)
 
 func _play_takeoff_animation() -> void:
 	transition_anim_timer = 0.0

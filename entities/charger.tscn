@@ -74,24 +74,35 @@ debug_color = Color(1.92523e-06, 0.609401, 0.6444029, 0.41960785)
 [node name="StepSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=200000002]
 stream = ExtResource("3_step")
 volume_db = -15.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="AttackSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=200000003]
 stream = ExtResource("3_attack")
 volume_db = -10.0
+unit_size = 4.0
 max_distance = 20.0
 
 [node name="PainSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=200000004]
 stream = ExtResource("3_pain")
 volume_db = -15.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="BreathSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=200000005]
 stream = ExtResource("3_breathe")
 volume_db = -8.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="IdleSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=200000006]
 stream = ExtResource("3_idle")
 volume_db = -8.0
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="GrowlSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=200000007]
 stream = ExtResource("3_growl")
 volume_db = -15.0
+unit_size = 4.0
+max_distance = 20.0
