@@ -2,6 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://bkju4rh2uc0es" path="res://assets/entities/knight.glb" id="1_kmc1q"]
 [ext_resource type="Script" uid="uid://cd2df45y6baat" path="res://scripts/npc/knight.gd" id="1_wmydh"]
+[ext_resource type="AudioStream" uid="uid://dlgxgnxrwis7x" path="res://sounds/knight/grinding.mp3" id="2_grinding"]
+[ext_resource type="AudioStream" uid="uid://b2ll8gb65lfht" path="res://sounds/knight/death.mp3" id="3_death"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kmc1q"]
 radius = 0.9658203
@@ -49,6 +51,7 @@ radius = 1.2490234
 
 [node name="Knight" type="CharacterBody3D" unique_id=1412719762]
 script = ExtResource("1_wmydh")
+debug_attack_logs = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1623037696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7876916, 0.092847146)
@@ -127,3 +130,31 @@ shape = SubResource("CylinderShape3D_8203k")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/AttacksActivation" unique_id=697835094]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.728839, 2.307773)
 shape = SubResource("CylinderShape3D_scv0e")
+
+[node name="Sounds" type="Node3D" parent="." unique_id=300000001]
+
+[node name="StepSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000002]
+volume_db = -5.0
+
+[node name="BreathSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000003]
+volume_db = -15.0
+
+[node name="GrindingSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000004]
+stream = ExtResource("2_grinding")
+volume_db = -8.0
+
+[node name="DeathSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000005]
+stream = ExtResource("3_death")
+volume_db = -10.0
+
+[node name="HurtSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000006]
+volume_db = -15.0
+
+[node name="AttackSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000007]
+volume_db = -15.0
+
+[node name="SlashSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000008]
+volume_db = -10.0
+
+[node name="SmashSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=300000009]
+volume_db = -15.0

@@ -99,6 +99,63 @@ var previous_has_line_of_sight: bool = false
 var last_visible_player_position: Vector3 = Vector3.ZERO
 var memorized_target_trail: Array[Vector3] = []
 
+# Step sounds
+const WALK_STEP_FRAMES: Array[int] = [13, 41]
+const STRAFE_STEP_FRAMES: Array[int] = [21, 41]
+const RUN_STEP_FRAMES: Array[int] = [9, 20]
+var step_sound_player: AudioStreamPlayer3D = null
+var step_sound_last_frame: int = -1
+var strafe_step_sound_last_frame: int = -1
+var run_step_sound_last_frame: int = -1
+var step_sounds: Array = []
+
+# Breath sounds
+const BREATH_COOLDOWN: float = 2.5
+const BREATH_COOLDOWN_RUN: float = 1.5
+var breath_sound_player: AudioStreamPlayer3D = null
+var breath_sounds: Array = []
+var breath_timer: float = 0.0
+var breath_phase: int = 0  # 0 = ready, 1 = inhale, 2 = exhale
+var _breath_stream = null
+var _breath_pending_cooldown: float = 0.0
+var _breath_pending_pitch: float = 1.0
+
+# Grinding sound
+const SLIDE_GRIND_ACTIVE_FRAMES: Vector2i = Vector2i(14, 31)
+var grinding_sound_player: AudioStreamPlayer3D = null
+
+# Death sound
+var death_sound_player: AudioStreamPlayer3D = null
+
+# Hurt sounds
+var hurt_sound_player: AudioStreamPlayer3D = null
+var hurt_sounds: Array = []
+
+# Attack sounds
+const KICK_ATTACK_SOUND_FRAME: int = 1
+const VERT_SLASH_ATTACK_SOUND_FRAME: int = 20
+const HEAVY_SMASH_ATTACK_SOUND_FRAME: int = 38
+const SLIDE_ATTACK_SOUND_FRAME: int = 42
+var attack_sound_player: AudioStreamPlayer3D = null
+var attack_sounds: Array = []
+var attack_sound_played_this_attack: bool = false
+var slide_attack_sound_played: bool = false
+
+# Slash sounds
+const VERT_SLASH_SLASH_SOUND_FRAME: int = 26
+const HEAVY_SMASH_SLASH_SOUND_FRAME: int = 59
+const SLIDE_SLASH_SLASH_SOUND_FRAME: int = 45
+var slash_sound_player: AudioStreamPlayer3D = null
+var slash_sounds: Array = []
+var slash_sound_played_this_attack: bool = false
+var slide_slash_sound_played: bool = false
+
+# Smash sound
+const HEAVY_SMASH_SMASH_SOUND_FRAME: int = 64
+var smash_sound_player: AudioStreamPlayer3D = null
+var smash_sounds: Array = []
+var smash_sound_played_this_attack: bool = false
+
 func _ready() -> void:
 	top_level = true
 	randomize()
@@ -109,6 +166,40 @@ func _ready() -> void:
 	_reset_direction_timer()
 	_reset_walk_before_idle_timer()
 	_play_walk_animation()
+	step_sound_player = get_node_or_null("Sounds/StepSound") as AudioStreamPlayer3D
+	for i in range(1, 8):
+		var s = load("res://sounds/knight/step%d.mp3" % i)
+		if s:
+			step_sounds.append(s)
+	breath_sound_player = get_node_or_null("Sounds/BreathSound") as AudioStreamPlayer3D
+	for i in range(1, 6):
+		var s = load("res://sounds/knight/breath%d.mp3" % i)
+		if s:
+			breath_sounds.append(s)
+	if breath_sound_player:
+		breath_sound_player.finished.connect(_on_breath_sound_finished)
+	grinding_sound_player = get_node_or_null("Sounds/GrindingSound") as AudioStreamPlayer3D
+	death_sound_player = get_node_or_null("Sounds/DeathSound") as AudioStreamPlayer3D
+	hurt_sound_player = get_node_or_null("Sounds/HurtSound") as AudioStreamPlayer3D
+	for i in range(1, 6):
+		var s = load("res://sounds/knight/hurt%d.mp3" % i)
+		if s:
+			hurt_sounds.append(s)
+	attack_sound_player = get_node_or_null("Sounds/AttackSound") as AudioStreamPlayer3D
+	for i in range(1, 4):
+		var s = load("res://sounds/knight/attack%d.mp3" % i)
+		if s:
+			attack_sounds.append(s)
+	slash_sound_player = get_node_or_null("Sounds/SlashSound") as AudioStreamPlayer3D
+	for i in range(1, 4):
+		var s = load("res://sounds/knight/slash%d.mp3" % i)
+		if s:
+			slash_sounds.append(s)
+	smash_sound_player = get_node_or_null("Sounds/SmashSound") as AudioStreamPlayer3D
+	for i in range(1, 3):
+		var s = load("res://sounds/knight/smash%d.mp3" % i)
+		if s:
+			smash_sounds.append(s)
 	var detection: Area3D = $Detection
 	detection.body_entered.connect(_on_detection_body_entered)
 	detection.body_exited.connect(_on_detection_body_exited)
@@ -143,6 +234,7 @@ func _physics_process(delta: float) -> void:
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
 	slide_attack_cooldown_timer = max(slide_attack_cooldown_timer - delta, 0.0)
 	attack_cooldown_timer = max(attack_cooldown_timer - delta, 0.0)
+	breath_timer = max(breath_timer - delta, 0.0)
 
 	# Apply gravity
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
@@ -229,6 +321,9 @@ func apply_damage(amount: float) -> void:
 
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
 	_play_hit_animation()
+	if hurt_sound_player and not hurt_sounds.is_empty():
+		hurt_sound_player.stream = hurt_sounds.pick_random()
+		hurt_sound_player.play()
 
 func take_damage(amount: float) -> void:
 	_log_attack("take_damage forwarded amount=%.2f" % amount)
@@ -244,6 +339,8 @@ func _die() -> void:
 	hit_reaction_timer = 0.0
 	is_idle = false
 	velocity = Vector3.ZERO
+	if death_sound_player:
+		death_sound_player.play()
 
 	await EnemyDeathLinger.run_death_linger(
 		self,
@@ -497,7 +594,7 @@ func _play_animation() -> void:
 		pass # Attack animation already playing, don't interrupt
 	elif is_retreating and is_on_floor():
 		_play_retreat_animation()
-	elif is_strafing and is_on_floor():
+	elif is_strafing:
 		_play_strafe_animation()
 	elif target_player and is_on_floor():
 		_play_run_animation()
@@ -516,6 +613,8 @@ func _play_retreat_animation() -> void:
 		if needs_restart:
 			animation_player.speed_scale = 1.0
 			animation_player.play_backwards("walk")
+		_try_play_walk_step_sound()
+		_try_play_breath_sound()
 
 func _play_strafe_animation() -> void:
 	if not animation_player:
@@ -532,6 +631,8 @@ func _play_strafe_animation() -> void:
 			if needs_restart:
 				animation_player.speed_scale = 1.0
 				animation_player.play("strafe")
+		_try_play_strafe_step_sound()
+		_try_play_breath_sound()
 	else:
 		_play_walk_animation()
 
@@ -543,10 +644,14 @@ func _play_run_animation() -> void:
 		if animation_player.current_animation != "run" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("run")
+		_try_play_run_step_sound()
+		_try_play_breath_sound(BREATH_COOLDOWN_RUN, 1.3)
 	else:
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
 			animation_player.play("walk")
 		animation_player.speed_scale = RUN_SPEED / WALK_SPEED
+		_try_play_walk_step_sound()
+		_try_play_breath_sound(BREATH_COOLDOWN)
 
 func _play_walk_animation() -> void:
 	if animation_player and animation_player.has_animation("walk"):
@@ -555,6 +660,8 @@ func _play_walk_animation() -> void:
 		if animation_player.current_animation != "walk" or not animation_player.is_playing() or was_retreat:
 			animation_player.speed_scale = 1.0
 			animation_player.play("walk")
+		_try_play_walk_step_sound()
+		_try_play_breath_sound(BREATH_COOLDOWN)
 
 func _play_idle_animation() -> void:
 	if not animation_player:
@@ -604,6 +711,90 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 			return result
 	return null
 
+func _try_play_walk_step_sound() -> void:
+	if step_sound_player == null or animation_player == null or step_sounds.is_empty():
+		return
+	if not animation_player.is_playing():
+		return
+	var anim := animation_player.get_animation("walk")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	var current_frame := int(animation_player.current_animation_position * fps)
+	if current_frame != step_sound_last_frame:
+		for step_frame in WALK_STEP_FRAMES:
+			if current_frame == step_frame:
+				step_sound_player.stream = step_sounds.pick_random()
+				step_sound_player.play()
+				break
+		step_sound_last_frame = current_frame
+
+func _try_play_strafe_step_sound() -> void:
+	if step_sound_player == null or animation_player == null or step_sounds.is_empty():
+		return
+	if not animation_player.is_playing():
+		return
+	var anim := animation_player.get_animation("strafe")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	var current_frame := int(animation_player.current_animation_position * fps)
+	if current_frame != strafe_step_sound_last_frame:
+		for step_frame in STRAFE_STEP_FRAMES:
+			if current_frame == step_frame:
+				step_sound_player.stream = step_sounds.pick_random()
+				step_sound_player.play()
+				break
+		strafe_step_sound_last_frame = current_frame
+
+func _try_play_run_step_sound() -> void:
+	if step_sound_player == null or animation_player == null or step_sounds.is_empty():
+		return
+	if not animation_player.is_playing():
+		return
+	var anim := animation_player.get_animation("run")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	var current_frame := int(animation_player.current_animation_position * fps)
+	if current_frame != run_step_sound_last_frame:
+		for step_frame in RUN_STEP_FRAMES:
+			if current_frame == step_frame:
+				step_sound_player.stream = step_sounds.pick_random()
+				step_sound_player.play()
+				break
+		run_step_sound_last_frame = current_frame
+
+func _try_play_breath_sound(cooldown: float = BREATH_COOLDOWN, pitch: float = 1.0) -> void:
+	if breath_sound_player == null or breath_sounds.is_empty():
+		return
+	if breath_phase != 0 or breath_timer > 0.0:
+		return
+	_breath_pending_cooldown = cooldown
+	_breath_pending_pitch = pitch
+	_breath_stream = breath_sounds.pick_random()
+	breath_sound_player.stream = _breath_stream
+	breath_sound_player.pitch_scale = pitch * 1.2
+	breath_sound_player.play()
+	breath_phase = 1
+
+func _on_breath_sound_finished() -> void:
+	if breath_phase == 1:
+		breath_sound_player.stream = _breath_stream
+		breath_sound_player.pitch_scale = _breath_pending_pitch
+		breath_sound_player.play()
+		breath_phase = 2
+	elif breath_phase == 2:
+		breath_sound_player.pitch_scale = 1.0
+		breath_phase = 0
+		breath_timer = _breath_pending_cooldown
+
 func angle_difference(from: float, to: float) -> float:
 	var diff := fmod(to - from + PI, TAU) - PI
 	return diff if diff >= -PI else diff + TAU
@@ -633,6 +824,8 @@ func _start_slide_attack() -> void:
 	is_slide_attacking = true
 	slide_attack_timer = SLIDE_ATTACK_DURATION
 	has_dealt_slide_damage = false
+	slide_attack_sound_played = false
+	slide_slash_sound_played = false
 	is_idle = false
 	is_strafing = false
 	is_retreating = false
@@ -659,6 +852,9 @@ func _update_slide_attack(delta: float) -> void:
 	# Try to deal damage
 	if not has_dealt_slide_damage:
 		_try_apply_slide_damage()
+	_try_play_slide_grinding_sound()
+	_try_play_slide_attack_sound()
+	_try_play_slide_slash_sound()
 
 	# End slide attack when animation finishes
 	var anim_playing := animation_player and animation_player.current_animation == "slideSlash" and animation_player.is_playing()
@@ -671,6 +867,42 @@ func _is_in_slide_active_frames() -> bool:
 	var pos := animation_player.current_animation_position
 	var current_frame := int(pos * SLIDE_ATTACK_ANIMATION_FPS)
 	return current_frame >= SLIDE_ATTACK_ACTIVE_FRAMES.x and current_frame <= SLIDE_ATTACK_ACTIVE_FRAMES.y
+
+func _try_play_slide_attack_sound() -> void:
+	if slide_attack_sound_played or attack_sound_player == null or attack_sounds.is_empty():
+		return
+	if animation_player == null or not animation_player.is_playing() or animation_player.current_animation != "slideSlash":
+		return
+	var current_frame := int(animation_player.current_animation_position * SLIDE_ATTACK_ANIMATION_FPS)
+	if current_frame >= SLIDE_ATTACK_SOUND_FRAME:
+		attack_sound_player.stream = attack_sounds.pick_random()
+		attack_sound_player.play()
+		slide_attack_sound_played = true
+
+func _try_play_slide_slash_sound() -> void:
+	if slide_slash_sound_played or slash_sound_player == null or slash_sounds.is_empty():
+		return
+	if animation_player == null or not animation_player.is_playing() or animation_player.current_animation != "slideSlash":
+		return
+	var current_frame := int(animation_player.current_animation_position * SLIDE_ATTACK_ANIMATION_FPS)
+	if current_frame >= SLIDE_SLASH_SLASH_SOUND_FRAME:
+		slash_sound_player.stream = slash_sounds.pick_random()
+		slash_sound_player.play()
+		slide_slash_sound_played = true
+
+func _try_play_slide_grinding_sound() -> void:
+	if grinding_sound_player == null or animation_player == null:
+		return
+	if not animation_player.is_playing() or animation_player.current_animation != "slideSlash":
+		if grinding_sound_player.is_playing():
+			grinding_sound_player.stop()
+		return
+	var current_frame := int(animation_player.current_animation_position * SLIDE_ATTACK_ANIMATION_FPS)
+	if current_frame >= SLIDE_GRIND_ACTIVE_FRAMES.x and current_frame <= SLIDE_GRIND_ACTIVE_FRAMES.y:
+		if not grinding_sound_player.is_playing():
+			grinding_sound_player.play()
+	elif grinding_sound_player.is_playing():
+		grinding_sound_player.stop()
 
 func _try_apply_slide_damage() -> void:
 	if slide_slash_area == null:
@@ -722,6 +954,9 @@ func _can_start_melee_attack() -> bool:
 func _start_melee_attack(delta: float) -> void:
 	is_attacking = true
 	has_dealt_damage_this_attack = false
+	attack_sound_played_this_attack = false
+	slash_sound_played_this_attack = false
+	smash_sound_played_this_attack = false
 	is_idle = false
 	is_strafing = false
 	is_retreating = false
@@ -774,6 +1009,55 @@ func _update_attack_state(delta: float) -> void:
 	# Try to deal damage during active frames
 	if not has_dealt_damage_this_attack:
 		_try_apply_melee_damage()
+	_try_play_attack_sound()
+	_try_play_melee_slash_sound()
+	_try_play_smash_sound()
+
+func _try_play_attack_sound() -> void:
+	if attack_sound_played_this_attack or attack_sound_player == null or attack_sounds.is_empty():
+		return
+	if animation_player == null or not animation_player.is_playing():
+		return
+	var trigger_frame: int
+	match current_attack_type:
+		1: trigger_frame = KICK_ATTACK_SOUND_FRAME
+		2: trigger_frame = VERT_SLASH_ATTACK_SOUND_FRAME
+		3: trigger_frame = HEAVY_SMASH_ATTACK_SOUND_FRAME
+		_: return
+	var current_frame := int(animation_player.current_animation_position * ATTACK_ANIMATION_FPS)
+	if current_frame >= trigger_frame:
+		attack_sound_player.stream = attack_sounds.pick_random()
+		attack_sound_player.play()
+		attack_sound_played_this_attack = true
+
+func _try_play_melee_slash_sound() -> void:
+	if slash_sound_played_this_attack or slash_sound_player == null or slash_sounds.is_empty():
+		return
+	if animation_player == null or not animation_player.is_playing():
+		return
+	var trigger_frame: int
+	match current_attack_type:
+		2: trigger_frame = VERT_SLASH_SLASH_SOUND_FRAME
+		3: trigger_frame = HEAVY_SMASH_SLASH_SOUND_FRAME
+		_: return  # kick has no slash sound
+	var current_frame := int(animation_player.current_animation_position * ATTACK_ANIMATION_FPS)
+	if current_frame >= trigger_frame:
+		slash_sound_player.stream = slash_sounds.pick_random()
+		slash_sound_player.play()
+		slash_sound_played_this_attack = true
+
+func _try_play_smash_sound() -> void:
+	if smash_sound_played_this_attack or smash_sound_player == null or smash_sounds.is_empty():
+		return
+	if animation_player == null or not animation_player.is_playing():
+		return
+	if current_attack_type != 3:
+		return
+	var current_frame := int(animation_player.current_animation_position * ATTACK_ANIMATION_FPS)
+	if current_frame >= HEAVY_SMASH_SMASH_SOUND_FRAME:
+		smash_sound_player.stream = smash_sounds.pick_random()
+		smash_sound_player.play()
+		smash_sound_played_this_attack = true
 
 func _get_active_attack_area() -> Area3D:
 	match current_attack_type:
