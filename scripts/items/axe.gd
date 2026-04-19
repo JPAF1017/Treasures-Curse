@@ -126,6 +126,10 @@ func can_start_primary_action() -> bool:
 
 func begin_primary_action(player: Node) -> bool:
 	if not can_start_primary_action():
+		print("[AxeDbg] begin_primary_action blocked — slot=%d swing=%s equipped=%s on_floor=%s attachment=%s" % [
+			inventory_slot_index, str(swing_in_progress), str(is_equipped_in_hand()),
+			str(_is_wielding_player_on_floor()),
+			(right_hand_attachment.name if is_instance_valid(right_hand_attachment) else "null")])
 		return false
 
 	swing_animation_finished = false
@@ -363,7 +367,15 @@ func _apply_attack_damage(player: Node, amount: float) -> void:
 
 	var attack_area := _get_player_attack_area(player)
 	if attack_area == null:
+		print("[AxeDbg] _apply_attack_damage: attack_area is null!")
 		return
+
+	var overlapping := attack_area.get_overlapping_areas()
+	if overlapping.is_empty():
+		print("[AxeDbg] swing active — attack area overlapping 0 areas (no hurtbox in range)")
+	else:
+		var names := overlapping.map(func(a: Area3D) -> String: return "%s(layer=%d)" % [a.name, a.collision_layer])
+		print("[AxeDbg] swing active — attack area overlapping: %s" % ", ".join(names))
 
 	var targets: Array[Node] = MeleeShared.collect_hurtbox_damage_targets(attack_area, self, player, swing_damaged_targets)
 	for target: Node in targets:

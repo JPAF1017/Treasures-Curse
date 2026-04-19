@@ -1,13 +1,6 @@
-res://entities/player.tscn
-res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://scripts/npc/gnome.gd
 res://levels/test map.tscn
-res://entities/statue.tscn
-res://scripts/npc/statue.gd
-res://assets/items/projectile.tscn
-res://scripts/npc/shambler.gd
-res://entities/shambler.tscn
-res://scripts/items/shovel.gd
+res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://entities/gnome.tscn
 res://scripts/items/axe.gd
-res://scripts/items/bat.gd
-res://scripts/items/health.gd
-res://scripts/player.gd
+res://assets/items/axe.tscn

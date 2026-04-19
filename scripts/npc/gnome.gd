@@ -29,12 +29,16 @@ const DEATH_LINGER_TIME := 5.0
 const STUN_WALK_ANIMATION_SPEED_SCALE := 0.45
 const GRAB_ESCAPE_REQUIRED_JUMPS := 10
 const GRAB_REACQUIRE_COOLDOWN := 0.8
+const GRAB_INITIAL_DELAY := 1.0
 const HIT_REACTION_DURATION := 0.35
 const DAMAGE_ACTION_COOLDOWN := 3.0
-const HIT_ANIMATION_CANDIDATES: Array[StringName] = [&"hurt", &"hit", &"damage"]
+const HIT_ANIMATION_CANDIDATES: Array[StringName] = [&"damage", &"hurt", &"hit"]
+const OINK_SOUND_INTERVAL_MIN := 2.0
+const OINK_SOUND_INTERVAL_MAX := 3.0
 
 @export var facing_offset_degrees: float = 180.0
 @export var debug_memory_logs: bool = false
+@export var debug_damage_logs: bool = true
 
 var move_direction: Vector3 = Vector3.ZERO
 var health: float = HEALTH_MAX
@@ -70,7 +74,16 @@ var damage_action_cooldown_timer: float = 0.0
 var stun_walk_visual_active: bool = false
 var grab_escape_jump_count: int = 0
 var grab_reacquire_timer: float = 0.0
+var grab_initial_delay_timer: float = 0.0
 var has_dealt_damage_this_attack: bool = false
+var oink_player: AudioStreamPlayer3D = null
+var oink_streams: Array[AudioStream] = []
+var oink_sound_timer: float = 0.0
+var pain_player: AudioStreamPlayer3D = null
+var grab_sound_player: AudioStreamPlayer3D = null
+var grab_sound_timer: float = 0.0
+var attack_sound_player: AudioStreamPlayer3D = null
+var attack_sound_played_this_swing: bool = false
 
 func _ready() -> void:
 	randomize()
@@ -92,7 +105,10 @@ func _ready() -> void:
 		attack_range_area.body_exited.connect(_on_attack_range_body_exited)
 	_pick_new_direction()
 	_reset_direction_timer()
+	_setup_oink_sounds()
 	_play_walk_animation()
+	_setup_damage_debug()
+	add_to_group("gnome")
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -121,7 +137,6 @@ func _physics_process(delta: float) -> void:
 		hit_reaction_timer = max(hit_reaction_timer - delta, 0.0)
 		velocity.x = 0.0
 		velocity.z = 0.0
-		_play_hit_animation()
 		move_and_slide()
 		return
 
@@ -143,10 +158,14 @@ func _physics_process(delta: float) -> void:
 
 	if is_player_in_attack_range and _has_valid_attack_range_player():
 		_update_attack_range_state(delta)
-		if _has_valid_grabbed_player() and grabbed_player == attack_range_player:
+		if damage_action_cooldown_timer > 0.0:
+			pass  # recovering from a hit — do not start new attacks or grabs
+		elif _has_valid_grabbed_player() and grabbed_player == attack_range_player:
 			_play_grab_animation()
-		else:
+			_try_grab_damage()
+		elif _is_player_grabbed_by_another_gnome(attack_range_player):
 			_play_attack_animation()
+		# else: no other gnome has grabbed yet — wait, face the player
 	elif _should_run_chase():
 		_update_pursuit_movement(delta, RUN_SPEED)
 		_play_run_animation()
@@ -175,6 +194,19 @@ func _should_walk_chase() -> bool:
 	if los_lost_timer > 0.0 and not memorized_target_trail.is_empty():
 		return true
 	return los_lost_timer > 0.0
+
+func _is_player_grabbed_by_another_gnome(player: CharacterBody3D) -> bool:
+	if player == null:
+		return false
+	for gnome in get_tree().get_nodes_in_group("gnome"):
+		if gnome == self:
+			continue
+		if not is_instance_valid(gnome):
+			continue
+		var gp = gnome.get("grabbed_player")
+		if gp != null and gp == player:
+			return true
+	return false
 
 func _has_valid_target_player() -> bool:
 	if target_player == null:
@@ -362,6 +394,8 @@ func _update_attack_range_state(delta: float) -> void:
 	if is_stunned:
 		return
 
+	grab_initial_delay_timer = max(grab_initial_delay_timer - delta, 0.0)
+
 	if damage_action_cooldown_timer > 0.0:
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -407,11 +441,72 @@ func _pick_new_direction() -> void:
 func _reset_direction_timer() -> void:
 	direction_change_timer = randf_range(DIR_CHANGE_MIN, DIR_CHANGE_MAX)
 
+func _setup_damage_debug() -> void:
+	var hurtbox := get_node_or_null("Hurtbox") as Area3D
+	if hurtbox:
+		print("[GnomeDmg] Hurtbox found — layer=%d mask=%d monitorable=%s" % [
+			hurtbox.collision_layer, hurtbox.collision_mask, str(hurtbox.monitorable)])
+		if not hurtbox.area_entered.is_connected(_on_hurtbox_area_entered):
+			hurtbox.area_entered.connect(_on_hurtbox_area_entered)
+	else:
+		print("[GnomeDmg] WARNING: No Hurtbox node found — weapons cannot hit this gnome!")
+	print("[GnomeDmg] Gnome ready — health=%.1f damage_cooldown=%.2f hit_timer=%.2f" % [
+		health, damage_action_cooldown_timer, hit_reaction_timer])
+
+func _on_hurtbox_area_entered(area: Area3D) -> void:
+	if not debug_damage_logs:
+		return
+	var parent_name: String = area.get_parent().name if area.get_parent() else "<none>"
+	print("[GnomeDmg] hurtbox overlapped by area '%s' (parent: %s) layer=%d mask=%d" % [
+		area.name, parent_name, area.collision_layer, area.collision_mask])
+
+func _setup_oink_sounds() -> void:
+	var s1 := get_node_or_null("Sounds/OinkSound1") as AudioStreamPlayer3D
+	var s2 := get_node_or_null("Sounds/OinkSound2") as AudioStreamPlayer3D
+	var sp := get_node_or_null("Sounds/PainSound") as AudioStreamPlayer3D
+	if sp:
+		pain_player = sp
+	var sg := get_node_or_null("Sounds/GrabSound") as AudioStreamPlayer3D
+	if sg:
+		grab_sound_player = sg
+	var sa := get_node_or_null("Sounds/AttackSound") as AudioStreamPlayer3D
+	if sa:
+		attack_sound_player = sa
+	if s1:
+		oink_streams.append(s1.stream)
+		if oink_player == null:
+			oink_player = s1
+	if s2:
+		oink_streams.append(s2.stream)
+		if oink_player == null:
+			oink_player = s2
+	if oink_player == null:
+		# Fallback: create at runtime if scene nodes are missing
+		var fs1 := load("res://sounds/gnome/oink1.mp3") as AudioStream
+		var fs2 := load("res://sounds/gnome/oink2.mp3") as AudioStream
+		if fs1:
+			oink_streams.append(fs1)
+		if fs2:
+			oink_streams.append(fs2)
+		if not oink_streams.is_empty():
+			oink_player = AudioStreamPlayer3D.new()
+			add_child(oink_player)
+
+func _update_oink_sounds() -> void:
+	if oink_player == null or oink_streams.is_empty():
+		return
+	oink_sound_timer = max(oink_sound_timer - get_physics_process_delta_time(), 0.0)
+	if oink_sound_timer <= 0.0 and not oink_player.playing:
+		oink_sound_timer = randf_range(OINK_SOUND_INTERVAL_MIN, OINK_SOUND_INTERVAL_MAX)
+		oink_player.stream = oink_streams[randi() % oink_streams.size()]
+		oink_player.play()
+
 func _play_walk_animation() -> void:
 	if animation_player and animation_player.has_animation("walk"):
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("walk")
+	_update_oink_sounds()
 
 func _play_run_animation() -> void:
 	if not animation_player:
@@ -425,10 +520,27 @@ func _play_run_animation() -> void:
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.6
 			animation_player.play("walk")
+	_update_oink_sounds()
+
+func _update_grab_sound(delta: float) -> void:
+	if grab_sound_player == null:
+		return
+	grab_sound_timer = max(grab_sound_timer - delta, 0.0)
+	if grab_sound_timer <= 0.0 and not grab_sound_player.playing:
+		grab_sound_player.play()
+		grab_sound_timer = 1.0
+
+func _try_grab_damage() -> void:
+	if attack_swing_cooldown_timer > 0.0:
+		return
+	_try_apply_attack_swing_damage()
+	attack_swing_cooldown_timer = ATTACK_SWING_COOLDOWN
 
 func _play_grab_animation() -> void:
 	if not animation_player:
 		return
+
+	_update_grab_sound(get_physics_process_delta_time())
 
 	if animation_player.has_animation("grab"):
 		if animation_player.current_animation != "grab" or not animation_player.is_playing():
@@ -449,8 +561,10 @@ func _play_attack_animation() -> void:
 		return
 
 	if attack_swing_cooldown_timer > 0.0:
-		if not has_dealt_damage_this_attack and animation_player.current_animation == "attack" and animation_player.is_playing():
-			_try_frame_gated_attack_damage()
+		if animation_player.current_animation == "attack" and animation_player.is_playing():
+			if not has_dealt_damage_this_attack:
+				_try_frame_gated_attack_damage()
+			_try_play_attack_sound()
 		return
 
 	if animation_player.has_animation("attack"):
@@ -459,10 +573,26 @@ func _play_attack_animation() -> void:
 			animation_player.play("attack")
 			attack_swing_cooldown_timer = ATTACK_SWING_COOLDOWN
 			has_dealt_damage_this_attack = false
+			attack_sound_played_this_swing = false
 	elif animation_player.has_animation("run"):
 		if animation_player.current_animation != "run" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("run")
+
+func _try_play_attack_sound() -> void:
+	if attack_sound_played_this_swing:
+		return
+	if attack_sound_player == null:
+		return
+	var anim := animation_player.get_animation("attack")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	if animation_player.current_animation_position >= 14.0 / fps:
+		attack_sound_player.play()
+		attack_sound_played_this_swing = true
 
 func _try_frame_gated_attack_damage() -> void:
 	if has_dealt_damage_this_attack:
@@ -589,12 +719,8 @@ func _on_attack_range_body_entered(body: Node3D) -> void:
 		return
 
 	attack_range_player = body
-	if grab_reacquire_timer <= 0.0 and _can_grab_player_on_ground(attack_range_player) and _can_lock_player(attack_range_player):
-		grabbed_player = attack_range_player
-		_lock_grabbed_player(true)
-		grab_escape_jump_count = 0
-	else:
-		grabbed_player = null
+	grabbed_player = null
+	grab_initial_delay_timer = GRAB_INITIAL_DELAY
 	target_player = body
 	is_player_in_attack_range = true
 	last_visible_player_position = attack_range_player.global_position
@@ -608,6 +734,7 @@ func _on_attack_range_body_exited(body: Node3D) -> void:
 	_interrupt_grab(false)
 	is_player_in_attack_range = false
 	attack_range_player = null
+	grab_initial_delay_timer = 0.0
 
 func _lock_grabbed_player(locked: bool) -> void:
 	if grabbed_player == null:
@@ -631,9 +758,16 @@ func _exit_tree() -> void:
 	_interrupt_grab(false)
 
 func apply_damage(amount: float) -> void:
+	if debug_damage_logs:
+		print("[GnomeDmg] apply_damage called — amount=%.1f health=%.1f is_dead=%s hit_timer=%.2f dmg_cooldown=%.2f stun=%.2f" % [
+			amount, health, str(is_dead), hit_reaction_timer, damage_action_cooldown_timer, stun_timer])
 	if is_dead:
+		if debug_damage_logs:
+			print("[GnomeDmg] blocked — already dead")
 		return
 	if amount <= 0.0:
+		if debug_damage_logs:
+			print("[GnomeDmg] blocked — amount <= 0")
 		return
 
 	_interrupt_grab()
@@ -669,7 +803,14 @@ func _begin_hit_reaction() -> void:
 	hit_reaction_timer = max(hit_reaction_timer, _get_hit_reaction_duration())
 	velocity.x = 0.0
 	velocity.z = 0.0
-	_play_hit_animation()
+	if pain_player:
+		pain_player.stop()
+		pain_player.play()
+	var hit_animation_name := _get_hit_animation_name()
+	if animation_player and hit_animation_name != StringName():
+		animation_player.speed_scale = 1.0
+		animation_player.play(hit_animation_name)
+		animation_player.seek(0.0, true)
 
 func _get_hit_reaction_duration() -> float:
 	if animation_player == null:
@@ -704,7 +845,8 @@ func _play_hit_animation() -> void:
 	if hit_animation_name == StringName():
 		return
 
-	if animation_player.current_animation != hit_animation_name or not animation_player.is_playing():
+	# Only restart if a different animation is active — do not restart a finished hit anim.
+	if animation_player.current_animation != hit_animation_name:
 		animation_player.speed_scale = 1.0
 		animation_player.play(hit_animation_name)
 		animation_player.seek(0.0, true)
