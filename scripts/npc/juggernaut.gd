@@ -5,6 +5,7 @@ const GRAVITY = 20.0
 var animation_player: AnimationPlayer = null
 
 func _ready() -> void:
+	top_level = true
 	animation_player = _find_animation_player(self)
 
 func _physics_process(delta: float) -> void:

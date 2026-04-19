@@ -56,6 +56,7 @@ var sound_triggered_frame51: bool = false
 var prev_anim_position: float = 0.0
 
 func _ready():
+	top_level = true
 	_setup_bone_sounds()
 	call_deferred("_setup_player_reference")
 	call_deferred("_setup_animation_player")

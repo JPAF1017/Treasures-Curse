@@ -86,6 +86,7 @@ var attack_sound_player: AudioStreamPlayer3D = null
 var attack_sound_played_this_swing: bool = false
 
 func _ready() -> void:
+	top_level = true
 	randomize()
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7

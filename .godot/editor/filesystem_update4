@@ -4,3 +4,11 @@ res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 res://entities/gnome.tscn
 res://scripts/items/axe.gd
 res://assets/items/axe.tscn
+res://scripts/npc/charger.gd
+res://scripts/npc/fly.gd
+res://scripts/npc/juggernaut.gd
+res://scripts/npc/knight.gd
+res://scripts/npc/shambler.gd
+res://scripts/npc/shy.gd
+res://scripts/npc/statue.gd
+res://entities/charger.tscn

@@ -98,6 +98,7 @@ var original_collision_transform: Transform3D  # CollisionShape3D's original loc
 const SLOPE_ALIGN_SPEED = 10.0  # How fast to tilt toward the slope
 
 func _ready():
+	top_level = true
 	# Configure slope handling
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7

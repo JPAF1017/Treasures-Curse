@@ -9,13 +9,13 @@ DungeonRoom3D.gd::GDScript::7142279615129479639::1762067671::0::1::::DungeonRoom
 DungeonUtils.gd::GDScript::6070860448080015173::1762067671::0::1::::DungeonUtils<>Node<><>0<>0<><>::
 plugin.cfg::TextFile::-1::1762067671::0::1::::<><><>0<>0<><>::
 plugin.gd::GDScript::9070280916846602594::1762067671::0::1::::<>EditorPlugin<><>0<>1<><>::
-::res://addons/SimpleDungeons/debug_visuals/::1776478657
+::res://addons/SimpleDungeons/debug_visuals/::1776574772
 DebugAlert.gd::GDScript::4586560211018176867::1762067671::0::1::::<>Node3D<><>0<>1<><>::
 DebugAlert.tscn::PackedScene::7810854742127915647::1762067671::0::1::::<><><>0<>0<><>::res://addons/SimpleDungeons/debug_visuals/DebugAlert.gd<>uid://byywkosue8x0q::::res://addons/SimpleDungeons/res/warning-sign.svg
 DoorDebugVisual.tscn::PackedScene::5453507236684216206::1762067671::0::1::::<><><>0<>0<><>::uid://pq2fqq4ophsy::::res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 DungeonGenerator3DDebugView.gd::GDScript::4236237803941079560::1762067671::0::1::::<>Node3D<><>0<>1<><>::
 DungeonRoom3DDebugView.gd::GDScript::5308857045408188190::1762067671::0::1::::<>Node3D<><>0<>1<><>::
-WireframeColorMat.tres::ShaderMaterial::1087511852837068432::1776478657::0::1::::<><><>0<>0<><>::
+WireframeColorMat.tres::ShaderMaterial::1087511852837068432::1776574772::0::1::::<><><>0<>0<><>::
 WireframeCube.gd::GDScript::9185337655749715378::1762067671::0::1::::<>Node3D<><>0<>1<><>::
 WireframeCube.gdshader::Shader::8297571535039200518::1762067671::0::1::::<><><>0<>0<><>::
 WireframeCube.tscn::PackedScene::5128393708817932903::1762067671::0::1::::<><><>0<>0<><>::res://addons/SimpleDungeons/debug_visuals/WireframeCube.gd<>res://addons/SimpleDungeons/debug_visuals/WireframeCube.gdshader
@@ -116,8 +116,8 @@ shy_Character_Monster_04.png::CompressedTexture2D::7181381470346393237::17742578
 statue.glb::PackedScene::1510593441703868854::1771731956::1771731956::1::::<><><>0<>0<>5dd412a273fd5c932fa7aa0da5bca03c<>res://.godot/imported/statue.glb-6b76dd46a8db68f4ff4ee3a5e41af431.scn::uid://ctiqsadfr5e2q::::res://assets/entities/statue_Character_Monster.png
 statue_asset.tscn::PackedScene::5388983664721488496::1771747524::0::1::::<><><>0<>0<><>::uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb
 statue_Character_Monster.png::CompressedTexture2D::6123948039601339926::1771731956::1771731956::1::::<><><>0<>0<>4cc58f44abd0c873683c7bc5d154a863<>res://.godot/imported/statue_Character_Monster.png-921413577eb5e2972b1f59aab82df13b.s3tc.ctex::
-::res://assets/items/::1776483815
-axe.tscn::PackedScene::8932074124412475625::1775809492::0::1::::<><><>0<>0<><>::uid://bmlfruh6i6jy7::::res://assets/items assets/axe.glb<>uid://co8bhh042ynal::::res://scripts/items/axe.gd
+::res://assets/items/::1776578422
+axe.tscn::PackedScene::8932074124412475625::1776578422::0::1::::<><><>0<>0<><>::uid://bmlfruh6i6jy7::::res://assets/items assets/axe.glb<>uid://co8bhh042ynal::::res://scripts/items/axe.gd
 bat.tscn::PackedScene::1444874965088193290::1775902346::0::1::::<><><>0<>0<><>::uid://dnaa5r00sen4i::::res://scripts/items/bat.gd<>uid://c48nwvof1g61s::::res://assets/items assets/bat.glb
 health.tscn::PackedScene::1367903231968309377::1776071791::0::1::::<><><>0<>0<><>::uid://brxc7lsdw8lpi::::res://scripts/items/health.gd<>uid://binumxdf5knpu::::res://assets/items assets/health.glb
 projectile.tscn::PackedScene::5921567088140244708::1776483815::0::1::::<><><>0<>0<><>::
@@ -291,10 +291,10 @@ dungeon-pal.png::CompressedTexture2D::5414532902131510788::1775097564::177509756
 E.png::CompressedTexture2D::1968923782170495919::1775805110::1775805141::1::::<><><>0<>0<>fb90e7a9d53490f72916093102ba3fb4<>res://.godot/imported/E.png-8267d04f6e99024839105abde34685de.ctex::
 health.png::CompressedTexture2D::6310224808751936348::1776072005::1776072016::1::::<><><>0<>0<>8a04de077d835b2e725f88d0939a517d<>res://.godot/imported/health.png-c8e310077151d1ced46604f8ee9121ae.ctex::
 shovel.png::CompressedTexture2D::8140832654871042140::1775820251::1775820262::1::::<><><>0<>0<>1ed66d91ef882112a346aad2e3a8c36b<>res://.godot/imported/shovel.png-c0e04f0f10be4e50436bae97e92867cf.ctex::
-::res://entities/::1776487158
+::res://entities/::1776579336
 charger.tscn::PackedScene::7427386518598396720::1776085274::0::1::::<><><>0<>0<><>::uid://xpn4iswxe4os::::res://scripts/npc/charger.gd<>uid://crxg8ido3i1el::::res://assets/entities/Dog.glb
 fly.tscn::PackedScene::8405782706479971729::1776346376::0::1::::<><><>0<>0<><>::uid://bnycbgp6g7mtv::::res://assets/entities/fly.glb<>uid://dnn7b7050rnsm::::res://scripts/npc/fly.gd
-gnome.tscn::PackedScene::4131573415046098760::1775982131::0::1::::<><><>0<>0<><>::uid://kphtenejjocw::::res://scripts/npc/gnome.gd<>uid://ci68ejmir8osg::::res://assets/entities/gnome_asset.tscn
+gnome.tscn::PackedScene::4131573415046098760::1776579336::0::1::::<><><>0<>0<><>::uid://kphtenejjocw::::res://scripts/npc/gnome.gd<>uid://ci68ejmir8osg::::res://assets/entities/gnome_asset.tscn<>uid://bhtybmln3igc6::::res://sounds/gnome/attack.mp3<>uid://dwgqrofuti55t::::res://sounds/gnome/grab.mp3<>uid://bri62f7g5m72t::::res://sounds/gnome/oink1.mp3<>uid://dy5v4r7kch03o::::res://sounds/gnome/oink2.mp3<>uid://b053k5ceqn6qt::::res://sounds/gnome/pain.mp3
 juggernaut.tscn::PackedScene::8116386185876814507::1775196137::0::1::::<><><>0<>0<><>::uid://bisvnpcht4suy::::res://scripts/npc/juggernaut.gd<>uid://bdycjkv1k4dcu::::res://assets/entities/juggernaut.glb
 knight.tscn::PackedScene::2610388479320767619::1776335594::0::1::::<><><>0<>0<><>::uid://bkju4rh2uc0es::::res://assets/entities/knight.glb<>uid://cd2df45y6baat::::res://scripts/npc/knight.gd
 necroThread.tscn::PackedScene::8085803751725972811::1774530005::0::1::::<><><>0<>0<><>::uid://dwk3c8bwsc0th::::res://assets/entities/manSpider.glb
@@ -302,15 +302,15 @@ player.tscn::PackedScene::8482503836702461174::1776487158::0::1::::<><><>0<>0<><
 shambler.tscn::PackedScene::4817799820594666782::1776523334::0::1::::<><><>0<>0<><>::uid://d207knqhtqb1p::::res://scripts/npc/shambler.gd<>uid://brqj4rm1gwdto::::res://assets/entities/shambler.glb<>uid://clswi6rotlwcd::::res://sounds/shambler/step1.mp3<>uid://cu0cv2re800de::::res://sounds/shambler/step2.mp3<>uid://ufsoklr6p8e3::::res://sounds/shambler/step3.mp3<>uid://dggde1xmk1wx3::::res://sounds/shambler/wander1.mp3<>uid://bjgvxassylbwi::::res://sounds/shambler/wander2.mp3<>uid://bi5app7mwvqe7::::res://sounds/shambler/wander3.mp3<>uid://7v71jyi6r8j4::::res://sounds/shambler/wander4.mp3<>uid://d1naqxfftsdnt::::res://sounds/shambler/wander5.mp3<>uid://cx4gh3y230b0g::::res://sounds/shambler/attack1.mp3<>uid://cvogeksl32uhu::::res://sounds/shambler/attack2.mp3<>uid://gdn4thgo2dcj::::res://sounds/shambler/attack3.mp3<>uid://bndc5453d5hno::::res://sounds/shambler/attack4.mp3<>uid://ba7d0qdutj263::::res://sounds/shambler/attack5.mp3<>uid://b3m20yx5p0yff::::res://sounds/shambler/attack6.mp3
 shy.tscn::PackedScene::4762740145002689240::1776433427::0::1::::<><><>0<>0<><>::uid://cpeiqwo1rd3t8::::res://assets/entities/shy.glb<>uid://dqcdnr501prpx::::res://scripts/npc/shy.gd<>uid://cuaba0i3cve0::::res://sounds/shy/scream.mp3<>uid://cri3qff8w5aw::::res://sounds/shy/step1.mp3<>uid://vj880bvuijp8::::res://sounds/shy/step2.mp3<>uid://dvte71b2h15k::::res://sounds/shy/step3.mp3<>uid://c5ugd2j5g0krf::::res://sounds/shy/chasing.mp3<>uid://di6ed25tv0s3n::::res://sounds/shy/attack1.mp3<>uid://6g2tkhhti7vc::::res://sounds/shy/attack2.mp3<>uid://gtcdbl3127g6::::res://sounds/shy/attack3.mp3<>uid://do1q6ueiwetmu::::res://sounds/shy/attack4.mp3<>uid://b7tolqpmg1ol::::res://sounds/shy/breath1.mp3<>uid://t7q2yy60n61n::::res://sounds/shy/breath2.mp3<>uid://djky4igajmit7::::res://sounds/shy/breath3.mp3<>uid://ckdye3fr0dbw3::::res://sounds/shy/breath4.mp3<>uid://ng6j1h8rcju7::::res://sounds/shy/breath5.mp3
 statue.tscn::PackedScene::4364222465737322954::1776482668::0::1::::<><><>0<>0<><>::uid://ohuverafit7o::::res://scripts/npc/statue.gd<>uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb<>uid://btq3ir1iumhms::::res://sounds/statue/bones1.mp3<>uid://camjqeg48py1f::::res://sounds/statue/bones2.mp3<>uid://du5hdbi2y2rv::::res://sounds/statue/bones3.mp3<>uid://d1huaspbd7tip::::res://sounds/statue/bones4.mp3<>uid://bjysepnwcd5wn::::res://sounds/statue/bones5.mp3
-::res://levels/::1776487078
+::res://levels/::1776574772
 test map backup.tscn::PackedScene::4267208314936302595::1768017799::0::1::::<><><>0<>0<><>::uid://ds38umkop3txm::::res://entities/player.tscn<>uid://bqeu73gvoygbb::::res://addons/SimpleDungeons/DungeonGenerator3D.gd<>uid://bw0184ufe88px::::res://assets/rooms/stair.tscn<>uid://scxkscsgrow5::::res://assets/rooms/narrow.tscn<>uid://da7ty6ck0l2sl::::res://assets/rooms/big_room.tscn<>uid://djgwx2fo8gck3::::res://assets/rooms/l_shape_room.tscn<>uid://bugkkvou15g0f::::res://assets/rooms/bridge.tscn<>uid://cfoq1560fj5jf::::res://assets/rooms/treasure_room.tscn<>uid://dvdly7xo8rxig::::res://assets/rooms/corridor.tscn<>uid://cjnmq8wqhrf84::::res://assets/rooms/start_room.tscn
-test map.tscn::PackedScene::505655486333358223::1776487078::0::1::::<><><>0<>0<><>::uid://ds38umkop3txm::::res://entities/player.tscn<>uid://bqeu73gvoygbb::::res://addons/SimpleDungeons/DungeonGenerator3D.gd<>uid://dmh06o2y4u65n::::res://assets/rooms/spawn_shambler.tscn<>uid://bw0184ufe88px::::res://assets/rooms/stair.tscn<>uid://cjnmq8wqhrf84::::res://assets/rooms/start_room.tscn<>uid://dvdly7xo8rxig::::res://assets/rooms/corridor.tscn
+test map.tscn::PackedScene::505655486333358223::1776574772::0::1::::<><><>0<>0<><>::uid://ds38umkop3txm::::res://entities/player.tscn<>uid://bqeu73gvoygbb::::res://addons/SimpleDungeons/DungeonGenerator3D.gd<>uid://dfh2o4rqmfxq8::::res://assets/rooms/spawn_gnome.tscn<>uid://bw0184ufe88px::::res://assets/rooms/stair.tscn<>uid://cjnmq8wqhrf84::::res://assets/rooms/start_room.tscn<>uid://dvdly7xo8rxig::::res://assets/rooms/corridor.tscn
 ::res://menus/::1776406777
 start_menu.tscn::PackedScene::2660805312750059841::1776406777::0::1::::<><><>0<>0<><>::
 ::res://scripts/::1776486798
 player.gd::GDScript::7860289825015925474::1776524348::0::1::::<>CharacterBody3D<><>0<>0<><>::
 ::res://scripts/items/::1776077956
-axe.gd::GDScript::5823683269390956943::1776524022::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
+axe.gd::GDScript::5823683269390956943::1776577572::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
 bat.gd::GDScript::8071771524868046774::1776524022::0::1::::Bat<>RigidBody3D<><>0<>0<><>::
 health.gd::GDScript::3627290899003863034::1776524022::0::1::::<>RigidBody3D<><>0<>0<><>::
 MeleeItemSharedComponent.gd::GDScript::7278604385311045916::1775983481::0::1::::MeleeItemSharedComponent<>RefCounted<><>0<>0<><>::
@@ -322,7 +322,7 @@ EnemyDeathLingerComponent.gd::GDScript::8940946792397853270::1775830239::0::1:::
 EnemyLocomotionComponent.gd::GDScript::441470401969985677::1775098145::0::1::::EnemyLocomotionComponent<>RefCounted<><>0<>0<><>::
 EnemyPerceptionMemoryComponent.gd::GDScript::4902680277644045211::1775098285::0::1::::EnemyPerceptionMemoryComponent<>RefCounted<><>0<>0<><>::
 fly.gd::GDScript::8100500379503402940::1776434388::0::1::::<>CharacterBody3D<><>0<>0<><>::
-gnome.gd::GDScript::733313282094775466::1776432804::0::1::::<>CharacterBody3D<><>0<>0<><>::
+gnome.gd::GDScript::733313282094775466::1776579264::0::1::::<>CharacterBody3D<><>0<>0<><>::
 juggernaut.gd::GDScript::2986389295823756160::1774848206::0::1::::<>CharacterBody3D<><>0<>0<><>::
 knight.gd::GDScript::5039338748260939659::1776432804::0::1::::<>CharacterBody3D<><>0<>0<><>::
 NavigationUtils.gd::GDScript::7424022917554956822::1776409773::0::1::::NavigationUtils<>RefCounted<><>0<>0<><>::
@@ -330,8 +330,16 @@ NPCKnockbackComponent.gd::GDScript::4514494447575375801::1775903283::0::1::::NPC
 shambler.gd::GDScript::9107931782729739543::1776523702::0::1::::<>CharacterBody3D<><>0<>0<><>::
 shy.gd::GDScript::8286618611507328913::1776433427::0::1::::<>CharacterBody3D<><>0<>0<><>::
 statue.gd::GDScript::998346533100298730::1776483055::0::1::::<>CharacterBody3D<><>0<>0<><>::
-::res://sounds/::1776574124
-::res://sounds/gnome/::1776574134
+::res://sounds/::1776579875
+::res://sounds/charger/::1776579889
+attack.mp3::AudioStreamMP3::2803378029556662560::1776579889::1776579890::1::::<><><>0<>0<>697b2729843c019aec45ee56eec16ce9<>res://.godot/imported/attack.mp3-1a90a191258f208e63957f1707aef7c1.mp3str::
+breathe.mp3::AudioStreamMP3::1237749249010292943::1776579889::1776579890::1::::<><><>0<>0<>1205e0ed126eaba9daedf1f97a801f46<>res://.godot/imported/breathe.mp3-9d6a1a21a1230adba0c6d32938652628.mp3str::
+growl.mp3::AudioStreamMP3::4110635021723412838::1776579889::1776579890::1::::<><><>0<>0<>488c3d073c2004a9346b20981648c1c8<>res://.godot/imported/growl.mp3-3497f973c63277a72044d4ee774c819d.mp3str::
+idle.mp3::AudioStreamMP3::4113222229298247877::1776579889::1776579890::1::::<><><>0<>0<>186469f81521b9bdf78e35b2a874168e<>res://.godot/imported/idle.mp3-4d903b5425067a12c05f1036f762e614.mp3str::
+pain.mp3::AudioStreamMP3::3078714078955828934::1776579889::1776579890::1::::<><><>0<>0<>91fdee89a83bf188a91d9fedebd6a838<>res://.godot/imported/pain.mp3-0117d45741d0151f152c990cc0c40b67.mp3str::
+step.mp3::AudioStreamMP3::2859709567945859053::1776579889::1776579890::1::::<><><>0<>0<>efd336719ac4c57776ff79fe363e7cf9<>res://.godot/imported/step.mp3-6b2b193dcb20980c6a9e8ce270312872.mp3str::
+swoosh idk.mp3::AudioStreamMP3::3993619331644236658::1776579889::1776579890::1::::<><><>0<>0<>98a394889db299d795b8ec9fdbc3fb9d<>res://.godot/imported/swoosh idk.mp3-50dd0908f9c101778d757d976f4c5c3b.mp3str::
+::res://sounds/gnome/::1776574135
 attack.mp3::AudioStreamMP3::2918425408008213211::1776574134::1776574135::1::::<><><>0<>0<>37712311af6ad636a05a372f8b041976<>res://.godot/imported/attack.mp3-766951c08fd3752588a9ae8832778d2f.mp3str::
 grab.mp3::AudioStreamMP3::8716805452006394039::1776574134::1776574135::1::::<><><>0<>0<>0a48c556503a1a112937b535bf000aa5<>res://.godot/imported/grab.mp3-1c83d38297d3bd44f4c9b9b75a924789.mp3str::
 oink1.mp3::AudioStreamMP3::3598076803147026601::1776574134::1776574135::1::::<><><>0<>0<>f668f359c58387722f38150323f8212a<>res://.godot/imported/oink1.mp3-a15474dc20272589983b63e4e6f87ac1.mp3str::

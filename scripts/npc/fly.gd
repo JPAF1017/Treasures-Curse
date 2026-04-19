@@ -75,6 +75,7 @@ var previous_has_line_of_sight: bool = false
 var wall_follow_mode: int = 0
 
 func _ready() -> void:
+	top_level = true
 	randomize()
 	space_state = get_world_3d().direct_space_state
 	animation_player = _find_animation_player(self)

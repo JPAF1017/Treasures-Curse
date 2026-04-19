@@ -73,6 +73,7 @@ var last_run_frame: int = -1
 var triggered_step_frames: Array[int] = []
 
 func _ready() -> void:
+	top_level = true
 	randomize()
 	floor_snap_length = 0.7
 	animation_player = _find_animation_player(self)

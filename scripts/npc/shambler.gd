@@ -90,6 +90,7 @@ var attack_sound_triggered: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
+	top_level = true
 	randomize()
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7

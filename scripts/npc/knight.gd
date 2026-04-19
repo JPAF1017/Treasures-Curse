@@ -100,6 +100,7 @@ var last_visible_player_position: Vector3 = Vector3.ZERO
 var memorized_target_trail: Array[Vector3] = []
 
 func _ready() -> void:
+	top_level = true
 	randomize()
 	space_state = get_world_3d().direct_space_state
 	animation_player = _find_animation_player(self)
