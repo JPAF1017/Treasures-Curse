@@ -90,6 +90,20 @@ var is_stunned: bool = false
 var stun_timer: float = 0.0
 var knockback_component = EnemyKnockback.new()
 var stun_walk_visual_active: bool = false
+var step_sound_player: AudioStreamPlayer3D = null
+var step_sound_last_frame: int = -1
+var run_step_sound_last_frame: int = -1
+var attack_sound_player: AudioStreamPlayer3D = null
+var attack_sound_played_this_lunge: bool = false
+var pain_sound_player: AudioStreamPlayer3D = null
+var breath_sound_player: AudioStreamPlayer3D = null
+var breath_sound_timer: float = 0.0
+const BREATH_SOUND_COOLDOWN: float = 1.5
+var idle_sound_player: AudioStreamPlayer3D = null
+var idle_sound_timer: float = 0.0
+var growl_sound_player: AudioStreamPlayer3D = null
+const WALK_STEP_FRAMES: Array[int] = [5, 15, 27]
+const RUN_STEP_FRAMES: Array[int] = [3, 5, 9]
 
 # Slope alignment
 var ground_normal: Vector3 = Vector3.UP  # Smoothed ground normal
@@ -137,6 +151,13 @@ func _ready():
 	
 	# Enable shadows on all mesh instances in the dog model
 	_enable_shadows($Dog)
+	step_sound_player = get_node_or_null("Sounds/StepSound") as AudioStreamPlayer3D
+	attack_sound_player = get_node_or_null("Sounds/AttackSound") as AudioStreamPlayer3D
+	pain_sound_player = get_node_or_null("Sounds/PainSound") as AudioStreamPlayer3D
+	breath_sound_player = get_node_or_null("Sounds/BreathSound") as AudioStreamPlayer3D
+	idle_sound_player = get_node_or_null("Sounds/IdleSound") as AudioStreamPlayer3D
+	idle_sound_timer = randf_range(2.0, 3.0)
+	growl_sound_player = get_node_or_null("Sounds/GrowlSound") as AudioStreamPlayer3D
 
 func _on_detector_body_entered(body):
 	if body.is_in_group("player") and _can_detect_crouching_player(body):
@@ -219,6 +240,8 @@ func _start_charge():
 		elif animation_player.has_animation("walk"):
 			animation_player.play("walk")
 			animation_player.speed_scale = 2.0
+	if growl_sound_player:
+		growl_sound_player.play()
 
 func _end_lunge():
 	"""End the lunge and begin decelerating"""
@@ -240,6 +263,7 @@ func _execute_lunge(direction: Vector3):
 	has_damaged_during_lunge = false
 	lunge_timer = 0.0
 	lunge_elapsed = 0.0
+	attack_sound_played_this_lunge = false
 	lunge_direction = direction
 	
 	# Snap rotation to face the lunge direction immediately
@@ -268,6 +292,8 @@ func _physics_process(delta):
 	debug_log_timer = max(debug_log_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
 	backup_initiate_cooldown_timer = max(backup_initiate_cooldown_timer - delta, 0.0)
+	breath_sound_timer = max(breath_sound_timer - delta, 0.0)
+	idle_sound_timer = max(idle_sound_timer - delta, 0.0)
 	_refresh_player_detection()
 
 	# Apply gravity
@@ -315,11 +341,15 @@ func _physics_process(delta):
 	if is_lunging:
 		lunge_elapsed += delta
 		_try_apply_lunge_damage()
+		_try_play_lunge_attack_sound()
 		if lunge_elapsed >= LUNGE_DURATION:
 			_end_lunge()
 	
 	# Handle post-lunge deceleration (inertia)
 	if is_decelerating:
+		# Lunge animation may still be playing into the decel phase — keep checking for the attack sound
+		if animation_player and animation_player.current_animation == "lunge":
+			_try_play_lunge_attack_sound()
 		decel_timer += delta
 		var t = clamp(decel_timer / LUNGE_DECEL_TIME, 0.0, 1.0)
 		velocity.x = decel_velocity.x * (1.0 - t)
@@ -356,6 +386,9 @@ func _physics_process(delta):
 			if animation_player.has_animation("walk"):
 				if not animation_player.is_playing() or animation_player.current_animation != "walk":
 					animation_player.play_backwards("walk")
+				_try_play_walk_step_sound()
+				_try_play_breath_sound()
+				_try_play_idle_sound()
 		
 		# Check if backup time is up
 		if backup_timer >= BACKUP_TIME:
@@ -377,6 +410,7 @@ func _physics_process(delta):
 			if animation_player.has_animation("run"):
 				if not animation_player.is_playing() or animation_player.current_animation != "run":
 					animation_player.play("run")
+				_try_play_run_step_sound()
 			elif animation_player.has_animation("walk"):
 				if not animation_player.is_playing() or animation_player.current_animation != "walk":
 					animation_player.play("walk")
@@ -484,6 +518,8 @@ func _physics_process(delta):
 						if not animation_player.is_playing() or animation_player.current_animation != "walk":
 							animation_player.play("walk")
 						animation_player.speed_scale = 1.0  # Ensure normal speed
+						_try_play_walk_step_sound()
+						_try_play_idle_sound()
 					else:
 						print("WARNING: Walk animation not found!")
 		else:
@@ -587,6 +623,71 @@ func _physics_process(delta):
 	# Align visuals and collision to slope
 	_align_to_slope(delta)
 
+func _try_play_lunge_attack_sound() -> void:
+	if attack_sound_played_this_lunge or attack_sound_player == null or animation_player == null:
+		return
+	if not animation_player.is_playing() or animation_player.current_animation != "lunge":
+		return
+	var anim := animation_player.get_animation("lunge")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	if animation_player.current_animation_position >= 18.0 / fps:
+		attack_sound_player.play()
+		attack_sound_played_this_lunge = true
+
+func _try_play_breath_sound() -> void:
+	if breath_sound_player == null or breath_sound_timer > 0.0:
+		return
+	breath_sound_player.stop()
+	breath_sound_player.play()
+	breath_sound_timer = BREATH_SOUND_COOLDOWN
+
+func _try_play_idle_sound() -> void:
+	if idle_sound_player == null or idle_sound_timer > 0.0:
+		return
+	idle_sound_player.stop()
+	idle_sound_player.play()
+	idle_sound_timer = randf_range(2.0, 3.0)
+
+func _try_play_run_step_sound() -> void:
+	if step_sound_player == null or animation_player == null:
+		return
+	var anim := animation_player.get_animation("run")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	var current_frame := int(animation_player.current_animation_position * fps)
+	if current_frame != run_step_sound_last_frame:
+		for step_frame in RUN_STEP_FRAMES:
+			if current_frame == step_frame:
+				step_sound_player.stop()
+				step_sound_player.play()
+				break
+		run_step_sound_last_frame = current_frame
+
+func _try_play_walk_step_sound() -> void:
+	if step_sound_player == null or animation_player == null:
+		return
+	var anim := animation_player.get_animation("walk")
+	if anim == null:
+		return
+	var fps := 30.0
+	if anim.step > 0.0:
+		fps = 1.0 / anim.step
+	var current_frame := int(animation_player.current_animation_position * fps)
+	if current_frame != step_sound_last_frame:
+		for step_frame in WALK_STEP_FRAMES:
+			if current_frame == step_frame:
+				step_sound_player.stop()
+				step_sound_player.play()
+				break
+		step_sound_last_frame = current_frame
+
 func apply_damage(amount: float) -> void:
 	if is_dead:
 		return
@@ -627,6 +728,9 @@ func apply_knockback(direction: Vector3, strength: float) -> void:
 
 func _begin_hit_reaction() -> void:
 	hit_reaction_timer = max(hit_reaction_timer, _get_hurt_reaction_duration())
+	if pain_sound_player:
+		pain_sound_player.stop()
+		pain_sound_player.play()
 	# Hurt should take priority over ongoing charge/lunge logic.
 	is_backing_up = false
 	is_charging = false
@@ -707,6 +811,10 @@ func _die() -> void:
 	is_decelerating = false
 	has_damaged_during_lunge = false
 	velocity = Vector3.ZERO
+
+	if pain_sound_player:
+		pain_sound_player.stop()
+		pain_sound_player.play()
 
 	await EnemyDeathLinger.run_death_linger(
 		self,
@@ -892,6 +1000,8 @@ func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_p
 			if not animation_player.is_playing() or animation_player.current_animation != "walk":
 				animation_player.play("walk")
 			animation_player.speed_scale = 1.0
+			_try_play_breath_sound()
+			_try_play_idle_sound()
 		return true
 
 	if cooldown_spacing_mode != "APPROACH":
@@ -906,6 +1016,8 @@ func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_p
 		if not animation_player.is_playing() or animation_player.current_animation != "walk":
 			animation_player.play("walk")
 		animation_player.speed_scale = 1.0
+		_try_play_breath_sound()
+		_try_play_idle_sound()
 
 	return true
 
