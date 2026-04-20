@@ -68,10 +68,12 @@ var players_in_detection: Array = []
 var target_player: Node3D = null
 var is_biting: bool = false
 var has_dealt_bite_damage: bool = false
+var has_played_bite_sound: bool = false
 var bite_cooldown_timer: float = 0.0
 var needle_area: Area3D = null
 var is_needle_attacking: bool = false
 var has_dealt_needle_damage: bool = false
+var has_played_needle_sound: bool = false
 var needle_cooldown_timer: float = 0.0
 var is_stunned: bool = false
 var stun_timer: float = 0.0
@@ -84,6 +86,11 @@ var memorized_target_trail: Array[Vector3] = []
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
 var wall_follow_mode: int = 0
+var hurt_sound_player: AudioStreamPlayer3D = null
+var death_sound_player: AudioStreamPlayer3D = null
+var walk_sound_player: AudioStreamPlayer3D = null
+var bite_sound_player: AudioStreamPlayer3D = null
+var fly_sound_player: AudioStreamPlayer3D = null
 
 func _ready() -> void:
 	top_level = true
@@ -104,6 +111,19 @@ func _ready() -> void:
 		hurtbox_vert_fly.add_to_group("hurtbox")
 		hurtbox_vert_fly.collision_layer = 2
 		hurtbox_vert_fly.collision_mask = 0
+	hurt_sound_player = get_node_or_null("Sounds/HurtSound") as AudioStreamPlayer3D
+	death_sound_player = get_node_or_null("Sounds/DeathSound") as AudioStreamPlayer3D
+	walk_sound_player = get_node_or_null("Sounds/WalkSound") as AudioStreamPlayer3D
+	bite_sound_player = get_node_or_null("Sounds/BiteSound") as AudioStreamPlayer3D
+	fly_sound_player = get_node_or_null("Sounds/FlySound") as AudioStreamPlayer3D
+	if walk_sound_player:
+		var walk_stream := walk_sound_player.stream as AudioStreamMP3
+		if walk_stream:
+			walk_stream.loop = true
+	if fly_sound_player:
+		var fly_stream := fly_sound_player.stream as AudioStreamMP3
+		if fly_stream:
+			fly_stream.loop = true
 	detection_area = get_node_or_null("Detection")
 	bite_area = get_node_or_null("Attacks/Bite")
 	needle_area = get_node_or_null("Attacks/Needle")
@@ -148,9 +168,12 @@ func _physics_process(delta: float) -> void:
 			velocity.y = height_diff * FLOAT_SPEED
 		if not has_dealt_needle_damage:
 			_try_apply_needle_damage()
+		if not has_played_needle_sound:
+			_try_play_needle_sound()
 		if animation_player and not animation_player.is_playing():
 			is_needle_attacking = false
 			has_dealt_needle_damage = false
+			has_played_needle_sound = false
 			needle_cooldown_timer = NEEDLE_COOLDOWN
 		move_and_slide()
 		return
@@ -166,9 +189,12 @@ func _physics_process(delta: float) -> void:
 				velocity.y = 0.0
 		if not has_dealt_bite_damage:
 			_try_apply_bite_damage()
+		if not has_played_bite_sound:
+			_try_play_bite_sound()
 		if animation_player and not animation_player.is_playing():
 			is_biting = false
 			has_dealt_bite_damage = false
+			has_played_bite_sound = false
 			bite_cooldown_timer = BITE_COOLDOWN
 		move_and_slide()
 		return
@@ -424,9 +450,14 @@ func apply_damage(amount: float) -> void:
 		return
 	is_biting = false
 	has_dealt_bite_damage = false
+	has_played_bite_sound = false
 	is_needle_attacking = false
 	has_dealt_needle_damage = false
+	has_played_needle_sound = false
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	if hurt_sound_player:
+		hurt_sound_player.stop()
+		hurt_sound_player.play()
 	_play_hit_animation()
 
 func apply_stun_state(duration: float) -> void:
@@ -434,11 +465,16 @@ func apply_stun_state(duration: float) -> void:
 		return
 	is_biting = false
 	has_dealt_bite_damage = false
+	has_played_bite_sound = false
 	is_needle_attacking = false
 	has_dealt_needle_damage = false
+	has_played_needle_sound = false
 	is_stunned = true
 	stun_timer = duration
 	hit_reaction_timer = max(hit_reaction_timer, HIT_REACTION_DURATION)
+	if hurt_sound_player:
+		hurt_sound_player.stop()
+		hurt_sound_player.play()
 	_play_hit_animation()
 
 func take_damage(amount: float) -> void:
@@ -553,11 +589,25 @@ func _can_bite() -> bool:
 func _start_bite() -> void:
 	is_biting = true
 	has_dealt_bite_damage = false
+	has_played_bite_sound = false
 	velocity.x = 0.0
 	velocity.z = 0.0
 	if animation_player and animation_player.has_animation("bite"):
 		animation_player.speed_scale = 1.0
 		animation_player.play("bite")
+
+func _try_play_bite_sound() -> void:
+	if not animation_player or animation_player.current_animation != "bite":
+		return
+	var anim := animation_player.get_animation("bite")
+	if not anim:
+		return
+	var current_frame := int(round(animation_player.current_animation_position * BITE_ANIMATION_FPS))
+	if current_frame >= 16:
+		has_played_bite_sound = true
+		if bite_sound_player:
+			bite_sound_player.stop()
+			bite_sound_player.play()
 
 func _try_apply_bite_damage() -> void:
 	if not _is_in_bite_active_frames():
@@ -602,11 +652,22 @@ func _can_needle_attack() -> bool:
 func _start_needle_attack() -> void:
 	is_needle_attacking = true
 	has_dealt_needle_damage = false
+	has_played_needle_sound = false
 	velocity.x = 0.0
 	velocity.z = 0.0
 	if animation_player and animation_player.has_animation("needleAttack"):
 		animation_player.speed_scale = 1.0
 		animation_player.play("needleAttack")
+
+func _try_play_needle_sound() -> void:
+	if not animation_player or animation_player.current_animation != "needleAttack":
+		return
+	var current_frame := int(round(animation_player.current_animation_position * NEEDLE_ANIMATION_FPS))
+	if current_frame >= 10:
+		has_played_needle_sound = true
+		if bite_sound_player:
+			bite_sound_player.stop()
+			bite_sound_player.play()
 
 func _try_apply_needle_damage() -> void:
 	if not _is_in_needle_active_frames():
@@ -644,6 +705,14 @@ func _die() -> void:
 	is_floating = false
 	is_preparing_to_fly = false
 	velocity = Vector3.ZERO
+
+	if death_sound_player:
+		death_sound_player.stop()
+		death_sound_player.play()
+	if walk_sound_player:
+		walk_sound_player.stop()
+	if fly_sound_player:
+		fly_sound_player.stop()
 
 	if was_floating:
 		# Fall to the ground first
@@ -703,10 +772,18 @@ func _play_walk_animation() -> void:
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
 			animation_player.play("walk")
+	if fly_sound_player:
+		fly_sound_player.stop()
+	if walk_sound_player and not walk_sound_player.playing:
+		walk_sound_player.play()
 
 func _play_idle_animation() -> void:
 	if not animation_player:
 		return
+	if walk_sound_player:
+		walk_sound_player.stop()
+	if fly_sound_player:
+		fly_sound_player.stop()
 	if animation_player.has_animation("idle"):
 		if animation_player.current_animation != "idle" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0
@@ -717,6 +794,10 @@ func _play_idle_animation() -> void:
 func _play_air_animation() -> void:
 	if not animation_player:
 		return
+	if walk_sound_player:
+		walk_sound_player.stop()
+	if fly_sound_player and not fly_sound_player.playing:
+		fly_sound_player.play()
 	if animation_player.has_animation("idleFly"):
 		if animation_player.current_animation != "idleFly" or not animation_player.is_playing():
 			animation_player.speed_scale = 1.0

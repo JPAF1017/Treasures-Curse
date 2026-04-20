@@ -2,6 +2,11 @@
 
 [ext_resource type="PackedScene" uid="uid://bnycbgp6g7mtv" path="res://assets/entities/fly.glb" id="1_m7jbi"]
 [ext_resource type="Script" uid="uid://dnn7b7050rnsm" path="res://scripts/npc/fly.gd" id="1_xmgs0"]
+[ext_resource type="AudioStream" uid="uid://dv5tj2tq680eg" path="res://sounds/fly/bite.mp3" id="3_bite"]
+[ext_resource type="AudioStream" uid="uid://b8sd2l8032f26" path="res://sounds/fly/fly.mp3" id="3_fly"]
+[ext_resource type="AudioStream" uid="uid://df16xth0mak6k" path="res://sounds/fly/noise2.mp3" id="3_hurt"]
+[ext_resource type="AudioStream" uid="uid://blbfuosgvm7mq" path="res://sounds/fly/walk.mp3" id="3_walk"]
+[ext_resource type="AudioStream" uid="uid://nnayx0drxnky" path="res://sounds/fly/noise1.mp3" id="4_0se4s"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_m7jbi"]
 radius = 1.809082
@@ -71,6 +76,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.4191141)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Attacks/Needle" unique_id=1581635224]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2601986, 0.16711426, 2.1063728)
 shape = SubResource("CylinderShape3D_pxlef")
+
+[node name="Sounds" type="Node3D" parent="." unique_id=900000001]
+
+[node name="HurtSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=900000002]
+stream = ExtResource("3_hurt")
+unit_size = 4.0
+max_distance = 20.0
+
+[node name="DeathSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=900000003]
+stream = ExtResource("4_0se4s")
+unit_size = 4.0
+max_distance = 20.0
+
+[node name="WalkSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=900000004]
+stream = ExtResource("3_walk")
+volume_db = -5.0
+unit_size = 4.0
+max_distance = 20.0
+
+[node name="BiteSound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=900000005]
+stream = ExtResource("3_bite")
+unit_size = 4.0
+max_distance = 20.0
+
+[node name="FlySound" type="AudioStreamPlayer3D" parent="Sounds" unique_id=900000006]
+stream = ExtResource("3_fly")
+unit_size = 4.0
+max_distance = 20.0
 
 [node name="Detection" type="Area3D" parent="." unique_id=862142689]
 
