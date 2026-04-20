@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
+const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 1.5
@@ -119,6 +120,9 @@ func _physics_process(delta: float) -> void:
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
 
 	_update_step_sounds()
+
+	if SmokeAggro.suppress_aggro_if_in_smoke(self):
+		current_state = State.WANDER
 
 	if current_state == State.SCREAMING:
 		_update_scream_state(delta)

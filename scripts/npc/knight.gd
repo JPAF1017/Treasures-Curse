@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
+const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 4.0
@@ -248,6 +249,7 @@ func _physics_process(delta: float) -> void:
 		return
 	
 	_update_target()
+	SmokeAggro.suppress_aggro_if_in_smoke(self)
 
 	# Slide attack in progress takes priority
 	if is_slide_attacking:

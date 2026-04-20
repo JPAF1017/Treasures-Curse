@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
+const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 # Movement constants
 const WALK_SPEED = 10.0
@@ -265,7 +266,7 @@ func _physics_process(delta):
 	was_trying_to_move = false
 	
 	# Chase player if found and in range
-	if player and is_instance_valid(player):
+	if player and is_instance_valid(player) and not SmokeAggro.is_inside_smoke(self):
 		var distance_to_player = global_position.distance_to(player.global_position)
 		var space_state := get_world_3d().direct_space_state
 		var has_line_of_sight = NavigationUtils.has_line_of_sight_to(self, player.global_position + Vector3(0, 1.0, 0), space_state, [self, player])

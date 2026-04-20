@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
+const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 const GRAVITY := 20.0
 const WALK_SPEED := 3.0
@@ -144,6 +145,7 @@ func _physics_process(delta: float) -> void:
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
 	_refresh_player_detection()
+	SmokeAggro.suppress_aggro_if_in_smoke(self)
 
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
 

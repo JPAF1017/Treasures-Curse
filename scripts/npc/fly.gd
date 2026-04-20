@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
+const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 2.0
@@ -151,6 +152,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_target_player()
+	SmokeAggro.suppress_aggro_if_in_smoke(self)
 	bite_cooldown_timer = max(bite_cooldown_timer - delta, 0.0)
 	needle_cooldown_timer = max(needle_cooldown_timer - delta, 0.0)
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)

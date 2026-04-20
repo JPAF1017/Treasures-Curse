@@ -16,6 +16,7 @@ const DAMAGE_OVERLAY_MAX_ALPHA = 0.7
 const DAMAGE_OVERLAY_FADE_TIME = 0.35
 const SMOKE_OVERLAY_COLOR := Color(0.75, 0.75, 0.75, 0.55)
 const SMOKE_OVERLAY_FADE_SPEED := 3.0
+const SMOKE_OVERLAY_TEXTURE_PATH := "res://assets/items assets/smoke.jpeg"
 const SMOKE_EFFECT_SCRIPT: Script = preload("res://scripts/items/smoke_effect.gd")
 const DAMAGE_TILT_ANGLE_DEG = 20.5
 const DAMAGE_TILT_DURATION = 0.35
@@ -103,7 +104,7 @@ var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
 var damage_overlay_tween: Tween = null
 var damage_tilt_tween: Tween = null
-var smoke_overlay: ColorRect = null
+var smoke_overlay: TextureRect = null
 var hotbar_slots: Array[NinePatchRect] = []
 var hotbar_slot_base_scales: Array[Vector2] = []
 var hotbar_item_icons: Array[TextureRect] = []
@@ -589,11 +590,19 @@ func _setup_smoke_overlay() -> void:
 	smoke_canvas.name = "SmokeOverlayLayer"
 	smoke_canvas.layer = 0
 	add_child(smoke_canvas)
-	smoke_overlay = ColorRect.new()
+	smoke_overlay = TextureRect.new()
 	smoke_overlay.name = "SmokeOverlay"
-	smoke_overlay.color = Color(SMOKE_OVERLAY_COLOR.r, SMOKE_OVERLAY_COLOR.g, SMOKE_OVERLAY_COLOR.b, 0.0)
+	var smoke_tex := load(SMOKE_OVERLAY_TEXTURE_PATH) as Texture2D
+	if smoke_tex:
+		smoke_overlay.texture = smoke_tex
+	smoke_overlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	smoke_overlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	smoke_overlay.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	smoke_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	smoke_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var smoke_mat := ShaderMaterial.new()
+	smoke_mat.shader = load("res://assets/items/smoke_overlay.gdshader") as Shader
+	smoke_overlay.material = smoke_mat
 	smoke_canvas.add_child(smoke_overlay)
 
 
@@ -609,8 +618,8 @@ func _update_smoke_overlay(delta: float) -> void:
 			inside = true
 			break
 	var target_alpha := SMOKE_OVERLAY_COLOR.a if inside else 0.0
-	var current_alpha := smoke_overlay.color.a
-	smoke_overlay.color.a = move_toward(current_alpha, target_alpha, SMOKE_OVERLAY_FADE_SPEED * delta)
+	var current_alpha := smoke_overlay.modulate.a
+	smoke_overlay.modulate.a = move_toward(current_alpha, target_alpha, SMOKE_OVERLAY_FADE_SPEED * delta)
 
 
 func _setup_damage_overlay() -> void:

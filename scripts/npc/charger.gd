@@ -3,6 +3,7 @@ extends CharacterBody3D
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyKnockback := preload("res://scripts/npc/NPCKnockbackComponent.gd")
+const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 const HEALTH_MAX = 20.0
 const GRAVITY = 20.0
@@ -295,6 +296,7 @@ func _physics_process(delta):
 	breath_sound_timer = max(breath_sound_timer - delta, 0.0)
 	idle_sound_timer = max(idle_sound_timer - delta, 0.0)
 	_refresh_player_detection()
+	SmokeAggro.suppress_aggro_if_in_smoke(self)
 
 	# Apply gravity
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)

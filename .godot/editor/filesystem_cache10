@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1776669108
+::res://::1776691303
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1762067671::1762067671::1::::<><><>0<>0<>4ef53fe4fa71720005a197a89e551d5b<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
 ::res://addons/::1762181518
@@ -116,17 +116,18 @@ shy_Character_Monster_04.png::CompressedTexture2D::7181381470346393237::17742578
 statue.glb::PackedScene::1510593441703868854::1771731956::1771731956::1::::<><><>0<>0<>5dd412a273fd5c932fa7aa0da5bca03c<>res://.godot/imported/statue.glb-6b76dd46a8db68f4ff4ee3a5e41af431.scn::uid://ctiqsadfr5e2q::::res://assets/entities/statue_Character_Monster.png
 statue_asset.tscn::PackedScene::5388983664721488496::1771747524::0::1::::<><><>0<>0<><>::uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb
 statue_Character_Monster.png::CompressedTexture2D::6123948039601339926::1771731956::1771731956::1::::<><><>0<>0<>4cc58f44abd0c873683c7bc5d154a863<>res://.godot/imported/statue_Character_Monster.png-921413577eb5e2972b1f59aab82df13b.s3tc.ctex::
-::res://assets/items/::1776670043
+::res://assets/items/::1776673422
 axe.tscn::PackedScene::8932074124412475625::1776578422::0::1::::<><><>0<>0<><>::uid://bmlfruh6i6jy7::::res://assets/items assets/axe.glb<>uid://co8bhh042ynal::::res://scripts/items/axe.gd
 bat.tscn::PackedScene::1444874965088193290::1775902346::0::1::::<><><>0<>0<><>::uid://dnaa5r00sen4i::::res://scripts/items/bat.gd<>uid://c48nwvof1g61s::::res://assets/items assets/bat.glb
 health.tscn::PackedScene::1367903231968309377::1776660575::0::1::::<><><>0<>0<><>::uid://brxc7lsdw8lpi::::res://scripts/items/health.gd<>uid://binumxdf5knpu::::res://assets/items assets/health.glb
 projectile.tscn::PackedScene::5921567088140244708::1776483815::0::1::::<><><>0<>0<><>::
-smoke_effect.tscn::PackedScene::3859159970958085098::1776670119::0::1::::<><><>0<>0<><>::uid://rjmj5ys2d5d5::::res://scripts/items/smoke_effect.gd
 shovel.tscn::PackedScene::7361508600567735026::1775820830::0::1::::<><><>0<>0<><>::uid://4ohdemwq642m::::res://scripts/items/shovel.gd<>uid://caxmjfgpmtj3p::::res://assets/items assets/shovel.glb
 smoke.tscn::PackedScene::1707998657463874165::1776668453::0::1::::<><><>0<>0<><>::uid://10ufa7exkmxw::::res://scripts/items/smoke.gd<>uid://wml68e52wrji::::res://assets/items assets/smoke.glb
-smoke_inner.gdshader::Shader::1162984334811657967::1776670167::0::1::::<><><>0<>0<><>::
-smoke_outer.gdshader::Shader::3816609527725199355::1776670167::0::1::::<><><>0<>0<><>::
-::res://assets/items assets/::1776669788
+smoke_effect.tscn::PackedScene::3859159970958085098::1776673422::0::1::::<><><>0<>0<><>::uid://rjmj5ys2d5d5::::res://scripts/items/smoke_effect.gd<>uid://dc66rgf7csgtt::::res://assets/items assets/smoke.jpeg<>uid://bum2abrn6xtt8::::res://assets/items/smoke_outer.gdshader<>uid://qtmggqqls2nj::::res://assets/items/smoke_inner.gdshader
+smoke_inner.gdshader::Shader::1162984334811657967::1776673422::0::1::::<><><>0<>0<><>::
+smoke_outer.gdshader::Shader::3816609527725199355::1776673422::0::1::::<><><>0<>0<><>::
+smoke_ring.gdshader::Shader::6575844316335550020::1776670339::0::1::::<><><>0<>0<><>::
+::res://assets/items assets/::1776670169
 axe.glb::PackedScene::3251729968805415052::1775203839::1775203840::1::::<><><>0<>0<>f719e6f3f97828219d90d77b2636bde8<>res://.godot/imported/axe.glb-a925616b067e46062e370197227014e6.scn::uid://c6vbmfjcspa75::::res://assets/items assets/axe_Axe_Material_BaseColor.png
 axe_Axe_Material_BaseColor.png::CompressedTexture2D::6992129876155592566::1775203840::1775203840::1::::<><><>0<>0<>93fe1f7ec4720fb5b87c9b9e839baa02<>res://.godot/imported/axe_Axe_Material_BaseColor.png-2c2c44805fe582dbb8fc356fc5ab2037.s3tc.ctex::
 bat.glb::PackedScene::6877272032024794866::1775900637::1775900638::1::::<><><>0<>0<>3bf1c5ad38151fbc42c8d50c16624d55<>res://.godot/imported/bat.glb-c4223eb8284238e057841cdc898276ca.scn::uid://dfk83oy2kkwq1::::res://assets/items assets/bat_BaseballBats_Raw_BloodAndGrime.png
@@ -263,7 +264,7 @@ wall_ruin.tscn::PackedScene::2573341297620335204::1767885108::0::1::::<><><>0<>0
 wall_table.tscn::PackedScene::3728069911466426354::1762067671::0::1::::<><><>0<>0<><>::uid://b5gqms30p52g2::::res://assets/PSX_Dungeon/wall_table.glb
 windowed_wall_01.tscn::PackedScene::3697782764746732926::1762067671::0::1::::<><><>0<>0<><>::uid://diwqb1obx4n84::::res://assets/PSX_Dungeon/Models/Windowed_Wall_01.fbx<>uid://lcnmdb7guh5r::::res://assets/PSX_Dungeon/Textures/Dungeon_Map.png
 windowed_wall_02.tscn::PackedScene::4891954925115385243::1767798561::0::1::::<><><>0<>0<><>::uid://ckwghygbxqwmj::::res://assets/PSX_Dungeon/Models/Windowed_Wall_02.fbx<>uid://lcnmdb7guh5r::::res://assets/PSX_Dungeon/Textures/Dungeon_Map.png
-::res://assets/rooms/::1776072380
+::res://assets/rooms/::1776671907
 big_room.tscn::PackedScene::7226520252927186435::1767660845::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://drc5sh8egqajx::::res://assets/room assets/stairs.tscn<>uid://dp6j0b5dhrjx8::::res://assets/room assets/block_half.tscn<>uid://d4b5hb4e4emkt::::res://assets/room assets/skull_wall.tscn<>uid://bo6jeems25wnu::::res://assets/room assets/wall_border_02.tscn<>uid://b73y1fuhewrxj::::res://assets/room assets/pillar.tscn<>uid://c5tachymoo3s2::::res://assets/room assets/wall_01.tscn<>uid://brta7m5puqnyt::::res://assets/room assets/crate.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://dyce2eifprojb::::res://assets/room assets/barrel.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn
 bridge.tscn::PackedScene::3803209976407075967::1767805990::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://cbxx1va3hslot::::res://assets/room assets/windowed_wall_02.tscn<>uid://c5tachymoo3s2::::res://assets/room assets/wall_01.tscn<>uid://b73y1fuhewrxj::::res://assets/room assets/pillar.tscn<>uid://bo6jeems25wnu::::res://assets/room assets/wall_border_02.tscn<>uid://d1e1ffdtkokq8::::res://assets/room assets/torch.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://b62ceuey58ead::::res://assets/room assets/spikes.tscn
 corridor.gd::GDScript::3023721409076912995::1762067671::0::1::::<>DungeonRoom3D<><>0<>1<><>::
@@ -281,7 +282,7 @@ spawn_shambler.tscn::PackedScene::8017552881610971701::1774512051::0::1::::<><><
 spawn_shy.tscn::PackedScene::3118995453922728399::1774625790::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://d4b5hb4e4emkt::::res://assets/room assets/skull_wall.tscn<>uid://o7in1t7fk86v::::res://assets/room assets/door_frame_01.tscn<>uid://bh6l5evgdyhpq::::res://assets/room assets/door_03.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://b84dvtkhuaktk::::res://entities/shy.tscn
 spawn_statue.tscn::PackedScene::72191472280701839::1774361600::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://d4b5hb4e4emkt::::res://assets/room assets/skull_wall.tscn<>uid://o7in1t7fk86v::::res://assets/room assets/door_frame_01.tscn<>uid://bh6l5evgdyhpq::::res://assets/room assets/door_03.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://b3gcdu8ssg3lu::::res://entities/statue.tscn
 stair.tscn::PackedScene::3983823814899198209::1774270482::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://drc5sh8egqajx::::res://assets/room assets/stairs.tscn<>uid://c5tachymoo3s2::::res://assets/room assets/wall_01.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn
-start_room.tscn::PackedScene::5432136815540194699::1776072380::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn<>uid://cs4tf1k5iewuj::::res://assets/room assets/door_01.tscn<>uid://b73y1fuhewrxj::::res://assets/room assets/pillar.tscn<>uid://d0i07q7hajshl::::res://assets/items/axe.tscn<>uid://dc478au7umvs1::::res://assets/items/shovel.tscn<>uid://ut54514ild5k::::res://assets/items/bat.tscn<>uid://tqvfwlkbwja4::::res://assets/items/health.tscn
+start_room.tscn::PackedScene::5432136815540194699::1776671907::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn<>uid://cs4tf1k5iewuj::::res://assets/room assets/door_01.tscn<>uid://b73y1fuhewrxj::::res://assets/room assets/pillar.tscn<>uid://d0i07q7hajshl::::res://assets/items/axe.tscn<>uid://ylmqur8jrsqv::::res://assets/items/smoke.tscn<>uid://dc478au7umvs1::::res://assets/items/shovel.tscn<>uid://ut54514ild5k::::res://assets/items/bat.tscn<>uid://tqvfwlkbwja4::::res://assets/items/health.tscn
 treasure_room.tscn::PackedScene::5153706401391388839::1767943810::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://tml4ayda8oy6::::res://assets/room assets/chest.tscn<>uid://dp6j0b5dhrjx8::::res://assets/room assets/block_half.tscn<>uid://drc5sh8egqajx::::res://assets/room assets/stairs.tscn<>uid://b73y1fuhewrxj::::res://assets/room assets/pillar.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn<>uid://defgp8i1a5vem::::res://assets/room assets/arch_roof.tscn<>uid://d2wnqnpsexqi1::::res://assets/room assets/arch.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://d1e1ffdtkokq8::::res://assets/room assets/torch.tscn<>uid://c5tachymoo3s2::::res://assets/room assets/wall_01.tscn
 ::res://assets/scene_entity/::1775102901
 charger.tscn::PackedScene::8995800778055222439::1775102901::0::1::::<><><>0<>0<><>::uid://crxg8ido3i1el::::res://assets/entities/Dog.glb
@@ -315,16 +316,16 @@ test map.tscn::PackedScene::505655486333358223::1776600860::0::1::::<><><>0<>0<>
 ::res://menus/::1776406777
 start_menu.tscn::PackedScene::2660805312750059841::1776406777::0::1::::<><><>0<>0<><>::
 ::res://scripts/::1776486798
-player.gd::GDScript::7860289825015925474::1776524348::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1776673928::0::1::::<>CharacterBody3D<><>0<>0<><>::
 ::res://scripts/items/::1776669822
 axe.gd::GDScript::5823683269390956943::1776605208::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
 bat.gd::GDScript::8071771524868046774::1776524022::0::1::::Bat<>RigidBody3D<><>0<>0<><>::
 health.gd::GDScript::3627290899003863034::1776524022::0::1::::<>RigidBody3D<><>0<>0<><>::
 MeleeItemSharedComponent.gd::GDScript::7278604385311045916::1775983481::0::1::::MeleeItemSharedComponent<>RefCounted<><>0<>0<><>::
 MeleeViewmodelComponent.gd::GDScript::1319044425994665230::1776175512::0::1::::MeleeViewmodelComponent<>RefCounted<><>0<>0<><>::
-smoke_effect.gd::GDScript::1212536031321311876::1776670119::0::1::::<>Node3D<><>0<>0<><>::
 shovel.gd::GDScript::2064808360044123086::1776524021::0::1::::Shovel<>RigidBody3D<><>0<>0<><>::
-smoke.gd::GDScript::1877742696911816596::1776668727::0::1::::<>RigidBody3D<><>0<>0<><>::
+smoke.gd::GDScript::1877742696911816596::1776672043::0::1::::<>RigidBody3D<><>0<>0<><>::
+smoke_effect.gd::GDScript::1212536031321311876::1776673667::0::1::::<>Node3D<><>0<>0<><>::
 ::res://scripts/npc/::1775970618
 charger.gd::GDScript::1646150627938634418::1776583138::0::1::::<>CharacterBody3D<><>0<>0<><>::
 EnemyDeathLingerComponent.gd::GDScript::8940946792397853270::1775830239::0::1::::EnemyDeathLingerComponent<>RefCounted<><>0<>0<><>::
