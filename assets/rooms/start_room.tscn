@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cs4tf1k5iewuj" path="res://assets/room assets/door_01.tscn" id="5_gnk4p"]
 [ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="6_nq55u"]
 [ext_resource type="PackedScene" uid="uid://d0i07q7hajshl" path="res://assets/items/axe.tscn" id="7_gnk4p"]
+[ext_resource type="PackedScene" uid="uid://ylmqur8jrsqv" path="res://assets/items/smoke.tscn" id="7_qx1m2"]
 [ext_resource type="PackedScene" uid="uid://dc478au7umvs1" path="res://assets/items/shovel.tscn" id="8_nq55u"]
 [ext_resource type="PackedScene" uid="uid://ut54514ild5k" path="res://assets/items/bat.tscn" id="9_ucdpm"]
 [ext_resource type="PackedScene" uid="uid://tqvfwlkbwja4" path="res://assets/items/health.tscn" id="10_heqaq"]
@@ -69,5 +70,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 3)
 [node name="Bat" parent="." unique_id=2062871578 instance=ExtResource("9_ucdpm")]
 transform = Transform3D(0.9659258, -0.25881904, 0, 0.25881904, 0.9659258, 0, 0, 0, 1, 1, 0, 4)
 
-[node name="Health" parent="." unique_id=1919651728 instance=ExtResource("10_heqaq")]
+[node name="Health" parent="." unique_id=1443525504 instance=ExtResource("10_heqaq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 3)
+
+[node name="Smoke" parent="." unique_id=1919651728 instance=ExtResource("7_qx1m2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 3)

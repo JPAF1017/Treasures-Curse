@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://ylmqur8jrsqv"]
+
+[ext_resource type="Script" uid="uid://10ufa7exkmxw" path="res://scripts/items/smoke.gd" id="1_g1ei5"]
+[ext_resource type="PackedScene" uid="uid://wml68e52wrji" path="res://assets/items assets/smoke.glb" id="2_g1ei5"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_t73jc"]
+radius = 1.1621094
+height = 3.0821533
+
+[node name="Smoke" type="RigidBody3D" unique_id=1919651728]
+script = ExtResource("1_g1ei5")
+
+[node name="smoke" parent="." unique_id=1011059225 instance=ExtResource("2_g1ei5")]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=769325705]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0.11213815, 0)
+shape = SubResource("CapsuleShape3D_t73jc")

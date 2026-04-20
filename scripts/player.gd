@@ -14,6 +14,9 @@ const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
 const BLOOD_OVERLAY_PATH = "res://assets/ui/BloodOverlay.png"
 const DAMAGE_OVERLAY_MAX_ALPHA = 0.7
 const DAMAGE_OVERLAY_FADE_TIME = 0.35
+const SMOKE_OVERLAY_COLOR := Color(0.75, 0.75, 0.75, 0.55)
+const SMOKE_OVERLAY_FADE_SPEED := 3.0
+const SMOKE_EFFECT_SCRIPT: Script = preload("res://scripts/items/smoke_effect.gd")
 const DAMAGE_TILT_ANGLE_DEG = 20.5
 const DAMAGE_TILT_DURATION = 0.35
 const JUMP_STAMINA_COST = 20.0
@@ -41,6 +44,7 @@ const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
+const SMOKE_ITEM_SCRIPT: Script = preload("res://scripts/items/smoke.gd")
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
@@ -99,6 +103,7 @@ var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
 var damage_overlay_tween: Tween = null
 var damage_tilt_tween: Tween = null
+var smoke_overlay: ColorRect = null
 var hotbar_slots: Array[NinePatchRect] = []
 var hotbar_slot_base_scales: Array[Vector2] = []
 var hotbar_item_icons: Array[TextureRect] = []
@@ -118,6 +123,7 @@ func _ready():
 	_setup_stamina_ui()
 	_setup_health_ui()
 	_setup_damage_overlay()
+	_setup_smoke_overlay()
 	_setup_hotbar_ui()
 	_select_hotbar_slot(0)
 	_update_stamina_ui()
@@ -201,6 +207,7 @@ func _physics_process(delta):
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
+	_update_smoke_overlay(delta)
 	var is_movement_locked := _is_movement_locked() or stun_timer > 0.0
 	var input_dir := Vector2.ZERO
 	if not is_movement_locked:
@@ -577,6 +584,35 @@ func _update_health_ui() -> void:
 	health_bar_fill.modulate = health_color_normal
 	previous_health = health
 
+func _setup_smoke_overlay() -> void:
+	var smoke_canvas := CanvasLayer.new()
+	smoke_canvas.name = "SmokeOverlayLayer"
+	smoke_canvas.layer = 0
+	add_child(smoke_canvas)
+	smoke_overlay = ColorRect.new()
+	smoke_overlay.name = "SmokeOverlay"
+	smoke_overlay.color = Color(SMOKE_OVERLAY_COLOR.r, SMOKE_OVERLAY_COLOR.g, SMOKE_OVERLAY_COLOR.b, 0.0)
+	smoke_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	smoke_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	smoke_canvas.add_child(smoke_overlay)
+
+
+func _update_smoke_overlay(delta: float) -> void:
+	if smoke_overlay == null:
+		return
+	var inside := false
+	for effect in SMOKE_EFFECT_SCRIPT.active_effects:
+		if not is_instance_valid(effect):
+			continue
+		var dist := global_position.distance_to(effect.global_position)
+		if dist < effect.get_world_radius():
+			inside = true
+			break
+	var target_alpha := SMOKE_OVERLAY_COLOR.a if inside else 0.0
+	var current_alpha := smoke_overlay.color.a
+	smoke_overlay.color.a = move_toward(current_alpha, target_alpha, SMOKE_OVERLAY_FADE_SPEED * delta)
+
+
 func _setup_damage_overlay() -> void:
 	previous_health = health
 	if player_canvas_layer == null:
@@ -704,13 +740,16 @@ func _get_selected_hotbar_item() -> Node3D:
 	return selected_item
 
 func _is_primary_item_model(item_model: Node) -> bool:
-	return item_model is Axe or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model)
+	return item_model is Axe or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model)
 
 func _is_shovel_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
 
 func _is_health_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == HEALTH_ITEM_SCRIPT
+
+func _is_smoke_item_model(item_model: Node) -> bool:
+	return item_model != null and item_model.get_script() == SMOKE_ITEM_SCRIPT
 
 func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()
@@ -778,7 +817,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Axe or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body):
+	if item_body is Axe or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body):
 		if _has_item_in_hotbar(item_body):
 			return
 
@@ -797,7 +836,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 func _try_auto_equip_item() -> void:
 	if _find_first_empty_hotbar_slot() == -1:
 		return
-	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
+	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
 
 	var item_body := _get_pickup_candidate()
@@ -817,7 +856,7 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")))))
+	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance"))))))
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
@@ -843,6 +882,10 @@ func _get_pickup_candidate() -> RigidBody3D:
 	var shovel_candidate := SHOVEL_ITEM_SCRIPT.call("find_shovel_rigidbody_from_node", collider) as RigidBody3D
 	if shovel_candidate:
 		return shovel_candidate
+
+	var smoke_candidate := SMOKE_ITEM_SCRIPT.call("find_smoke_rigidbody_from_node", collider) as RigidBody3D
+	if smoke_candidate:
+		return smoke_candidate
 
 	return HEALTH_ITEM_SCRIPT.call("find_health_rigidbody_from_node", collider) as RigidBody3D
 

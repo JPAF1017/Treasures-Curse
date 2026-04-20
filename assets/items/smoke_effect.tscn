@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://bu8n2h3h7evtq"]
+
+[ext_resource type="Script" uid="uid://rjmj5ys2d5d5" path="res://scripts/items/smoke_effect.gd" id="1_wvdbb"]
+[ext_resource type="Texture2D" uid="uid://dc66rgf7csgtt" path="res://assets/items assets/smoke.jpeg" id="2_smoke"]
+[ext_resource type="Shader" uid="uid://bum2abrn6xtt8" path="res://assets/items/smoke_outer.gdshader" id="3_outer"]
+[ext_resource type="Shader" uid="uid://qtmggqqls2nj" path="res://assets/items/smoke_inner.gdshader" id="4_inner"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_outer"]
+render_priority = 0
+shader = ExtResource("3_outer")
+shader_parameter/smoke_texture = ExtResource("2_smoke")
+shader_parameter/color = Color(0.44291076, 0.44291076, 0.44291073, 1)
+shader_parameter/fade_size = 0.016
+shader_parameter/fade_blend = 0.364
+shader_parameter/smoke_sharpness = 0.6
+shader_parameter/time_scale = 0.15
+shader_parameter/height_fade = 3.4
+shader_parameter/scissor = 0.35
+shader_parameter/dissolve = 1.0
+shader_parameter/uv_scale = 3.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_outer"]
+radius = 1.0
+height = 2.0
+radial_segments = 32
+rings = 16
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_inner"]
+render_priority = 0
+shader = ExtResource("4_inner")
+shader_parameter/smoke_texture = ExtResource("2_smoke")
+shader_parameter/outer_color = Color(0.2231029, 0.2231029, 0.22310284, 1)
+shader_parameter/inner_color = Color(0.6174546, 0.61745465, 0.6174557, 1)
+shader_parameter/time_scale = 0.15
+shader_parameter/smoke_sharpness = 0.55
+shader_parameter/dissolve = 1.0
+shader_parameter/edge_pulse = 0.07
+shader_parameter/apply_inside = true
+shader_parameter/uv_scale = 3.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_inner"]
+radius = 0.95
+height = 1.9
+radial_segments = 32
+rings = 16
+
+[node name="SmokeEffect" type="Node3D" unique_id=838881080]
+transform = Transform3D(12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0)
+script = ExtResource("1_wvdbb")
+
+[node name="OuterSphere" type="MeshInstance3D" parent="." unique_id=100000001]
+material_override = SubResource("ShaderMaterial_outer")
+mesh = SubResource("SphereMesh_outer")
+
+[node name="InnerSphere" type="MeshInstance3D" parent="." unique_id=100000002]
+material_override = SubResource("ShaderMaterial_inner")
+mesh = SubResource("SphereMesh_inner")
