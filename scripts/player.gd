@@ -749,7 +749,7 @@ func _get_selected_hotbar_item() -> Node3D:
 	return selected_item
 
 func _is_primary_item_model(item_model: Node) -> bool:
-	return item_model is Axe or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model)
+	return item_model is Sword or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model)
 
 func _is_shovel_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
@@ -826,7 +826,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Axe or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body):
+	if item_body is Sword or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body):
 		if _has_item_in_hotbar(item_body):
 			return
 
@@ -845,7 +845,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 func _try_auto_equip_item() -> void:
 	if _find_first_empty_hotbar_slot() == -1:
 		return
-	if not (Axe.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
+	if not (Sword.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
 
 	var item_body := _get_pickup_candidate()
@@ -865,7 +865,7 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var pickup_distance: float = maxf(Axe.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance"))))))
+	var pickup_distance: float = maxf(Sword.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance"))))))
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
@@ -884,9 +884,9 @@ func _get_pickup_candidate() -> RigidBody3D:
 	if bat_candidate:
 		return bat_candidate
 
-	var axe_candidate := Axe.find_axe_rigidbody_from_node(collider)
-	if axe_candidate:
-		return axe_candidate
+	var sword_candidate := Sword.find_sword_rigidbody_from_node(collider)
+	if sword_candidate:
+		return sword_candidate
 
 	var shovel_candidate := SHOVEL_ITEM_SCRIPT.call("find_shovel_rigidbody_from_node", collider) as RigidBody3D
 	if shovel_candidate:
@@ -1104,7 +1104,7 @@ func _update_jump_animation_phase(delta: float) -> bool:
 		return false
 
 	# End jump phase immediately on landing so attacks aren't blocked
-	if is_on_floor():
+	if is_on_floor() and velocity.y <= 0.0:
 		jump_phase = JUMP_PHASE_NONE
 		jump_air_loop_frame = float(JUMP_AIR_LOOP_MIN_FRAME)
 		jump_air_loop_forward = true

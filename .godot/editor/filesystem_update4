@@ -1,9 +1,7 @@
-res://scripts/player.gd
+res://assets/room assets/wall_table.tscn
+res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://assets/items/smoke_outer.gdshader
+res://assets/items/smoke_inner.gdshader
 res://assets/items/smoke_overlay.gdshader
-res://scripts/npc/charger.gd
+res://assets/rooms/candle_puzzle.tscn
 res://scripts/npc/fly.gd
-res://scripts/npc/gnome.gd
-res://scripts/npc/knight.gd
-res://scripts/npc/shambler.gd
-res://scripts/npc/shy.gd
-res://scripts/npc/statue.gd

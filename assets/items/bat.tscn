@@ -1,18 +1,21 @@
 [gd_scene format=3 uid="uid://ut54514ild5k"]
 
 [ext_resource type="Script" uid="uid://dnaa5r00sen4i" path="res://scripts/items/bat.gd" id="1_3s535"]
-[ext_resource type="PackedScene" uid="uid://c48nwvof1g61s" path="res://assets/items assets/bat.glb" id="1_88ihb"]
+[ext_resource type="PackedScene" uid="uid://o01njqhk0f7u" path="res://assets/items assets/axe.glb" id="2_3s535"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_88ihb"]
 radius = 0.171875
-height = 1.9636841
+height = 1.9506111
 
 [node name="Bat" type="RigidBody3D" unique_id=2062871578]
 script = ExtResource("1_3s535")
-
-[node name="bat" parent="." unique_id=899643222 instance=ExtResource("1_88ihb")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+held_item_position = Vector3(0.03, 0.07, -0.5)
+held_item_scale = 0.7
+viewmodel_position = Vector3(0.5, -0.8, -0.45)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=98790780]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65975773, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9085008, 0.022047997)
 shape = SubResource("CapsuleShape3D_88ihb")
+
+[node name="axe" parent="." unique_id=327310807 instance=ExtResource("2_3s535")]
+transform = Transform3D(1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7, 0, 0, -0.03670627)

@@ -1,16 +1,19 @@
 [gd_scene format=3 uid="uid://dc478au7umvs1"]
 
 [ext_resource type="Script" uid="uid://4ohdemwq642m" path="res://scripts/items/shovel.gd" id="1_m86qi"]
-[ext_resource type="PackedScene" uid="uid://caxmjfgpmtj3p" path="res://assets/items assets/shovel.glb" id="1_xbb2e"]
+[ext_resource type="PackedScene" uid="uid://cuf724ak5uca" path="res://assets/items assets/mace.glb" id="2_m86qi"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_m86qi"]
-size = Vector3(0.17480469, 2.6401367, 0.4196167)
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hgduw"]
+radius = 0.21826172
+height = 2.1107788
 
 [node name="Shovel" type="RigidBody3D" unique_id=1957626746]
 script = ExtResource("1_m86qi")
-
-[node name="shovel" parent="." unique_id=1493856538 instance=ExtResource("1_xbb2e")]
+held_item_position = Vector3(0.009, 0.07, -0.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1296833946]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0014648438, -0.022705078, 0.0024108887)
-shape = SubResource("BoxShape3D_m86qi")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95600855, 0)
+shape = SubResource("CapsuleShape3D_hgduw")
+
+[node name="mace" parent="." unique_id=1580982179 instance=ExtResource("2_m86qi")]
+transform = Transform3D(1.9, 0, 0, 0, 1.9, 0, 0, 0, 1.9, 0, 0, 0)

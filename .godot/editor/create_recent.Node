@@ -1,7 +1,9 @@
+Node3D
+CSGBox3D
+DungeonRoom3D
 CollisionShape3D
 Area3D
 MeshInstance3D
-Node3D
 RigidBody3D
 CollisionPolygon3D
 Label
@@ -10,5 +12,3 @@ NinePatchRect
 TextureRect
 MenuBar
 CanvasLayer
-CharacterBody3D
-NavigationRegion3D

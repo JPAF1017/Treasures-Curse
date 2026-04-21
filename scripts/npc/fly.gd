@@ -92,6 +92,7 @@ var death_sound_player: AudioStreamPlayer3D = null
 var walk_sound_player: AudioStreamPlayer3D = null
 var bite_sound_player: AudioStreamPlayer3D = null
 var fly_sound_player: AudioStreamPlayer3D = null
+var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	top_level = true
@@ -211,8 +212,9 @@ func _physics_process(delta: float) -> void:
 		(animation_player.current_animation == "idleFlyHitReaction" and animation_player.is_playing())
 	)
 	if hit_reaction_timer > 0.0 or hit_anim_playing:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		velocity.x = knockback_velocity.x
+		velocity.z = knockback_velocity.z
+		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, delta * 12.0)
 		if is_floating:
 			_update_ground_height_from_raycast()
 			var desired_world_height = ground_height + target_height_above_ground
@@ -478,6 +480,13 @@ func apply_stun_state(duration: float) -> void:
 		hurt_sound_player.stop()
 		hurt_sound_player.play()
 	_play_hit_animation()
+
+func apply_knockback(direction: Vector3, strength: float) -> void:
+	if is_dead:
+		return
+	knockback_velocity.x = direction.x * strength
+	knockback_velocity.z = direction.z * strength
+	velocity.y = maxf(velocity.y, strength * 0.15)
 
 func take_damage(amount: float) -> void:
 	apply_damage(amount)

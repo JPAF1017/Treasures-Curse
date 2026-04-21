@@ -1,7 +1,7 @@
 extends RigidBody3D
 
 const SMOKE_SCENE_PATH := "res://assets/items/smoke.tscn"
-const SMOKE_ITEM_ICON: Texture2D = preload("res://assets/ui/health.png")
+const SMOKE_ITEM_ICON: Texture2D = preload("res://assets/ui/smoke.png")
 const SMOKE_MODEL_SCENE: PackedScene = preload("res://assets/items assets/smoke.glb")
 const SMOKE_EFFECT_SCENE: PackedScene = preload("res://assets/items/smoke_effect.tscn")
 static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()

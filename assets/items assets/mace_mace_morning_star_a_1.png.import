@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfk83oy2kkwq1"
-path.s3tc="res://.godot/imported/bat_BaseballBats_Raw_BloodAndGrime.png-7dca76e06b3f447ec99667d9117c161f.s3tc.ctex"
+uid="uid://cp4lvmwdxy5is"
+path.s3tc="res://.godot/imported/mace_mace_morning_star_a_1.png-98f07732f489c48d56e671ec240d674b.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "a0a573a00d72f50803de37cbe8e2f4bb"
+"md5": "9ff30a1708c0b44cd16ae5b4209405f7"
 }
 
 [deps]
 
-source_file="res://assets/items assets/bat_BaseballBats_Raw_BloodAndGrime.png"
-dest_files=["res://.godot/imported/bat_BaseballBats_Raw_BloodAndGrime.png-7dca76e06b3f447ec99667d9117c161f.s3tc.ctex"]
+source_file="res://assets/items assets/mace_mace_morning_star_a_1.png"
+dest_files=["res://.godot/imported/mace_mace_morning_star_a_1.png-98f07732f489c48d56e671ec240d674b.s3tc.ctex"]
 
 [params]
 

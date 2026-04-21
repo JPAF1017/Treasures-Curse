@@ -19,8 +19,8 @@ class HeldItemTransform:
 const SHOVEL_SCENE_PATH := "res://assets/items/shovel.tscn"
 const SHOVEL_ATTACHMENT_NODE_NAME := "RightHandShovelAttachment"
 static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
-const SHOVEL_ITEM_ICON: Texture2D = preload("res://assets/ui/shovel.png")
-const SHOVEL_MODEL_SCENE: PackedScene = preload("res://assets/items assets/shovel.glb")
+const SHOVEL_ITEM_ICON: Texture2D = preload("res://assets/ui/mace.png")
+const SHOVEL_MODEL_SCENE: PackedScene = preload("res://assets/items assets/mace.glb")
 const ViewmodelComponent = preload("res://scripts/items/MeleeViewmodelComponent.gd")
 var _viewmodel = ViewmodelComponent.new(SHOVEL_MODEL_SCENE, "ShovelViewmodel")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"

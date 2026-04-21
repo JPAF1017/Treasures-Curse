@@ -19,8 +19,8 @@ class HeldItemTransform:
 const BAT_SCENE_PATH := "res://assets/items/bat.tscn"
 const BAT_ATTACHMENT_NODE_NAME := "RightHandBatAttachment"
 static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
-const BAT_ITEM_ICON: Texture2D = preload("res://assets/ui/bat.png")
-const BAT_MODEL_SCENE: PackedScene = preload("res://assets/items assets/bat.glb")
+const BAT_ITEM_ICON: Texture2D = preload("res://assets/ui/axe.png")
+const BAT_MODEL_SCENE: PackedScene = preload("res://assets/items assets/axe.glb")
 const ViewmodelComponent = preload("res://scripts/items/MeleeViewmodelComponent.gd")
 var _viewmodel = ViewmodelComponent.new(BAT_MODEL_SCENE, "BatViewmodel")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"

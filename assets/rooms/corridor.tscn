@@ -48,7 +48,6 @@ transform = Transform3D(1.01, 0, 0, 0, 1, 0, 0, 0, 0.07, 0, -10.013, 9.81086)
 
 [node name="Torch" parent="Models/F_WALL" unique_id=1012974945 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(0.990099, 0, 0, 0, 0.9292742, 0.3693898, 0, -5.276997, 13.275346, 0, 10.013, -9.635712)
-visible = false
 
 [node name="B_WALL" parent="Models" unique_id=334974362 instance=ExtResource("4_nymqs")]
 transform = Transform3D(1.01, 0, 0, 0, 1, 0, 0, 0, 0.07, 0, -10.013, -9.8259)
@@ -67,7 +66,6 @@ transform = Transform3D(-4.41485e-08, 0, 0.07, 0, 1, 0, -1.01, 0, -3.0598e-09, -
 
 [node name="Torch" parent="Models/R_WALL" unique_id=1152558419 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(-3.98382e-08, -1.6910308e-08, -0.9900988, -0.3907311, 0.92050457, 0, 13.150068, 5.5818715, -6.244482e-07, -0.020753294, 10.013, 8.191269)
-visible = false
 
 [node name="Pillars" type="Node3D" parent="Models" unique_id=438006589]
 
