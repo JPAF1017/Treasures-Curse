@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Capstone"
-run/main_scene="uid://hg7cphhdmvh4"
+run/main_scene="uid://bd56csocojan6"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -24,7 +24,6 @@ config/icon="res://icon.svg"
 window/size/viewport_width=1366
 window/size/viewport_height=768
 window/size/mode=3
-window/vsync/vsync_mode=0
 
 [editor_plugins]
 

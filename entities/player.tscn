@@ -463,7 +463,6 @@ texture = ExtResource("7_6nm46")
 
 [node name="Interact" type="Control" parent="CanvasLayer/Control" unique_id=1333519528]
 visible = false
-mouse_filter = 2
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -476,6 +475,7 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Interact" unique_id=1432130651]
 layout_mode = 1
@@ -490,7 +490,6 @@ offset_right = 71.5
 offset_bottom = 41.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "interact"
 

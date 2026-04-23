@@ -203,8 +203,10 @@ class Door:
 			return false
 		return true
 	func get_room_leads_to() -> DungeonRoom3D:
+		if not is_instance_valid(room) or not is_instance_valid(room.dungeon_generator):
+			return null
 		var other_room = room.dungeon_generator.get_room_at_pos(exit_pos_grid)
-		if other_room == null: return null
+		if other_room == null or not is_instance_valid(other_room): return null
 		for door in other_room.get_doors():
 			if fits_other_door(door):
 				return other_room

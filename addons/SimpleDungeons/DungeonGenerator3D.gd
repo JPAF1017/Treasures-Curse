@@ -130,6 +130,13 @@ func _ready():
 	if generate_on_ready:
 		generate()
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		if running_thread != null and running_thread.is_started():
+			running_thread.wait_to_finish()
+		_quick_room_check_dict = {}
+		_quick_corridors_check_dict = {}
+
 func _process(delta):
 	if Engine.is_editor_hint():
 		# Debug view doesn't get added in Editor sometimes, like if you manually drag script on.
@@ -851,7 +858,14 @@ func get_room_at_pos(grid_pos : Vector3i) -> DungeonRoom3D:
 	if stage > BuildStage.CONNECT_ROOMS:
 		 # Can use these vars for speedup if past the connect rooms stage where we set them
 		var quick_check = _quick_room_check_dict.get(grid_pos)
-		return quick_check if quick_check else _quick_corridors_check_dict.get(grid_pos)
+		if quick_check and not is_instance_valid(quick_check):
+			quick_check = null
+		if quick_check:
+			return quick_check
+		var corridor_check = _quick_corridors_check_dict.get(grid_pos)
+		if corridor_check and not is_instance_valid(corridor_check):
+			return null
+		return corridor_check
 	for room in get_all_placed_and_preplaced_rooms():
 		if room.get_grid_aabbi(false).contains_point(grid_pos):
 			return room
