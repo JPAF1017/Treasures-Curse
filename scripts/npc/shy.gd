@@ -265,7 +265,7 @@ func _update_chase_state(delta: float) -> void:
 			_face_direction(chase_dir, delta, run_turn_speed)
 		_play_run_animation()
 
-func _update_attack_state(delta: float) -> void:
+func _update_attack_state(_delta: float) -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
 

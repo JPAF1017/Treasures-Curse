@@ -1004,7 +1004,7 @@ func _start_melee_attack(delta: float) -> void:
 		attack_cooldown_timer = ATTACK_COOLDOWN
 		_log_attack("melee_attack cancelled — animation '%s' not found" % attack_name)
 
-func _update_attack_state(delta: float) -> void:
+func _update_attack_state(_delta: float) -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
 

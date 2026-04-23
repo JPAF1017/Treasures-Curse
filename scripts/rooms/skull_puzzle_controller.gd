@@ -101,9 +101,9 @@ func _update_interact_prompt() -> void:
 	_set_interact_visible(aimed != null)
 
 
-func _set_interact_visible(is_visible: bool) -> void:
+func _set_interact_visible(visible_state: bool) -> void:
 	if _interact_control and is_instance_valid(_interact_control):
-		_interact_control.visible = is_visible
+		_interact_control.visible = visible_state
 
 
 func _try_place_skull(area: Area3D) -> void:

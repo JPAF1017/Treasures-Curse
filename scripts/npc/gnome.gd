@@ -459,7 +459,7 @@ func _setup_damage_debug() -> void:
 func _on_hurtbox_area_entered(area: Area3D) -> void:
 	if not debug_damage_logs:
 		return
-	var parent_name: String = area.get_parent().name if area.get_parent() else "<none>"
+	var parent_name: String = str(area.get_parent().name) if area.get_parent() else "<none>"
 	print("[GnomeDmg] hurtbox overlapped by area '%s' (parent: %s) layer=%d mask=%d" % [
 		area.name, parent_name, area.collision_layer, area.collision_mask])
 

@@ -533,9 +533,9 @@ func _compute_pursuit_target() -> Vector3:
 			los_lost_timer -= get_physics_process_delta_time()
 			if los_lost_timer <= 0.0:
 				return Vector3.ZERO
-			var trail_result := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
-			if bool(trail_result.get("has_target", false)):
-				return trail_result["target"]
+			var trail_result_early := NavigationUtils.get_trail_follow_target(global_position, memorized_target_trail, TRAIL_REACHED_DISTANCE)
+			if bool(trail_result_early.get("has_target", false)):
+				return trail_result_early["target"]
 			if last_visible_player_position != Vector3.ZERO:
 				var to_last := last_visible_player_position - global_position
 				to_last.y = 0.0

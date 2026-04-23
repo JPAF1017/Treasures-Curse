@@ -34,6 +34,7 @@ size = Vector3(1, 4.2387695, 2.5722656)
 
 [node name="Shambler" type="CharacterBody3D" unique_id=856872376]
 script = ExtResource("1_bhth7")
+debug_memory_logs = false
 
 [node name="shambler" parent="." unique_id=1058128852 instance=ExtResource("1_o6p7n")]
 transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 0.0050958907, -2, 0.0016005381)
@@ -83,57 +84,57 @@ volume_db = 3.0
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="WanderSound1" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="WanderSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1499396489]
 stream = ExtResource("5_wander1")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="WanderSound2" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="WanderSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1215398260]
 stream = ExtResource("6_wander2")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="WanderSound3" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="WanderSound3" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1192106830]
 stream = ExtResource("7_wander3")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="WanderSound4" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="WanderSound4" type="AudioStreamPlayer3D" parent="Sounds" unique_id=156324425]
 stream = ExtResource("8_wander4")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="WanderSound5" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="WanderSound5" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1296608873]
 stream = ExtResource("9_wander5")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="AttackSound1" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="AttackSound1" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1116455443]
 stream = ExtResource("10_attack1")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="AttackSound2" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="AttackSound2" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1647453805]
 stream = ExtResource("11_attack2")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="AttackSound3" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="AttackSound3" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1709035152]
 stream = ExtResource("12_attack3")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="AttackSound4" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="AttackSound4" type="AudioStreamPlayer3D" parent="Sounds" unique_id=548470226]
 stream = ExtResource("13_attack4")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="AttackSound5" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="AttackSound5" type="AudioStreamPlayer3D" parent="Sounds" unique_id=1481518656]
 stream = ExtResource("14_attack5")
 unit_size = 4.0
 max_distance = 20.0
 
-[node name="AttackSound6" type="AudioStreamPlayer3D" parent="Sounds"]
+[node name="AttackSound6" type="AudioStreamPlayer3D" parent="Sounds" unique_id=966913563]
 stream = ExtResource("15_attack6")
 unit_size = 4.0
 max_distance = 20.0

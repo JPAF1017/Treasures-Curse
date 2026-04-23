@@ -459,11 +459,9 @@ func _update_wander_movement(delta: float) -> void:
 	if in_move_window:
 		velocity.x = move_direction.x * WALK_SPEED
 		velocity.z = move_direction.z * WALK_SPEED
-		print("[Wander] MOVING - velocity: (%.2f, %.2f)" % [velocity.x, velocity.z])
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
-		print("[Wander] STOPPED - velocity: (0.0, 0.0)")
 	_face_direction(move_direction, delta)
 
 func _face_direction(direction: Vector3, delta: float) -> void:
