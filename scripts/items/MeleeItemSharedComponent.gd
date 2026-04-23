@@ -67,6 +67,7 @@ func set_item_physics_enabled(
 	body.freeze = not enabled
 	body.sleeping = not enabled
 	body.can_sleep = true
+	body.continuous_cd = enabled
 	body.mass = mass_value
 	body.linear_damp = linear_damp_value
 	body.angular_damp = angular_damp_value

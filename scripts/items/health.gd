@@ -125,6 +125,10 @@ func is_equipped_in_hand() -> bool:
 	return parent != null and parent == right_hand_attachment
 
 
+func release_primary_action(_player: Node) -> void:
+	pass
+
+
 func update_primary_action(player: Node, delta: float) -> bool:
 	_update_viewmodel_bob(player, delta)
 	return false

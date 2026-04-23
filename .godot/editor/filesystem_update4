@@ -1,7 +1,0 @@
-res://assets/room assets/wall_table.tscn
-res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://assets/items/smoke_outer.gdshader
-res://assets/items/smoke_inner.gdshader
-res://assets/items/smoke_overlay.gdshader
-res://assets/rooms/candle_puzzle.tscn
-res://scripts/npc/fly.gd

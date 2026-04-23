@@ -1,14 +1,58 @@
-[gd_scene load_steps=4 format=3 uid="uid://mx5lse0npag8"]
+[gd_scene format=3 uid="uid://mx5lse0npag8"]
 
 [ext_resource type="PackedScene" uid="uid://c0otir54fstst" path="res://assets/PSX_Dungeon/Models/Candle_02.fbx" id="1_aqdef"]
 [ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_ivnf6"]
+[ext_resource type="PackedScene" uid="uid://cvp45jmoq8e5j" path="res://assets/room assets/fire_particle.tscn" id="3_ivnf6"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uvjqq"]
 albedo_texture = ExtResource("2_ivnf6")
 texture_filter = 0
 
-[node name="Candle_02" instance=ExtResource("1_aqdef")]
+[sub_resource type="Gradient" id="Gradient_c02"]
+offsets = PackedFloat32Array(0, 0.503401, 1)
+colors = PackedColorArray(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_c02"]
+gradient = SubResource("Gradient_c02")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_c02_small"]
+emission_shape_scale = Vector3(0.2, 0.2, 0.2)
+emission_shape = 1
+emission_sphere_radius = 1.0
+gravity = Vector3(0, 2, 0)
+scale_min = 167.772
+scale_max = 167.772
+color_ramp = SubResource("GradientTexture1D_c02")
+
+[node name="Candle_02" unique_id=2044879858 instance=ExtResource("1_aqdef")]
 
 [node name="Cylinder_024" parent="." index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 material_override = SubResource("StandardMaterial3D_uvjqq")
+
+[node name="fire_particle" parent="." index="1" unique_id=1942414528 instance=ExtResource("3_ivnf6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9812174, 2.0635333, -0.51075447)
+
+[node name="Fire" parent="fire_particle"]
+process_material = SubResource("ParticleProcessMaterial_c02_small")
+
+[node name="Smoke" parent="fire_particle"]
+process_material = SubResource("ParticleProcessMaterial_c02_small")
+
+[node name="fire_particle2" parent="." index="2" unique_id=1924064007 instance=ExtResource("3_ivnf6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2587495, 0.43406463)
+
+[node name="Fire" parent="fire_particle2"]
+process_material = SubResource("ParticleProcessMaterial_c02_small")
+
+[node name="Smoke" parent="fire_particle2"]
+process_material = SubResource("ParticleProcessMaterial_c02_small")
+
+[node name="fire_particle3" parent="." index="3" unique_id=1950845655 instance=ExtResource("3_ivnf6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0205984, 3.9477353, -0.47347388)
+
+[node name="Fire" parent="fire_particle3"]
+process_material = SubResource("ParticleProcessMaterial_c02_small")
+
+[node name="Smoke" parent="fire_particle3"]
+process_material = SubResource("ParticleProcessMaterial_c02_small")

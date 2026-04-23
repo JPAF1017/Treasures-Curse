@@ -2,8 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://ds38umkop3txm" path="res://entities/player.tscn" id="1_yyqp4"]
 [ext_resource type="Script" uid="uid://bqeu73gvoygbb" path="res://addons/SimpleDungeons/DungeonGenerator3D.gd" id="2_rasb4"]
-[ext_resource type="PackedScene" uid="uid://bq7ox80pwkkj7" path="res://assets/rooms/spawn_fly.tscn" id="5_003he"]
+[ext_resource type="PackedScene" uid="uid://cch8nirmrnunk" path="res://assets/rooms/candle_puzzle.tscn" id="5_003he"]
 [ext_resource type="PackedScene" uid="uid://bw0184ufe88px" path="res://assets/rooms/stair.tscn" id="6_4d616"]
+[ext_resource type="PackedScene" uid="uid://hh0x2plnwp2j" path="res://assets/rooms/candle_puzzle2.tscn" id="6_7c0te"]
+[ext_resource type="PackedScene" uid="uid://wu5u2yv35nhd" path="res://assets/rooms/candle_puzzle3.tscn" id="7_jm5gf"]
 [ext_resource type="PackedScene" uid="uid://cjnmq8wqhrf84" path="res://assets/rooms/start_room.tscn" id="7_yyqp4"]
 [ext_resource type="PackedScene" uid="uid://dvdly7xo8rxig" path="res://assets/rooms/corridor.tscn" id="9_73k1s"]
 
@@ -36,24 +38,21 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0
 script = ExtResource("2_rasb4")
 room_scenes = Array[PackedScene]([ExtResource("6_4d616"), ExtResource("9_73k1s")])
 corridor_room_scene = ExtResource("9_73k1s")
-dungeon_size = Vector3i(5, 2, 5)
+dungeon_size = Vector3i(6, 2, 5)
 max_retries = 50
 metadata/_custom_type_script = "uid://bqeu73gvoygbb"
 
 [node name="StartRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2057079214 instance=ExtResource("7_yyqp4")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 20, -5, 0)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 25, -5, -2.1855692e-07)
 
-[node name="Corridor" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=237343406 instance=ExtResource("9_73k1s")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -5, 0)
+[node name="CandlePuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1505842369 instance=ExtResource("5_003he")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4, -5, -1.7484555e-07)
 
-[node name="Corridor2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1877544022 instance=ExtResource("9_73k1s")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0)
+[node name="CandlePuzzle2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2062432672 instance=ExtResource("6_7c0te")]
+transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, 25, -5, 19.999998)
 
-[node name="Corridor3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1044300545 instance=ExtResource("9_73k1s")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, -5, 0)
-
-[node name="SpawnFly" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2090395072 instance=ExtResource("5_003he")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20, -5, 8.742278e-07)
+[node name="CandlePuzzle3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1236636679 instance=ExtResource("7_jm5gf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, -5, -20.000002)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)

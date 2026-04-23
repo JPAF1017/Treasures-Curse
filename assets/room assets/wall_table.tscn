@@ -2,6 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://b5gqms30p52g2" path="res://assets/PSX_Dungeon/wall_table.glb" id="1_hxv2v"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hxv2v"]
+
 [node name="wall_table" unique_id=1158743613 instance=ExtResource("1_hxv2v")]
 
 [node name="CSGBox3D" type="CSGBox3D" parent="." index="1" unique_id=373335023]
@@ -9,3 +11,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4, 5)
 visible = false
 use_collision = true
 size = Vector3(20.05, 2.05, 10.05)
+material = SubResource("StandardMaterial3D_hxv2v")

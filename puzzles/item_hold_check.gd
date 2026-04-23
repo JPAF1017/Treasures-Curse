@@ -1,0 +1,45 @@
+extends Area3D
+
+@export var table_slot: int = 1
+
+const _SCENE_TO_SCRIPT: Dictionary = {
+	"res://assets/items/sword.tscn": "res://scripts/items/sword.gd",
+	"res://assets/items/bat.tscn": "res://scripts/items/bat.gd",
+	"res://assets/items/shovel.tscn": "res://scripts/items/shovel.gd",
+	"res://assets/items/health.tscn": "res://scripts/items/health.gd",
+	"res://assets/items/smoke.tscn": "res://scripts/items/smoke.gd",
+}
+
+var _satisfied: bool = false
+
+func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
+	body_entered.connect(_on_body_entered)
+	body_exited.connect(_on_body_exited)
+
+func _on_body_entered(body: Node3D) -> void:
+	if _satisfied:
+		return
+	if _check_item(body):
+		_satisfied = true
+		var room := owner
+		if room and room.has_method("on_item_hold_satisfied"):
+			room.call("on_item_hold_satisfied")
+
+func _on_body_exited(body: Node3D) -> void:
+	if _satisfied and _check_item(body):
+		_satisfied = false
+		var room := owner
+		if room and room.has_method("on_item_hold_unsatisfied"):
+			room.call("on_item_hold_unsatisfied")
+
+func _check_item(body: Node) -> bool:
+	var scr = body.get_script()
+	if scr == null:
+		return false
+	var expected_scene: String = TableItemSpawn.get_item_for_slot(table_slot)
+	if expected_scene.is_empty():
+		return false
+	var expected_script: String = _SCENE_TO_SCRIPT.get(expected_scene, "")
+	return scr.resource_path == expected_script

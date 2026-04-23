@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://btc5qwcqaetoi"]
+
+[ext_resource type="PackedScene" uid="uid://b5gqms30p52g2" path="res://assets/PSX_Dungeon/wall_table.glb" id="1_8rs3s"]
+[ext_resource type="PackedScene" uid="uid://mx5lse0npag8" path="res://assets/room assets/candle_02.tscn" id="2_d4uuh"]
+[ext_resource type="PackedScene" uid="uid://v57oy38j2rm5" path="res://assets/room assets/candle_03.tscn" id="3_fvny7"]
+[ext_resource type="Script" uid="uid://dq8mxn4vct2p1" path="res://puzzles/table_item_spawn.gd" id="4_8rs3s"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hxv2v"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_d4uuh"]
+
+[node name="wall_table" unique_id=1158743613 instance=ExtResource("1_8rs3s")]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." index="1" unique_id=373335023]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4, 5)
+visible = false
+use_collision = true
+size = Vector3(20.05, 2.05, 10.05)
+material = SubResource("StandardMaterial3D_hxv2v")
+
+[node name="Candle_02" parent="." index="2" unique_id=2044879858 instance=ExtResource("2_d4uuh")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -3, -3, 2)
+
+[node name="Candle_03" parent="." index="3" unique_id=1642470337 instance=ExtResource("3_fvny7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -3, 2)
+
+[node name="Spawn" type="Area3D" parent="." index="4" unique_id=1122537835]
+script = ExtResource("4_8rs3s")
+table_slot = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Spawn" index="0" unique_id=514643822]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 5)
+shape = SubResource("SphereShape3D_d4uuh")

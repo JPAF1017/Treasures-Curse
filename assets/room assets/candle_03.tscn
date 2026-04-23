@@ -1,14 +1,40 @@
-[gd_scene load_steps=4 format=3 uid="uid://v57oy38j2rm5"]
+[gd_scene format=3 uid="uid://v57oy38j2rm5"]
 
 [ext_resource type="PackedScene" uid="uid://c7qohrb2t1wnh" path="res://assets/PSX_Dungeon/Models/Candle_03.fbx" id="1_dsp5u"]
 [ext_resource type="Texture2D" uid="uid://lcnmdb7guh5r" path="res://assets/PSX_Dungeon/Textures/Dungeon_Map.png" id="2_7o018"]
+[ext_resource type="PackedScene" uid="uid://cvp45jmoq8e5j" path="res://assets/room assets/fire_particle.tscn" id="3_7o018"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6otar"]
 albedo_texture = ExtResource("2_7o018")
 texture_filter = 0
 
-[node name="Candle_03" instance=ExtResource("1_dsp5u")]
+[sub_resource type="Gradient" id="Gradient_c03"]
+offsets = PackedFloat32Array(0, 0.503401, 1)
+colors = PackedColorArray(0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_c03"]
+gradient = SubResource("Gradient_c03")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_c03_small"]
+emission_shape_scale = Vector3(0.2, 0.2, 0.2)
+emission_shape = 1
+emission_sphere_radius = 1.0
+gravity = Vector3(0, 2, 0)
+scale_min = 167.772
+scale_max = 167.772
+color_ramp = SubResource("GradientTexture1D_c03")
+
+[node name="Candle_03" unique_id=1642470337 instance=ExtResource("1_dsp5u")]
 
 [node name="Cylinder_030" parent="." index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 material_override = SubResource("StandardMaterial3D_6otar")
+
+[node name="fire_particle" parent="." index="1" unique_id=892051520 instance=ExtResource("3_7o018")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3443446, 0)
+
+[node name="Fire" parent="fire_particle"]
+process_material = SubResource("ParticleProcessMaterial_c03_small")
+
+[node name="Smoke" parent="fire_particle"]
+process_material = SubResource("ParticleProcessMaterial_c03_small")
