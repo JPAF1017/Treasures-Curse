@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://bajxw40q3gwwj"]
+
+[ext_resource type="PackedScene" uid="uid://b8hgvq1xxcs6i" path="res://assets/items assets/skull.glb" id="1_61j4r"]
+[ext_resource type="Script" uid="uid://dvisex0mou1wl" path="res://scripts/items/skull_key.gd" id="2_skullkey"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_t4a30"]
+radius = 0.35901284
+
+[node name="SkullKey1" type="RigidBody3D" unique_id=1435220282]
+script = ExtResource("2_skullkey")
+held_item_scale = 0.4
+viewmodel_scale = 0.65
+
+[node name="skull" parent="." unique_id=389562993 instance=ExtResource("1_61j4r")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=800760044]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03484434, 0)
+shape = SubResource("SphereShape3D_t4a30")

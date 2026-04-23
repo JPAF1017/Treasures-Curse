@@ -46,6 +46,7 @@ const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
 const SMOKE_ITEM_SCRIPT: Script = preload("res://scripts/items/smoke.gd")
+const SKULL_KEY_ITEM_SCRIPT: Script = preload("res://scripts/items/skull_key.gd")
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
@@ -749,7 +750,7 @@ func _get_selected_hotbar_item() -> Node3D:
 	return selected_item
 
 func _is_primary_item_model(item_model: Node) -> bool:
-	return item_model is Sword or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model)
+	return item_model is Sword or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model) or _is_skull_key_item_model(item_model)
 
 func _is_shovel_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
@@ -759,6 +760,9 @@ func _is_health_item_model(item_model: Node) -> bool:
 
 func _is_smoke_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SMOKE_ITEM_SCRIPT
+
+func _is_skull_key_item_model(item_model: Node) -> bool:
+	return item_model != null and item_model.get_script() == SKULL_KEY_ITEM_SCRIPT
 
 func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()
@@ -826,7 +830,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Sword or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body):
+	if item_body is Sword or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body) or _is_skull_key_item_model(item_body):
 		if _has_item_in_hotbar(item_body):
 			return
 
@@ -845,7 +849,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 func _try_auto_equip_item() -> void:
 	if _find_first_empty_hotbar_slot() == -1:
 		return
-	if not (Sword.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
+	if not (Sword.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SKULL_KEY_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
 
 	var item_body := _get_pickup_candidate()
@@ -865,7 +869,7 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var pickup_distance: float = maxf(Sword.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance"))))))
+	var pickup_distance: float = maxf(Sword.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance")), float(SKULL_KEY_ITEM_SCRIPT.call("get_pickup_max_distance")))))))
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
@@ -895,6 +899,10 @@ func _get_pickup_candidate() -> RigidBody3D:
 	var smoke_candidate := SMOKE_ITEM_SCRIPT.call("find_smoke_rigidbody_from_node", collider) as RigidBody3D
 	if smoke_candidate:
 		return smoke_candidate
+
+	var skull_key_candidate := SKULL_KEY_ITEM_SCRIPT.call("find_skull_key_rigidbody_from_node", collider) as RigidBody3D
+	if skull_key_candidate:
+		return skull_key_candidate
 
 	return HEALTH_ITEM_SCRIPT.call("find_health_rigidbody_from_node", collider) as RigidBody3D
 

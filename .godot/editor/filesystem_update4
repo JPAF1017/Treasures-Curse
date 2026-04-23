@@ -1,0 +1,15 @@
+res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://assets/items/smoke_outer.gdshader
+res://assets/items/smoke_inner.gdshader
+res://assets/items/smoke_overlay.gdshader
+res://puzzles/skull_key1.tscn
+res://assets/rooms/skull_puzzle.tscn
+res://assets/room assets/skull_room.tscn
+res://puzzles/skull_key.tscn
+res://levels/test map.tscn
+res://assets/rooms/skull_room.tscn
+res://scripts/player.gd
+res://entities/player.tscn
+res://scripts/items/skull_key.gd
+res://scripts/rooms/skull_puzzle_controller.gd
+res://scripts/items/MeleeItemSharedComponent.gd

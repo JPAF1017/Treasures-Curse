@@ -2,7 +2,7 @@ class_name MeleeItemSharedComponent
 extends RefCounted
 
 const DEFAULT_PICKUP_DISTANCE := 2.0
-const DEFAULT_EQUIP_ACTION: StringName = &"interact"
+const DEFAULT_EQUIP_ACTION: StringName = &"e"
 
 
 func get_pickup_max_distance() -> float:
