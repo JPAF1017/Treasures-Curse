@@ -924,6 +924,8 @@ func apply_damage(amount: float) -> void:
 	health = maxf(health - amount, 0.0)
 	_update_health_ui()
 	_apply_damage_camera_tilt()
+	if health <= 0.0:
+		get_tree().change_scene_to_file("res://menus/start_menu.tscn")
 
 func _apply_damage_camera_tilt() -> void:
 	if camera == null:

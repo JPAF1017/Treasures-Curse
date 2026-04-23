@@ -37,3 +37,4 @@ res://entities/shambler.tscn
 res://entities/shy.tscn
 res://scripts/items/axe.gd
 res://scripts/items/health.gd
+res://assets/rooms/treasure_room.tscn

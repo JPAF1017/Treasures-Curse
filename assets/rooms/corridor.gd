@@ -2,7 +2,7 @@
 extends DungeonRoom3D
 
 # Chance for torches to appear (0.0 = never, 1.0 = always)
-@export var torch_spawn_chance: float = 0.5
+@export var torch_spawn_chance: float = 0.25
 
 func _ready():
 	super._ready()
