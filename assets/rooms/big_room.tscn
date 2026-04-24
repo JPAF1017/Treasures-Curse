@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://da7ty6ck0l2sl"]
 
-[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_d21gc"]
 [ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_b7g7a"]
 [ext_resource type="PackedScene" uid="uid://drc5sh8egqajx" path="res://assets/room assets/stairs.tscn" id="3_8tda2"]
 [ext_resource type="PackedScene" uid="uid://dp6j0b5dhrjx8" path="res://assets/room assets/block_half.tscn" id="4_fk1er"]
@@ -12,9 +11,13 @@
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="7_u0o2f"]
 [ext_resource type="PackedScene" uid="uid://dyce2eifprojb" path="res://assets/room assets/barrel.tscn" id="8_o34fn"]
 [ext_resource type="PackedScene" uid="uid://covmwn16vmv06" path="res://assets/room assets/door_frame_02.tscn" id="12_ylye7"]
+[ext_resource type="Script" uid="uid://vimhoipd6dsi" path="res://scripts/rooms/big_room.gd" id="99_bigroom"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_u0o2f"]
+radius = 1.0
 
 [node name="BigRoom" type="Node3D" unique_id=1370706762]
-script = ExtResource("1_d21gc")
+script = ExtResource("99_bigroom")
 size_in_voxels = Vector3i(3, 2, 3)
 max_count = 3
 metadata/_custom_type_script = "uid://c801ki3oghumx"
@@ -222,3 +225,17 @@ transform = Transform3D(-2.18557e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.74228e-09, 
 
 [node name="Door_Frame_04" parent="Models/Structure" unique_id=1011895128 instance=ExtResource("12_ylye7")]
 transform = Transform3D(-2.18557e-08, 0, 0.2, 0, 0.5, 0, -0.5, 0, -8.74228e-09, 14.75, -10, 0)
+
+[node name="Spawn" type="Node3D" parent="." unique_id=1377741730]
+
+[node name="SpawnItem" type="Area3D" parent="Spawn" unique_id=994173676]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 11)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Spawn/SpawnItem" unique_id=1873094083]
+shape = SubResource("SphereShape3D_u0o2f")
+
+[node name="SpawnItem2" type="Area3D" parent="Spawn" unique_id=1809852745]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 0, 11)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Spawn/SpawnItem2" unique_id=631266286]
+shape = SubResource("SphereShape3D_u0o2f")

@@ -22,3 +22,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.417, 0.008)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=429716641]
 transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0.028, 0)
 shape = SubResource("CapsuleShape3D_hr5o3")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=352546872]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.417, 0.008)
+light_color = Color(0.855485, 0.46624, 0, 1)
+light_energy = 6.0
+light_volumetric_fog_energy = 0.0
+omni_range = 12.0

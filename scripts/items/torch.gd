@@ -3,7 +3,7 @@ extends RigidBody3D
 const TORCH_SCENE_PATH := "res://assets/items/torch.tscn"
 const TORCH_ITEM_ICON: Texture2D = preload("res://assets/ui/torch.png")
 const TORCH_MODEL_SCENE: PackedScene = preload("res://assets/base assets/ps1psx_wooden_torch.glb")
-static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
@@ -28,6 +28,16 @@ const DEFAULT_LIGHT_ENERGY := 7.0
 const DEFAULT_LIGHT_COLOR := Color(1.0, 1.0, 1.0)
 const DEFAULT_LIGHT_RANGE := 43.3203
 
+const MAX_USABLE_TIME := 120.0
+var usable_time_left: float = MAX_USABLE_TIME
+var is_burning: bool = false
+
+var item_durability_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
+var item_durability_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
+const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
+const ITEM_DURABILITY_COLOR_START_INDEX := 17
+const ITEM_DURABILITY_COLOR_END_INDEX := 22
+
 static var equip_key_was_down: bool = false
 
 @export var right_hand_bone_name: String = "mixamorig_RightHand"
@@ -46,20 +56,82 @@ var viewmodel_bob_time: float = 0.0
 var _carried_omni: OmniLight3D = null
 
 @onready var _fire_particle: Node3D = $fire_particle
+@onready var _dropped_light: OmniLight3D = get_node_or_null("OmniLight3D")
 
 
 func _ready() -> void:
 	_configure_item_physics()
 	if _fire_particle:
 		_fire_particle.visible = false
+	_setup_item_durability_palette_colors()
+
+func _setup_item_durability_palette_colors() -> void:
+	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
+	if palette_texture == null:
+		return
+	var palette_image := palette_texture.get_image()
+	if palette_image == null or palette_image.is_empty():
+		return
+	item_durability_color_start = _get_palette_color(palette_image, ITEM_DURABILITY_COLOR_START_INDEX, item_durability_color_start)
+	item_durability_color_end = _get_palette_color(palette_image, ITEM_DURABILITY_COLOR_END_INDEX, item_durability_color_end)
+
+func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Color) -> Color:
+	if one_based_index <= 0:
+		return fallback
+	var width := palette_image.get_width()
+	var height := palette_image.get_height()
+	if width <= 0 or height <= 0:
+		return fallback
+	var max_colors := width * height
+	if one_based_index > max_colors:
+		return fallback
+	var linear_index := one_based_index - 1
+	var pixel_x := linear_index % width
+	var pixel_y := int(float(linear_index) / float(width))
+	return palette_image.get_pixel(pixel_x, pixel_y)
+
+func _process(delta: float) -> void:
+	if is_burning:
+		usable_time_left -= delta
+		if usable_time_left <= 0.0:
+			_delete_torch()
+
+func _delete_torch() -> void:
+	if inventory_slot_index >= 0:
+		var parent := get_parent()
+		var player: Node = null
+		while parent:
+			if parent.has_method("_set_hotbar_item"):
+				player = parent
+				break
+			parent = parent.get_parent()
+		if player == null and right_hand_attachment:
+			parent = right_hand_attachment
+			while parent:
+				if parent.has_method("_set_hotbar_item"):
+					player = parent
+					break
+				parent = parent.get_parent()
+		if player:
+			_apply_torch_light(player, false)
+			player.call("_set_hotbar_item", inventory_slot_index, null, null)
+			if player.has_method("_refresh_selected_item_state"):
+				player.call("_refresh_selected_item_state")
+			if player.has_method("_update_pickup_prompt_visibility"):
+				player.call("_update_pickup_prompt_visibility")
+	
+	if _carried_omni and is_instance_valid(_carried_omni):
+		_carried_omni.queue_free()
+	
+	queue_free()
 
 
 static func get_pickup_max_distance() -> float:
-	return MeleeShared.get_pickup_max_distance()
+	return melee_shared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return MeleeShared.get_equip_action_name()
+	return melee_shared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -71,15 +143,15 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_torch_node(node: Node) -> bool:
-	return MeleeShared.is_item_node(node, TORCH_SCENE_PATH, "torch")
+	return melee_shared.is_item_node(node, TORCH_SCENE_PATH, "torch")
 
 
 static func find_torch_rigidbody_from_node(node: Node) -> RigidBody3D:
-	return MeleeShared.find_item_rigidbody_from_node(node, TORCH_SCENE_PATH, "torch")
+	return melee_shared.find_item_rigidbody_from_node(node, TORCH_SCENE_PATH, "torch")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	var equip_input: Dictionary = melee_shared.read_equip_input(get_equip_action_name(), equip_key_was_down)
 	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
 	return bool(equip_input.get("just_pressed", false))
 
@@ -89,7 +161,9 @@ func get_hotbar_icon_texture() -> Texture2D:
 
 
 func get_hotbar_icon_modulate(alpha: float) -> Color:
-	return Color(1.0, 1.0, 1.0, alpha)
+	var durability_percent := clampf(usable_time_left / MAX_USABLE_TIME, 0.0, 1.0)
+	var dur_color := item_durability_color_start.lerp(item_durability_color_end, durability_percent)
+	return Color(dur_color.r, dur_color.g, dur_color.b, alpha)
 
 
 func can_start_primary_action() -> bool:
@@ -131,6 +205,7 @@ func pick_up_into_hotbar(player: Node, slot_index: int) -> bool:
 	player.add_child(self)
 	_set_item_physics_enabled(false)
 	_set_item_visuals_visible(false)
+	is_burning = false
 	return true
 
 
@@ -170,7 +245,9 @@ func drop_from_hotbar(player: Node) -> bool:
 	_set_visual_layer_recursive(self, 1)
 	_set_item_visuals_visible(true)
 	if _fire_particle:
-		_fire_particle.visible = false
+		_fire_particle.visible = true
+	if _dropped_light:
+		_dropped_light.visible = true
 	_set_item_physics_enabled(true)
 	var player_node := player as Node3D
 	var forward := Vector3.FORWARD
@@ -193,10 +270,12 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinti
 		_set_item_visuals_visible(true)
 		_show_viewmodel(player)
 		_apply_torch_light(player, true)
+		is_burning = true
 	else:
 		_detach_from_hand(player)
 		_hide_viewmodel()
 		_apply_torch_light(player, false)
+		is_burning = false
 
 
 func _configure_item_physics() -> void:
@@ -207,11 +286,11 @@ func _configure_item_physics() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	MeleeShared.set_item_physics_enabled(self, enabled, TORCH_PHYSICS_COLLISION_LAYER, TORCH_PHYSICS_COLLISION_MASK, TORCH_PHYSICS_MASS, TORCH_PHYSICS_LINEAR_DAMP, TORCH_PHYSICS_ANGULAR_DAMP)
+	melee_shared.set_item_physics_enabled(self, enabled, TORCH_PHYSICS_COLLISION_LAYER, TORCH_PHYSICS_COLLISION_MASK, TORCH_PHYSICS_MASS, TORCH_PHYSICS_LINEAR_DAMP, TORCH_PHYSICS_ANGULAR_DAMP)
 
 
 func _set_item_visuals_visible(visibility: bool) -> void:
-	MeleeShared.set_visual_children_visible(self, visibility)
+	melee_shared.set_visual_children_visible(self, visibility)
 
 
 func _set_visual_layer_recursive(node: Node, layer: int) -> void:
@@ -235,6 +314,8 @@ func _equip_to_right_hand(player: Node) -> void:
 		_set_item_visuals_visible(true)
 		if _fire_particle:
 			_fire_particle.visible = true
+		if _dropped_light:
+			_dropped_light.visible = false
 		return
 
 	var old_parent := get_parent()
@@ -248,6 +329,8 @@ func _equip_to_right_hand(player: Node) -> void:
 	_set_visual_layer_recursive(self, 2)
 	if _fire_particle:
 		_fire_particle.visible = true
+	if _dropped_light:
+		_dropped_light.visible = false
 
 	position = held_item_position
 	rotation = Vector3(

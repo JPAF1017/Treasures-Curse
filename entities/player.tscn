@@ -64,6 +64,8 @@ collision_mask = 2
 shape = SubResource("CapsuleShape3D_vision")
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
+light_energy = 0.0
+light_indirect_energy = 0.0
 light_volumetric_fog_energy = 0.0
 spot_range = 43.3203
 spot_attenuation = 0.5
@@ -580,7 +582,8 @@ offset_bottom = 323.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "Done"
+text = "Done
+NOW MOVE!"
 horizontal_alignment = 1
 
 [node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]
@@ -619,7 +622,7 @@ stream = ExtResource("8_music")
 volume_db = -15.0
 
 [node name="ChasePlayer" type="AudioStreamPlayer" parent="." unique_id=2135034319]
-volume_db = -25.0
+volume_db = -15.0
 
 [node name="SwingPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034320]
 volume_db = -5.0

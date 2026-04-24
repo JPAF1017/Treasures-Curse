@@ -18,7 +18,7 @@ class HeldItemTransform:
 
 const BAT_SCENE_PATH := "res://assets/items/bat.tscn"
 const BAT_ATTACHMENT_NODE_NAME := "RightHandBatAttachment"
-static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const BAT_ITEM_ICON: Texture2D = preload("res://assets/ui/axe.png")
 const BAT_MODEL_SCENE: PackedScene = preload("res://assets/items assets/axe.glb")
 const ViewmodelComponent = preload("res://scripts/items/MeleeViewmodelComponent.gd")
@@ -33,7 +33,7 @@ const SWING_STOP_FRAME := 100
 const SWING_RELEASE_SPEED_MULTIPLIER := 1.3
 const SWING_DAMAGE_FULL := 10.0
 const SWING_DAMAGE_INCOMPLETE := 3.0
-const BAT_KNOCKBACK_INCOMPLETE := 20.0
+const BAT_KNOCKBACK_INCOMPLETE := 40.0
 const BAT_KNOCKBACK_FULL := BAT_KNOCKBACK_INCOMPLETE * 3.0
 const BAT_KNOCKBACK_DURATION := 0.18
 const BAT_KNOCKBACK_POSITION_SCALE := 0.04
@@ -89,11 +89,11 @@ func _physics_process(delta: float) -> void:
 
 
 static func get_pickup_max_distance() -> float:
-	return MeleeShared.get_pickup_max_distance()
+	return melee_shared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return MeleeShared.get_equip_action_name()
+	return melee_shared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -105,15 +105,15 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_bat_node(node: Node) -> bool:
-	return MeleeShared.is_item_node(node, BAT_SCENE_PATH, "bat")
+	return melee_shared.is_item_node(node, BAT_SCENE_PATH, "bat")
 
 
 static func find_bat_rigidbody_from_node(node: Node) -> RigidBody3D:
-	return MeleeShared.find_item_rigidbody_from_node(node, BAT_SCENE_PATH, "bat")
+	return melee_shared.find_item_rigidbody_from_node(node, BAT_SCENE_PATH, "bat")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	var equip_input: Dictionary = melee_shared.read_equip_input(get_equip_action_name(), equip_key_was_down)
 	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
 	return bool(equip_input.get("just_pressed", false))
 
@@ -378,7 +378,7 @@ func _apply_attack_damage(player: Node, amount: float, knockback_strength: float
 	if attack_area == null:
 		return
 
-	var targets: Array[Node] = MeleeShared.collect_hurtbox_damage_targets(attack_area, self, player, swing_damaged_targets)
+	var targets: Array[Node] = melee_shared.collect_hurtbox_damage_targets(attack_area, self, player, swing_damaged_targets)
 	for target: Node in targets:
 		if target.has_method("apply_damage"):
 			target.call("apply_damage", amount)
@@ -576,7 +576,7 @@ func _apply_item_blade_flip() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	MeleeShared.set_item_physics_enabled(self, enabled, BAT_PHYSICS_COLLISION_LAYER, BAT_PHYSICS_COLLISION_MASK, BAT_PHYSICS_MASS, BAT_PHYSICS_LINEAR_DAMP, BAT_PHYSICS_ANGULAR_DAMP)
+	melee_shared.set_item_physics_enabled(self, enabled, BAT_PHYSICS_COLLISION_LAYER, BAT_PHYSICS_COLLISION_MASK, BAT_PHYSICS_MASS, BAT_PHYSICS_LINEAR_DAMP, BAT_PHYSICS_ANGULAR_DAMP)
 
 
 func _configure_item_physics() -> void:
@@ -591,7 +591,7 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 
 func _set_visual_children_visible(node: Node, visibility: bool) -> void:
-	MeleeShared.set_visual_children_visible(node, visibility)
+	melee_shared.set_visual_children_visible(node, visibility)
 
 
 func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
@@ -676,7 +676,7 @@ func _get_player_attack_area(player: Node) -> Area3D:
 
 
 func _is_wielding_player_on_floor() -> bool:
-	return MeleeShared.is_wielding_player_on_floor(self)
+	return melee_shared.is_wielding_player_on_floor(self)
 
 
 func _get_self_animation_player() -> AnimationPlayer:
@@ -717,7 +717,7 @@ func _is_knockbackable_npc_target(target: Node, player: Node) -> bool:
 
 
 func _swing_frame_to_time(frame: int) -> float:
-	return MeleeShared.swing_frame_to_time(frame, SWING_ANIMATION_FPS)
+	return melee_shared.swing_frame_to_time(frame, SWING_ANIMATION_FPS)
 
 
 func _reset_swing_state(player: Node) -> void:

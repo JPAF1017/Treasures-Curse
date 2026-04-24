@@ -1165,7 +1165,9 @@ func _update_chase_sound(delta: float) -> void:
 			continue
 		var tp = npc.get("target_player")
 		if tp == null and scr != null and scr.resource_path == CHARGER_SCRIPT_PATH:
-			tp = npc.get("player")
+			var charger_player = npc.get("player")
+			if charger_player != null and (npc.get("is_player_in_range") or npc.get("los_lost_timer") > 0.0):
+				tp = charger_player
 		if tp != null and is_instance_valid(tp) and tp == self:
 			chaser_count += 1
 			if scr != null and scr.resource_path == SHY_SCRIPT_PATH:
