@@ -4,11 +4,16 @@ const CHARGER_SCENE := preload("res://entities/charger.tscn")
 const FLY_SCENE     := preload("res://entities/fly.tscn")
 const SHAMBLER_SCENE := preload("res://entities/shambler.tscn")
 const GNOME_SCENE   := preload("res://entities/gnome.tscn")
+const STATUE_SCENE  := preload("res://entities/statue.tscn")
+const SHY_SCENE     := preload("res://entities/shy.tscn")
 
 const CHARGER_COUNT  := 5
 const FLY_COUNT      := 5
 const SHAMBLER_COUNT := 3
 const GNOME_GROUPS   := 3  # each group spawns 2 or 3 gnomes in the same room
+# Floors (0-based index) where statues and shy spawn (one per floor)
+const STATUE_FLOORS  := [1, 3]
+const SHY_FLOORS     := [1, 3]
 
 
 func _ready() -> void:
@@ -75,3 +80,22 @@ func _on_dungeon_ready(generator: Node) -> void:
 			)
 			add_child(enemy)
 			enemy.global_position = room.global_position + spread
+
+	# Spawn statues and shy on specific dungeon floors
+	var gen_origin_y: float = (generator as Node3D).global_position.y
+	var voxel_y: float = generator.get("voxel_scale").y
+	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS]]:
+		var scene: PackedScene = floor_data[0]
+		var floors: Array = floor_data[1]
+		for floor_idx: int in floors:
+			var target_y := gen_origin_y + floor_idx * voxel_y
+			var floor_rooms := all_rooms.filter(func(r: Node) -> bool:
+				return r.name != "StartRoom" and abs((r as Node3D).global_position.y - target_y) < voxel_y * 0.5
+			)
+			if floor_rooms.is_empty():
+				continue
+			floor_rooms.shuffle()
+			var enemy: Node3D = scene.instantiate()
+			var room: Node3D = floor_rooms[0]
+			add_child(enemy)
+			enemy.global_position = room.global_position + Vector3(rng.randf_range(-2.5, 2.5), 2.0, rng.randf_range(-2.5, 2.5))

@@ -38,3 +38,13 @@ res://entities/shy.tscn
 res://scripts/items/axe.gd
 res://scripts/items/health.gd
 res://assets/rooms/treasure_room.tscn
+res://puzzles/table_item_spawn.gd
+res://scripts/rooms/candle_puzzle_room.gd
+res://puzzles/item_hold_check.gd
+res://scripts/level1_spawner.gd
+res://scripts/items/shovel.gd
+res://assets/rooms/candle_puzzle.tscn
+res://assets/rooms/stair.tscn
+res://assets/rooms/big_room.tscn
+res://assets/rooms/bridge.tscn
+res://assets/rooms/l_shape_room.tscn

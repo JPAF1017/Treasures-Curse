@@ -1,4 +1,5 @@
 @tool
+class_name CandlePuzzleRoom
 extends DungeonRoom3D
 
 const _PUZZLE_TABLE_PATHS: Array[String] = [
@@ -11,6 +12,10 @@ const _PUZZLE_TABLE_PATHS: Array[String] = [
 # Shared across all instances so no two rooms pick the same table.
 static var _shared_pool: Array[String] = []
 static var _pool_idx: int = 0
+
+static func reset_for_generation() -> void:
+	_shared_pool.clear()
+	_pool_idx = 0
 
 func _ready() -> void:
 	super._ready()

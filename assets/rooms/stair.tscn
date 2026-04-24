@@ -10,7 +10,7 @@
 [node name="Stair" type="Node3D" unique_id=253396480]
 script = ExtResource("1_xwt1m")
 size_in_voxels = Vector3i(2, 2, 1)
-max_count = 50
+max_count = 3
 is_stair_room = true
 metadata/_custom_type_script = "uid://c801ki3oghumx"
 

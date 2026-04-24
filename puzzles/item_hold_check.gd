@@ -23,16 +23,26 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	if _check_item(body):
 		_satisfied = true
-		var room := owner
+		var room := _find_room()
 		if room and room.has_method("on_item_hold_satisfied"):
 			room.call("on_item_hold_satisfied")
 
 func _on_body_exited(body: Node3D) -> void:
 	if _satisfied and _check_item(body):
 		_satisfied = false
-		var room := owner
+		var room := _find_room()
 		if room and room.has_method("on_item_hold_unsatisfied"):
 			room.call("on_item_hold_unsatisfied")
+
+# Walk up the tree to find the puzzle room rather than relying on owner,
+# which can be null for programmatically added nodes.
+func _find_room() -> Node:
+	var n := get_parent()
+	while n != null:
+		if n.has_method("on_item_hold_satisfied"):
+			return n
+		n = n.get_parent()
+	return null
 
 func _check_item(body: Node) -> bool:
 	var scr = body.get_script()

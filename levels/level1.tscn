@@ -15,8 +15,8 @@
 [ext_resource type="PackedScene" uid="uid://djgwx2fo8gck3" path="res://assets/rooms/l_shape_room.tscn" id="9_w7ck5"]
 [ext_resource type="PackedScene" uid="uid://scxkscsgrow5" path="res://assets/rooms/narrow.tscn" id="10_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="13_ou4v7"]
-[ext_resource type="Script" path="res://scripts/level1_spawner.gd" id="99_spawner"]
-[ext_resource type="Script" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
+[ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
+[ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav01"]
 
@@ -31,20 +31,19 @@ sky_material = SubResource("ProceduralSkyMaterial_27e7b")
 [sub_resource type="Environment" id="Environment_yplof"]
 background_mode = 2
 sky = SubResource("Sky_rasb4")
-tonemap_mode = 2
-sdfgi_enabled = true
-glow_enabled = true
 ambient_light_source = 3
 ambient_light_color = Color(0.12, 0.08, 0.04, 1)
 ambient_light_energy = 0.3
+tonemap_mode = 2
+sdfgi_enabled = true
+glow_enabled = true
 fog_enabled = true
 fog_light_color = Color(0.05, 0.03, 0.02, 1)
-fog_light_energy = 1.0
 fog_density = 0.04
 fog_depth_curve = 0.5
 volumetric_fog_enabled = true
-volumetric_fog_albedo = Color(0.85, 0.75, 0.6, 1)
 volumetric_fog_density = 0.02
+volumetric_fog_albedo = Color(0.85, 0.75, 0.6, 1)
 
 [node name="test map" type="Node3D" unique_id=1262865494]
 script = ExtResource("99_spawner")
@@ -55,14 +54,32 @@ navigation_mesh = SubResource("NavigationMesh_nav01")
 [node name="DungeonGenerator3D" type="Node3D" parent="NavigationRegion3D" unique_id=1968456005]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 script = ExtResource("1_8hd6v")
-room_scenes = Array[PackedScene]([ExtResource("2_045es"), ExtResource("3_omn1t"), ExtResource("4_jq2cn"), ExtResource("5_a5s8o"), ExtResource("6_ls4ot"), ExtResource("7_tx362"), ExtResource("8_l7nqg"), ExtResource("9_w7ck5"), ExtResource("10_2nn5w"), ExtResource("6_bekh1"), ExtResource("5_yydhl"), ExtResource("13_ou4v7")])
+room_scenes = Array[PackedScene]([ExtResource("2_045es"), ExtResource("4_jq2cn"), ExtResource("5_a5s8o"), ExtResource("9_w7ck5"), ExtResource("10_2nn5w"), ExtResource("13_ou4v7")])
 corridor_room_scene = ExtResource("3_omn1t")
-dungeon_size = Vector3i(15, 4, 15)
+dungeon_size = Vector3i(14, 3, 14)
 max_retries = 50
 metadata/_custom_type_script = "uid://bqeu73gvoygbb"
 
 [node name="StartRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2057079214 instance=ExtResource("4_lf3p4")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 70, -15, 40)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 65, -10, 35)
+
+[node name="CandlePuzzle2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2062432672 instance=ExtResource("6_ls4ot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, -10, 4.999997)
+
+[node name="CandlePuzzle3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1719491580 instance=ExtResource("7_tx362")]
+transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, 65, -10, 65)
+
+[node name="CandlePuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1505842369 instance=ExtResource("8_l7nqg")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20.000002, -10, 55)
+
+[node name="SkullPuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1594414824 instance=ExtResource("6_bekh1")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -60, 10, 15.000003)
+
+[node name="SkullRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1148952945 instance=ExtResource("5_yydhl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -65, 10, -34.999996)
+
+[node name="SkullRoom2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1662865710 instance=ExtResource("5_yydhl")]
+transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, -65, 10, 65)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)
@@ -77,4 +94,4 @@ environment = SubResource("Environment_yplof")
 script = ExtResource("98_optimizer")
 
 [node name="player" parent="." unique_id=1588251422 instance=ExtResource("7_8bcou")]
-transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -40, -15, 70)
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -25, -9, 55)

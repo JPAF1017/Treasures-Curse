@@ -1,7 +1,7 @@
 extends Node3D
 
 const SKULL_KEY_SCENE_PATH := "res://puzzles/skull_key.tscn"
-const DOOR_OPEN_Y_DEGREES := -60.0
+const DOOR_OPEN_Y_DEGREES := 60.0
 const DOOR_OPEN_DURATION := 1.5
 const RAYCAST_DISTANCE := 5.0
 const SKULL_PLACE_Y_OFFSET := 1.3
