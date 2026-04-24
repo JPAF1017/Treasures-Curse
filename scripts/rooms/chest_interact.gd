@@ -3,9 +3,12 @@ extends Node3D
 const RAYCAST_DISTANCE := 5.0
 const LID_OPEN_DEGREES := -90.0
 const LID_OPEN_DURATION := 1.0
+const GOLD_SCENE: PackedScene = preload("res://assets/items/gold.tscn")
+const GOLD_POP_SPEED := 3.0
 
 @onready var chest_area: Area3D = $Chest/Area3D
 @onready var chest_lid: Node3D = $Chest/Cube_085
+@onready var spawn_area: Area3D = $Chest/Spawn
 
 var _player: Node = null
 var _interact_control: Control = null
@@ -93,3 +96,22 @@ func _open_chest() -> void:
 		chest_lid, "rotation:x",
 		deg_to_rad(LID_OPEN_DEGREES), LID_OPEN_DURATION
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	_spawn_gold()
+
+
+func _spawn_gold() -> void:
+	if spawn_area == null:
+		return
+
+	var world_root: Node = null
+	var tree := get_tree()
+	if tree:
+		world_root = tree.current_scene
+	if world_root == null:
+		world_root = get_parent()
+
+	var gold_instance := GOLD_SCENE.instantiate() as RigidBody3D
+	world_root.add_child(gold_instance)
+	gold_instance.global_position = spawn_area.global_position
+	gold_instance.linear_velocity = Vector3.UP * GOLD_POP_SPEED

@@ -1,6 +1,9 @@
 extends Node3D
 
 const SKULL_KEY_SCENE_PATH := "res://puzzles/skull_key.tscn"
+const GOLD_ITEM_SCRIPT: Script = preload("res://scripts/items/gold.gd")
+const EXIT_MENU_PATH := "res://menus/escape_menu.tscn"
+const GOLD_REQUIRED_TO_EXIT := 3
 const DOOR_OPEN_Y_DEGREES := 60.0
 const DOOR_OPEN_DURATION := 1.5
 const RAYCAST_DISTANCE := 5.0
@@ -11,6 +14,7 @@ const SKULL_PLACE_Y_OFFSET := 1.3
 @onready var hexagon_1: Node3D = $Hexagon
 @onready var hexagon_2: Node3D = $Hexagon2
 @onready var door: Node3D = $"../Door/Door_01"
+@onready var exit_area: Area3D = $"../Door/Exit"
 
 # Placed via E-key interaction (physics disabled, tracked directly)
 var _key_1_placed: bool = false
@@ -38,7 +42,10 @@ func _process(_delta: float) -> void:
 		return
 	_update_interact_prompt()
 	if _hovered_area != null and Input.is_action_just_pressed("e"):
-		_try_place_skull(_hovered_area)
+		if _hovered_area == exit_area:
+			_try_exit()
+		else:
+			_try_place_skull(_hovered_area)
 
 
 func _find_player_if_needed() -> void:
@@ -76,7 +83,7 @@ func _get_selected_skull_key() -> Node:
 
 func _update_interact_prompt() -> void:
 	var camera := _get_player_camera()
-	if camera == null or _get_selected_skull_key() == null:
+	if camera == null:
 		_set_interact_visible(false)
 		_hovered_area = null
 		return
@@ -96,9 +103,21 @@ func _update_interact_prompt() -> void:
 			aimed = key_area_1
 		elif collider == key_area_2 and not _key_2_placed and _key_2_body_count == 0:
 			aimed = key_area_2
+		elif collider == exit_area:
+			aimed = exit_area
 
-	_hovered_area = aimed
-	_set_interact_visible(aimed != null)
+	# Only show interact for skull placement when holding a skull key.
+	# Always show interact for exit area.
+	if aimed == exit_area:
+		_hovered_area = aimed
+		_set_interact_visible(true)
+	else:
+		if aimed != null and _get_selected_skull_key() != null:
+			_hovered_area = aimed
+			_set_interact_visible(true)
+		else:
+			_hovered_area = null
+			_set_interact_visible(false)
 
 
 func _set_interact_visible(visible_state: bool) -> void:
@@ -202,3 +221,22 @@ func _open_door() -> void:
 	var tween := create_tween()
 	tween.tween_property(door, "rotation:y", deg_to_rad(DOOR_OPEN_Y_DEGREES), DOOR_OPEN_DURATION) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _count_gold_in_hotbar() -> int:
+	if _player == null:
+		return 0
+	var models = _player.get("hotbar_item_models")
+	if models == null:
+		return 0
+	var count := 0
+	for item in models:
+		if item != null and is_instance_valid(item) and item.get_script() == GOLD_ITEM_SCRIPT:
+			count += 1
+	return count
+
+
+func _try_exit() -> void:
+	if _count_gold_in_hotbar() < GOLD_REQUIRED_TO_EXIT:
+		return
+	get_tree().change_scene_to_file(EXIT_MENU_PATH)

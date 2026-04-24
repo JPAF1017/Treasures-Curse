@@ -11,3 +11,10 @@ res://scripts/items/sword.gd
 res://assets/room assets/chest.tscn
 res://assets/rooms/treasure_room.tscn
 res://assets/items/gold.tscn
+res://scripts/player.gd
+res://assets/rooms/candle_puzzle.tscn
+res://scripts/rooms/chest_interact.gd
+res://menus/pause_menu.tscn
+res://menus/escape_menu.tscn
+res://menus/death_menu.tscn
+res://scripts/rooms/skull_puzzle_controller.gd
