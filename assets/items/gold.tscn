@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://cxjwpa386eouw"]
+
+[ext_resource type="PackedScene" uid="uid://di4nyywsvy2di" path="res://assets/items assets/gold.glb" id="1_gmvxu"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_uv5uo"]
+size = Vector3(5.960083, 4.0700073, 1.5507813)
+
+[node name="Gold" type="RigidBody3D" unique_id=2016877817]
+
+[node name="gold" parent="." unique_id=368424173 instance=ExtResource("1_gmvxu")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1527789933]
+transform = Transform3D(0.95996183, -0.28013062, 0, 0.28013062, 0.95996183, 0, 0, 0, 1, -0.02202794, -0.0017328877, 0)
+shape = SubResource("BoxShape3D_uv5uo")

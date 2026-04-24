@@ -12,6 +12,12 @@
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="10_478ps"]
 [ext_resource type="PackedScene" uid="uid://d1e1ffdtkokq8" path="res://assets/room assets/torch.tscn" id="11_mvry0"]
 [ext_resource type="PackedScene" uid="uid://c5tachymoo3s2" path="res://assets/room assets/wall_01.tscn" id="12_gx6bh"]
+[ext_resource type="Script" uid="uid://cnbhlfgj2c6gs" path="res://scripts/rooms/chest_interact.gd" id="13_chest"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mvry0"]
+size = Vector3(5, 3, 3.406128)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_gx6bh"]
 
 [node name="TreasureRoom" type="Node3D" unique_id=731915099]
 script = ExtResource("1_08di3")
@@ -80,9 +86,23 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 10, -9.75, -10)
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 10, -9.75, 10)
 
 [node name="Treasure" type="Node3D" parent="." unique_id=2008008993]
+script = ExtResource("13_chest")
 
 [node name="Chest" parent="Treasure" unique_id=2018623727 instance=ExtResource("3_cnku6")]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, -6, 0)
+
+[node name="Area3D" type="Area3D" parent="Treasure/Chest" unique_id=1680707788]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Treasure/Chest/Area3D" unique_id=286977708]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -0.009338379)
+shape = SubResource("BoxShape3D_mvry0")
+
+[node name="Spawn" type="Area3D" parent="Treasure/Chest" unique_id=79957577]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.6836224, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Treasure/Chest/Spawn" unique_id=1226839941]
+shape = SubResource("SphereShape3D_gx6bh")
 
 [node name="Block_Half" parent="Treasure" unique_id=177554539 instance=ExtResource("4_r58n7")]
 transform = Transform3D(0.5, 0, 0, 0, 0.4, 0, 0, 0, 0.5, 0, -10, 0)
