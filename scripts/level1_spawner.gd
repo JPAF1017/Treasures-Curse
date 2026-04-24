@@ -20,6 +20,12 @@ func _ready() -> void:
 	var generator := _find_dungeon_generator(self)
 	if generator:
 		generator.done_generating.connect(_on_dungeon_ready.bind(generator))
+		generator.generating_failed.connect(_on_dungeon_failed.bind(generator))
+
+
+func _on_dungeon_failed(generator: Node) -> void:
+	push_warning("[level1_spawner] Dungeon generation failed on current seed — retrying with a new random seed.")
+	generator.call("generate")
 
 
 func _find_dungeon_generator(node: Node) -> Node:

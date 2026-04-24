@@ -5,6 +5,7 @@ const TEST_MAP_PATH := "res://levels/level1.tscn"
 @onready var video_player: VideoStreamPlayer = $VideoStreamPlayer
 @onready var play_button: Button = $Button/MenuButton
 @onready var quit_button: Button = $Button/Quit
+@onready var button_container: Control = $Button
 
 var _map_instance: Node = null
 
@@ -25,6 +26,7 @@ func _on_quit_pressed() -> void:
 
 func _on_play_pressed() -> void:
 	play_button.disabled = true
+	button_container.visible = false
 	# Reset puzzle pool state so each run gets a fresh shuffle
 	CandlePuzzleRoom.reset_for_generation()
 	TableItemSpawn.reset_for_generation()

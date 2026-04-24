@@ -51,3 +51,5 @@ res://assets/rooms/l_shape_room.tscn
 res://entities/statue.tscn
 res://assets/room assets/fire_particle.tscn
 res://assets/room assets/fire_particle.gd
+res://assets/items/torch.tscn
+res://scripts/items/torch.gd
