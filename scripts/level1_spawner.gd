@@ -38,8 +38,15 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# Collect all placed rooms, skip the StartRoom so enemies don't spawn on the player
 	var all_rooms: Array = generator.find_children("*", "DungeonRoom3D", true, false)
+	var start_room: Node3D = generator.find_child("StartRoom", true, false) as Node3D
+	var start_pos: Vector3 = start_room.global_position if start_room else Vector3.ZERO
+
+	# Sort rooms by distance from StartRoom descending so farthest rooms are picked first.
 	var rooms: Array = all_rooms.filter(func(r: Node) -> bool:
 		return r.name != "StartRoom"
+	)
+	rooms.sort_custom(func(a: Node, b: Node) -> bool:
+		return (a as Node3D).global_position.distance_to(start_pos) > (b as Node3D).global_position.distance_to(start_pos)
 	)
 
 	if rooms.is_empty():
@@ -58,15 +65,12 @@ func _on_dungeon_ready(generator: Node) -> void:
 		var group_size: int = 2 if rng.randi() % 2 == 0 else 3
 		tasks.append([GNOME_SCENE, group_size])
 
-	# Shuffle tasks so enemy types are interleaved across rooms (dispersion)
+	# Shuffle tasks so enemy types are interleaved, but assign to rooms farthest-first.
 	tasks.shuffle()
 
-	# Assign each task to a unique room, wrapping only if we run out of rooms
-	var shuffled_rooms := rooms.duplicate()
-	shuffled_rooms.shuffle()
-
+	# Assign each task to rooms starting from the farthest, wrapping if needed.
 	for i in tasks.size():
-		var room: Node3D = shuffled_rooms[i % shuffled_rooms.size()]
+		var room: Node3D = rooms[i % rooms.size()]
 		var scene: PackedScene = tasks[i][0]
 		var count: int = tasks[i][1]
 
@@ -94,7 +98,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 			)
 			if floor_rooms.is_empty():
 				continue
-			floor_rooms.shuffle()
+			# Pick the room farthest from the start on this floor.
+			floor_rooms.sort_custom(func(a: Node, b: Node) -> bool:
+				return (a as Node3D).global_position.distance_to(start_pos) > (b as Node3D).global_position.distance_to(start_pos)
+			)
 			var enemy: Node3D = scene.instantiate()
 			var room: Node3D = floor_rooms[0]
 			add_child(enemy)

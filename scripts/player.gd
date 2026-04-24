@@ -47,6 +47,26 @@ const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
 const SMOKE_ITEM_SCRIPT: Script = preload("res://scripts/items/smoke.gd")
 const SKULL_KEY_ITEM_SCRIPT: Script = preload("res://scripts/items/skull_key.gd")
+const STEP_SOUND_PATHS := [
+	"res://sounds/player/step1.mp3",
+	"res://sounds/player/step2.mp3",
+	"res://sounds/player/step3.mp3",
+	"res://sounds/player/step4.mp3",
+	"res://sounds/player/step5.mp3",
+]
+const STEP_ANIM_FPS := 30.0
+# Trigger frames for each animation (a step sound fires each time the position crosses one)
+const STEP_FRAMES: Dictionary = {
+	"walk": [10, 26],
+	"walkHold": [10, 26],
+	"walkBack": [10, 26],
+	"walkBackHold": [10, 26],
+	"run": [6, 16],
+	"leftStrafe": [10, 26],
+	"leftStrafeHold": [10, 26],
+	"rightStrafe": [8, 24],
+	"rightStrafeHold": [8, 24],
+}
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
@@ -99,6 +119,21 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
 @onready var player_canvas_layer: CanvasLayer = $CanvasLayer
 @onready var pickup_control: Control = $CanvasLayer/Control/Pickup
+@onready var footstep_player: AudioStreamPlayer = $FootstepPlayer
+@onready var hud_control: Control = $CanvasLayer/Control
+@onready var loading_control: Control = $CanvasLayer/Loading
+@onready var loading_label1: Label = $CanvasLayer/Loading/Label
+@onready var loading_label2: Label = $CanvasLayer/Loading/Label2
+@onready var loading_label3: Label = $CanvasLayer/Loading/Label3
+@onready var loading_label4: Label = $CanvasLayer/Loading/Label4
+
+var _game_started: bool = false
+var _map_generated: bool = false
+var _loading_label_timer: float = 0.0
+const LOADING_LABEL_INTERVAL := 0.5
+var _loading_label_index: int = 0
+var _step_sounds: Array = []
+var _prev_anim_pos: float = -1.0
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
@@ -131,7 +166,23 @@ func _ready():
 	_update_stamina_ui()
 	_update_health_ui()
 	_setup_attack_overlap_debug()
-	
+	for path in STEP_SOUND_PATHS:
+		_step_sounds.append(load(path))	
+	# Show loading screen until the player first moves.
+	hud_control.visible = false
+	loading_control.visible = true
+	loading_label1.visible = true
+	loading_label2.visible = false
+	loading_label3.visible = false
+	loading_label4.visible = false
+
+	# Connect to dungeon generator's done_generating to show Label4.
+	var generator := _find_dungeon_generator(get_tree().root)
+	if generator:
+		generator.done_generating.connect(_on_map_generated)
+	else:
+		_on_map_generated()
+
 	# Initialize player visual rotation.
 	if visual_root:
 		visual_root.rotation.y = head.rotation.y + deg_to_rad(visual_yaw_offset_degrees)
@@ -210,6 +261,31 @@ func _physics_process(delta):
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
 	_update_smoke_overlay(delta)
+
+	# Freeze all NPCs and show loading until the player first moves.
+	if not _game_started:
+		if not _map_generated:
+			_loading_label_timer += delta
+			if _loading_label_timer >= LOADING_LABEL_INTERVAL:
+				_loading_label_timer = 0.0
+				_loading_label_index = (_loading_label_index + 1) % 3
+				loading_label1.visible = _loading_label_index == 0
+				loading_label2.visible = _loading_label_index == 1
+				loading_label3.visible = _loading_label_index == 2
+		var move_input := Input.get_vector("a", "d", "w", "s")
+		var jump_input := Input.is_action_just_pressed("ui_accept")
+		if move_input != Vector2.ZERO or jump_input:
+			_game_started = true
+			hud_control.visible = true
+			loading_control.visible = false
+			# Unfreeze all NPCs by restoring inherited process mode.
+			for npc in _get_all_npcs():
+				npc.process_mode = Node.PROCESS_MODE_INHERIT
+		else:
+			# Keep NPCs frozen while waiting.
+			for npc in _get_all_npcs():
+				npc.process_mode = Node.PROCESS_MODE_DISABLED
+			return
 	var is_movement_locked := _is_movement_locked() or stun_timer > 0.0
 	var input_dir := Vector2.ZERO
 	if not is_movement_locked:
@@ -391,6 +467,7 @@ func _physics_process(delta):
 	_try_auto_equip_item()
 	_log_player_position()
 	_log_attack_overlap_snapshot()
+	_update_footsteps()
 
 func _setup_attack_overlap_debug() -> void:
 	if attack_area == null:
@@ -926,6 +1003,59 @@ func apply_damage(amount: float) -> void:
 	_apply_damage_camera_tilt()
 	if health <= 0.0:
 		get_tree().change_scene_to_file("res://menus/start_menu.tscn")
+
+func _get_all_npcs() -> Array:
+	var all_bodies := get_tree().root.find_children("*", "CharacterBody3D", true, false)
+	return all_bodies.filter(func(n: Node) -> bool:
+		return is_instance_valid(n) and not n.is_in_group("player")
+	)
+
+func _find_dungeon_generator(node: Node) -> Node:
+	for child in node.get_children():
+		if child.has_signal("done_generating"):
+			return child
+		var result := _find_dungeon_generator(child)
+		if result:
+			return result
+	return null
+
+func _on_map_generated() -> void:
+	_map_generated = true
+	loading_label1.visible = false
+	loading_label2.visible = false
+	loading_label3.visible = false
+	loading_label4.visible = true
+
+func _update_footsteps() -> void:
+	if animation_player == null or not is_on_floor():
+		_prev_anim_pos = -1.0
+		return
+	var anim_name := animation_player.current_animation
+	if not STEP_FRAMES.has(anim_name):
+		_prev_anim_pos = -1.0
+		return
+	var cur_pos := animation_player.current_animation_position
+	if _prev_anim_pos < 0.0:
+		_prev_anim_pos = cur_pos
+		return
+	var cur_frame := cur_pos * STEP_ANIM_FPS
+	var prev_frame := _prev_anim_pos * STEP_ANIM_FPS
+	for f: int in STEP_FRAMES[anim_name]:
+		# Forward crossing
+		if prev_frame < f and f <= cur_frame:
+			_play_random_step()
+			break
+		# Backward crossing (walk_backwards via play_backwards)
+		if cur_frame < f and f <= prev_frame:
+			_play_random_step()
+			break
+	_prev_anim_pos = cur_pos
+
+func _play_random_step() -> void:
+	if _step_sounds.is_empty() or footstep_player == null:
+		return
+	footstep_player.stream = _step_sounds[randi() % _step_sounds.size()]
+	footstep_player.play()
 
 func _apply_damage_camera_tilt() -> void:
 	if camera == null:

@@ -563,3 +563,24 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Generating Map ..."
+
+[node name="Label4" type="Label" parent="CanvasLayer/Loading" unique_id=1920088576]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -67.0
+offset_top = 300.0
+offset_right = 66.0
+offset_bottom = 323.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "Done"
+horizontal_alignment = 1
+
+[node name="FootstepPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034317]
+volume_db = -7.0
