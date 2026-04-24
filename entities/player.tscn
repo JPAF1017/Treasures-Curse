@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
+[ext_resource type="Shader" uid="uid://dx8i8cu4cr7rs" path="res://entities/overlay.gdshader" id="2_ef06p"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
 [ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="5_qsoyl"]
@@ -24,6 +25,16 @@ height = 1.1181335
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_vision"]
 radius = 2.0
 height = 12.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tjdhl"]
+render_priority = 3
+shader = ExtResource("2_ef06p")
+shader_parameter/pixel_size = 0.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_i623q"]
+material = SubResource("ShaderMaterial_tjdhl")
+flip_faces = true
+size = Vector2(2, 2)
 
 [node name="player" type="CharacterBody3D" unique_id=1588251422 groups=["player"]]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
@@ -71,6 +82,10 @@ spot_range = 43.3203
 spot_attenuation = 0.5
 spot_angle = 55.0
 spot_angle_attenuation = 0.8
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Head/playerCamera" unique_id=1465749198]
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_i623q")
 
 [node name="player" parent="." unique_id=1414178216 instance=ExtResource("2_b0kkn")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
