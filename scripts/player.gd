@@ -190,6 +190,15 @@ func _ready():
 	_setup_smoke_overlay()
 	_setup_hotbar_ui()
 	_select_hotbar_slot(0)
+	# Give player a torch in hotbar slot 1 on startup
+	var _torch_scene := preload("res://assets/items/torch.tscn")
+	var _torch_instance := _torch_scene.instantiate()
+	_torch_instance.name = "PlayerTorch"
+	if bool(_torch_instance.call("pick_up_into_hotbar", self, 1)):
+		_set_hotbar_item(1, _torch_instance, _torch_instance.call("get_hotbar_icon_texture"))
+		_refresh_selected_item_state()
+	else:
+		push_warning("Failed to add torch to hotbar on startup")
 	_update_stamina_ui()
 	_update_health_ui()
 	_setup_attack_overlap_debug()
@@ -1071,6 +1080,24 @@ func _find_dungeon_generator(node: Node) -> Node:
 			return result
 	return null
 
+const PAUSE_MENU_SCENE_PATH := "res://menus/pause_menu.tscn"
+
+func _open_pause_menu() -> void:
+	if not _game_started:
+		return
+	get_tree().paused = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if player_canvas_layer:
+		player_canvas_layer.visible = false
+	var pause_scene: PackedScene = load(PAUSE_MENU_SCENE_PATH)
+	var pause_menu := pause_scene.instantiate()
+	pause_menu.tree_exiting.connect(_on_pause_menu_closed)
+	get_tree().root.add_child(pause_menu)
+
+func _on_pause_menu_closed() -> void:
+	if player_canvas_layer:
+		player_canvas_layer.visible = true
+
 func _on_map_generated() -> void:
 	_map_generated = true
 	loading_label1.visible = false
@@ -1296,11 +1323,9 @@ func _log_player_position() -> void:
 
 # Debug function to check collision state
 func _input(event):
-	if event.is_action_pressed("ui_cancel"):  # ESC key - toggle mouse mode for debugging
-		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		else:
-			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if event.is_action_pressed("ui_cancel"):
+		_open_pause_menu()
+		return
 	
 	if event.is_action_pressed("space"):  # Space key - print debug info
 		print("=== PLAYER DEBUG INFO ===")

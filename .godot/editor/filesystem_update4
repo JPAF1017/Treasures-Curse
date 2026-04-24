@@ -53,3 +53,5 @@ res://assets/room assets/fire_particle.tscn
 res://assets/room assets/fire_particle.gd
 res://assets/items/torch.tscn
 res://scripts/items/torch.gd
+res://menus/pause_menu.tscn
+res://menus/pause_menu.gd

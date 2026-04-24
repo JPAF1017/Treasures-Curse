@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://b8ldrwy544bbi"]
+
+[ext_resource type="Script" uid="uid://pause_menu_gd" path="res://menus/pause_menu.gd" id="1_0wv6w"]
+[ext_resource type="VideoStream" uid="uid://b4ixw8c7c4e07" path="res://assets/ui/wallpaper.ogv" id="2_qlf07"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="3_ybqm1"]
+
+[node name="StartMenu" type="Control" unique_id=2131559063]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0wv6w")
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1000000001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stream = ExtResource("2_qlf07")
+autoplay = true
+expand = true
+
+[node name="Button" type="Control" parent="." unique_id=182493112]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Continue" type="Button" parent="Button" unique_id=906824854]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -179.0
+offset_top = -104.0
+offset_right = 185.0
+offset_bottom = -51.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_ybqm1")
+theme_override_font_sizes/font_size = 50
+text = "Continue
+"
+
+[node name="Quit" type="Button" parent="Button" unique_id=1302042999]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -91.0
+offset_top = 56.0
+offset_right = 95.0
+offset_bottom = 109.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_ybqm1")
+theme_override_font_sizes/font_size = 50
+text = "Quit"
+
+[node name="Main Menu" type="Button" parent="Button" unique_id=1964108592]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -203.0
+offset_top = -24.0
+offset_right = 213.0
+offset_bottom = 29.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_ybqm1")
+theme_override_font_sizes/font_size = 50
+text = "Main Menu
+"

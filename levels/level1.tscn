@@ -15,7 +15,6 @@
 [ext_resource type="PackedScene" uid="uid://djgwx2fo8gck3" path="res://assets/rooms/l_shape_room.tscn" id="9_w7ck5"]
 [ext_resource type="PackedScene" uid="uid://scxkscsgrow5" path="res://assets/rooms/narrow.tscn" id="10_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="13_ou4v7"]
-[ext_resource type="PackedScene" uid="uid://c14dcxk688t0u" path="res://assets/items/torch.tscn" id="18_tx362"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 
@@ -97,6 +96,3 @@ script = ExtResource("98_optimizer")
 
 [node name="player" parent="." unique_id=1588251422 instance=ExtResource("7_8bcou")]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -35, -9, 64)
-
-[node name="Torch" parent="." unique_id=2074645289 instance=ExtResource("18_tx362")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, -10, 65)
