@@ -10,3 +10,12 @@ res://scripts/player.gd
 res://scripts/items/torch.gd
 res://assets/items/torch.tscn
 res://scripts/items/bat.gd
+res://scripts/level1_spawner.gd
+res://assets/items/shovel.tscn
+res://assets/items/sword.tscn
+res://scripts/items/axe.gd
+res://scripts/items/health.gd
+res://scripts/items/shovel.gd
+res://scripts/items/skull_key.gd
+res://scripts/items/smoke.gd
+res://scripts/items/sword.gd

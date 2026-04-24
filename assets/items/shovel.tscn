@@ -10,6 +10,7 @@ height = 2.1107788
 [node name="Shovel" type="RigidBody3D" unique_id=1957626746]
 script = ExtResource("1_m86qi")
 held_item_position = Vector3(0.009, 0.07, -0.5)
+viewmodel_scale = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1296833946]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95600855, 0)

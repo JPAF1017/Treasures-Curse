@@ -3,7 +3,7 @@ extends RigidBody3D
 const SKULL_KEY_SCENE_PATH := "res://puzzles/skull_key.tscn"
 const SKULL_KEY_ITEM_ICON: Texture2D = preload("res://assets/ui/skull.png")
 const SKULL_KEY_MODEL_SCENE: PackedScene = preload("res://assets/items assets/skull.glb")
-static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
@@ -42,11 +42,11 @@ func _ready() -> void:
 
 
 static func get_pickup_max_distance() -> float:
-	return MeleeShared.get_pickup_max_distance()
+	return melee_shared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return MeleeShared.get_equip_action_name()
+	return melee_shared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -58,15 +58,15 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_skull_key_node(node: Node) -> bool:
-	return MeleeShared.is_item_node(node, SKULL_KEY_SCENE_PATH, "skull_key")
+	return melee_shared.is_item_node(node, SKULL_KEY_SCENE_PATH, "skull_key")
 
 
 static func find_skull_key_rigidbody_from_node(node: Node) -> RigidBody3D:
-	return MeleeShared.find_item_rigidbody_from_node(node, SKULL_KEY_SCENE_PATH, "skull_key")
+	return melee_shared.find_item_rigidbody_from_node(node, SKULL_KEY_SCENE_PATH, "skull_key")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	var equip_input: Dictionary = melee_shared.read_equip_input(get_equip_action_name(), equip_key_was_down)
 	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
 	return bool(equip_input.get("just_pressed", false))
 
@@ -189,11 +189,11 @@ func _configure_item_physics() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	MeleeShared.set_item_physics_enabled(self, enabled, SKULL_KEY_PHYSICS_COLLISION_LAYER, SKULL_KEY_PHYSICS_COLLISION_MASK, SKULL_KEY_PHYSICS_MASS, SKULL_KEY_PHYSICS_LINEAR_DAMP, SKULL_KEY_PHYSICS_ANGULAR_DAMP)
+	melee_shared.set_item_physics_enabled(self, enabled, SKULL_KEY_PHYSICS_COLLISION_LAYER, SKULL_KEY_PHYSICS_COLLISION_MASK, SKULL_KEY_PHYSICS_MASS, SKULL_KEY_PHYSICS_LINEAR_DAMP, SKULL_KEY_PHYSICS_ANGULAR_DAMP)
 
 
 func _set_item_visuals_visible(visibility: bool) -> void:
-	MeleeShared.set_visual_children_visible(self, visibility)
+	melee_shared.set_visual_children_visible(self, visibility)
 
 
 func _set_visual_layer_recursive(node: Node, layer: int) -> void:

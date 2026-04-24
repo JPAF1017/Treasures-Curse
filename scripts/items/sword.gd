@@ -19,14 +19,14 @@ class HeldItemTransform:
 const SWORD_SCENE_PATH := "res://assets/items/sword.tscn"
 const SWORD_DEBUG := false
 const SWORD_ATTACHMENT_NODE_NAME := "RightHandSwordAttachment"
-static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const SWORD_ITEM_ICON: Texture2D = preload("res://assets/ui/sword.png")
 const SWORD_MODEL_SCENE: PackedScene = preload("res://assets/items assets/sword.glb")
 const ViewmodelComponent = preload("res://scripts/items/MeleeViewmodelComponent.gd")
 var _viewmodel = ViewmodelComponent.new(SWORD_MODEL_SCENE, "SwordViewmodel")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
-const ITEM_WINDUP_COLOR_START_INDEX := 17
-const ITEM_WINDUP_COLOR_END_INDEX := 22
+const ITEM_DURABILITY_COLOR_START_INDEX := 17
+const ITEM_DURABILITY_COLOR_END_INDEX := 22
 const SWING_ANIMATION_NAME := "swing"
 const SWING_ANIMATION_FPS := 30.0
 const SWING_RELEASE_FRAME := 58
@@ -39,6 +39,7 @@ const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
 const ITEM_DROP_UPWARD_SPEED := 0.5
 const SWING_MOMENTUM_SPEED := 30.0
+const MAX_USES: int = 20
 const SWORD_PHYSICS_COLLISION_LAYER := 3
 const SWORD_PHYSICS_COLLISION_MASK := 3
 const SWORD_PHYSICS_MASS := 0.1
@@ -69,21 +70,22 @@ var swing_damage_ready: bool = false
 var swing_momentum_applied: bool = false
 var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
 var swing_damaged_targets: Dictionary = {}
-var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
-var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
+var uses_left: int = MAX_USES
+var item_durability_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
+var item_durability_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
 
 
 func _ready() -> void:
 	_configure_item_physics()
-	_setup_item_windup_palette_colors()
+	_setup_item_durability_palette_colors()
 
 
 static func get_pickup_max_distance() -> float:
-	return MeleeShared.get_pickup_max_distance()
+	return melee_shared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return MeleeShared.get_equip_action_name()
+	return melee_shared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -95,15 +97,15 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_sword_node(node: Node) -> bool:
-	return MeleeShared.is_item_node(node, SWORD_SCENE_PATH, "sword")
+	return melee_shared.is_item_node(node, SWORD_SCENE_PATH, "sword")
 
 
 static func find_sword_rigidbody_from_node(node: Node) -> RigidBody3D:
-	return MeleeShared.find_item_rigidbody_from_node(node, SWORD_SCENE_PATH, "sword")
+	return melee_shared.find_item_rigidbody_from_node(node, SWORD_SCENE_PATH, "sword")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	var equip_input: Dictionary = melee_shared.read_equip_input(get_equip_action_name(), equip_key_was_down)
 	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
 	return bool(equip_input.get("just_pressed", false))
 
@@ -113,12 +115,9 @@ func get_hotbar_icon_texture() -> Texture2D:
 
 
 func get_hotbar_icon_modulate(alpha: float) -> Color:
-	var icon_color := Color(1.0, 1.0, 1.0, alpha)
-	if is_swing_windup_active():
-		var windup_percent := get_swing_windup_percent()
-		var windup_color := item_windup_color_start.lerp(item_windup_color_end, windup_percent)
-		icon_color = Color(windup_color.r, windup_color.g, windup_color.b, alpha)
-	return icon_color
+	var durability_percent := clampf(float(uses_left) / float(MAX_USES), 0.0, 1.0)
+	var dur_color := item_durability_color_start.lerp(item_durability_color_end, durability_percent)
+	return Color(dur_color.r, dur_color.g, dur_color.b, alpha)
 
 
 func can_start_primary_action() -> bool:
@@ -333,19 +332,17 @@ func is_equipped_in_hand() -> bool:
 	return parent != null and parent == right_hand_attachment
 
 
-func _setup_item_windup_palette_colors() -> void:
+func _setup_item_durability_palette_colors() -> void:
 	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
 	if palette_texture == null:
-		push_warning("Item windup palette texture not found at: %s" % STAMINA_PALETTE_PATH)
 		return
 
 	var palette_image := palette_texture.get_image()
 	if palette_image == null or palette_image.is_empty():
-		push_warning("Item windup palette image is empty: %s" % STAMINA_PALETTE_PATH)
 		return
 
-	item_windup_color_start = _get_palette_color(palette_image, ITEM_WINDUP_COLOR_START_INDEX, item_windup_color_start)
-	item_windup_color_end = _get_palette_color(palette_image, ITEM_WINDUP_COLOR_END_INDEX, item_windup_color_end)
+	item_durability_color_start = _get_palette_color(palette_image, ITEM_DURABILITY_COLOR_START_INDEX, item_durability_color_start)
+	item_durability_color_end = _get_palette_color(palette_image, ITEM_DURABILITY_COLOR_END_INDEX, item_durability_color_end)
 
 
 func _consume_player_stamina(player: Node, amount: float) -> void:
@@ -381,11 +378,45 @@ func _apply_attack_damage(player: Node, amount: float) -> void:
 			var names := overlapping.map(func(a: Area3D) -> String: return "%s(layer=%d)" % [a.name, a.collision_layer])
 			print("[SwordDbg] swing active — attack area overlapping: %s" % ", ".join(names))
 
-	var targets: Array[Node] = MeleeShared.collect_hurtbox_damage_targets(attack_area, self, player, swing_damaged_targets)
+	var targets: Array[Node] = melee_shared.collect_hurtbox_damage_targets(attack_area, self, player, swing_damaged_targets)
+	var dealt_damage: bool = false
 	for target: Node in targets:
 		if target.has_method("apply_damage"):
 			target.call("apply_damage", amount)
 			swing_damaged_targets[target.get_instance_id()] = true
+			dealt_damage = true
+
+	if dealt_damage:
+		uses_left -= 1
+		if uses_left <= 0:
+			_delete_item()
+
+
+func _delete_item() -> void:
+	if inventory_slot_index >= 0:
+		var parent := get_parent()
+		var player: Node = null
+		while parent:
+			if parent.has_method("_set_hotbar_item"):
+				player = parent
+				break
+			parent = parent.get_parent()
+		if player == null and right_hand_attachment:
+			parent = right_hand_attachment
+			while parent:
+				if parent.has_method("_set_hotbar_item"):
+					player = parent
+					break
+				parent = parent.get_parent()
+		if player:
+			player.call("_set_hotbar_item", inventory_slot_index, null, null)
+			if player.has_method("_refresh_selected_item_state"):
+				player.call("_refresh_selected_item_state")
+			if player.has_method("_update_pickup_prompt_visibility"):
+				player.call("_update_pickup_prompt_visibility")
+
+	_viewmodel.hide()
+	queue_free()
 
 
 func _apply_swing_momentum(player: Node) -> void:
@@ -472,7 +503,7 @@ func _apply_item_blade_flip() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	MeleeShared.set_item_physics_enabled(self, enabled, SWORD_PHYSICS_COLLISION_LAYER, SWORD_PHYSICS_COLLISION_MASK, SWORD_PHYSICS_MASS, SWORD_PHYSICS_LINEAR_DAMP, SWORD_PHYSICS_ANGULAR_DAMP)
+	melee_shared.set_item_physics_enabled(self, enabled, SWORD_PHYSICS_COLLISION_LAYER, SWORD_PHYSICS_COLLISION_MASK, SWORD_PHYSICS_MASS, SWORD_PHYSICS_LINEAR_DAMP, SWORD_PHYSICS_ANGULAR_DAMP)
 
 
 func _configure_item_physics() -> void:
@@ -487,7 +518,7 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 
 func _set_visual_children_visible(node: Node, visibility: bool) -> void:
-	MeleeShared.set_visual_children_visible(node, visibility)
+	melee_shared.set_visual_children_visible(node, visibility)
 
 
 func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
@@ -572,7 +603,7 @@ func _get_player_attack_area(player: Node) -> Area3D:
 
 
 func _is_wielding_player_on_floor() -> bool:
-	return MeleeShared.is_wielding_player_on_floor(self)
+	return melee_shared.is_wielding_player_on_floor(self)
 
 
 func _get_self_animation_player() -> AnimationPlayer:
@@ -598,7 +629,7 @@ func _is_swing_in_windup(player: Node) -> bool:
 
 
 func _swing_frame_to_time(frame: int) -> float:
-	return MeleeShared.swing_frame_to_time(frame, SWING_ANIMATION_FPS)
+	return melee_shared.swing_frame_to_time(frame, SWING_ANIMATION_FPS)
 
 
 func _reset_swing_state(player: Node) -> void:

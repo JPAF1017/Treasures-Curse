@@ -15,6 +15,27 @@ const GNOME_GROUPS   := 3  # each group spawns 2 or 3 gnomes in the same room
 const STATUE_FLOORS  := [1, 3]
 const SHY_FLOORS     := [1, 3]
 
+# ---------- Item spawning configuration ----------
+# Scene paths must match the paths used by big_room.gd
+const ITEM_SCENES: Dictionary = {
+	"health": "res://assets/items/health.tscn",
+	"smoke":  "res://assets/items/smoke.tscn",
+	"sword":  "res://assets/items/sword.tscn",
+	"shovel": "res://assets/items/shovel.tscn",
+	"bat":    "res://assets/items/bat.tscn",
+	"torch":  "res://assets/items/torch.tscn",
+}
+
+# Total desired count for each item type (includes items spawned by big_rooms)
+const ITEM_TARGET_COUNTS: Dictionary = {
+	"health": 8,
+	"smoke":  12,
+	"sword":  7,
+	"shovel": 7,
+	"bat":    7,
+	"torch":  15,
+}
+
 
 func _ready() -> void:
 	var generator := _find_dungeon_generator(self)
@@ -75,13 +96,13 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# Build a list of spawn tasks: [scene, count]
 	# count > 1 means a group spawning close together in the same room
 	var tasks: Array = []
-	for _i in CHARGER_COUNT:
+	for i in CHARGER_COUNT:
 		tasks.append([CHARGER_SCENE, 1])
-	for _i in FLY_COUNT:
+	for i in FLY_COUNT:
 		tasks.append([FLY_SCENE, 1])
-	for _i in SHAMBLER_COUNT:
+	for i in SHAMBLER_COUNT:
 		tasks.append([SHAMBLER_SCENE, 1])
-	for _i in GNOME_GROUPS:
+	for i in GNOME_GROUPS:
 		var group_size: int = 2 if rng.randi() % 2 == 0 else 3
 		tasks.append([GNOME_SCENE, group_size])
 
@@ -129,3 +150,74 @@ func _on_dungeon_ready(generator: Node) -> void:
 			var room: Node3D = floor_rooms[0]
 			add_child(enemy)
 			enemy.global_position = room.global_position + Vector3(rng.randf_range(-2.5, 2.5), 2.0, rng.randf_range(-2.5, 2.5))
+
+	# ---------- Spawn items across the map ----------
+	var item_rooms: Array = rooms.filter(func(r: Node) -> bool:
+		var n := r.name.to_lower()
+		return not (n.begins_with("corridor") or n.begins_with("stair"))
+	)
+	_spawn_map_items(generator, item_rooms, rng)
+
+
+## Count items already spawned by big_rooms, then fill in the remaining
+## quota at random eligible rooms so every item type hits its target count.
+func _spawn_map_items(
+	generator: Node, rooms: Array, rng: RandomNumberGenerator
+) -> void:
+	# Count items that big_rooms already placed (they are children of SpawnItem areas)
+	var existing_counts: Dictionary = {}
+	for key: String in ITEM_TARGET_COUNTS:
+		existing_counts[key] = 0
+
+	var scene_path_to_key: Dictionary = {}
+	for key: String in ITEM_SCENES:
+		scene_path_to_key[ITEM_SCENES[key]] = key
+
+	# Walk every node inside the generator looking for items spawned by big_rooms
+	_count_existing_items(generator, scene_path_to_key, existing_counts)
+
+	# Build a flat list of item spawn tasks: each entry is a scene path string
+	var item_tasks: Array[String] = []
+	for key: String in ITEM_TARGET_COUNTS:
+		var target: int = ITEM_TARGET_COUNTS[key]
+		var already: int = existing_counts.get(key, 0)
+		var remaining: int = maxi(target - already, 0)
+		for i in remaining:
+			item_tasks.append(ITEM_SCENES[key])
+
+	item_tasks.shuffle()
+
+	if item_tasks.is_empty() or rooms.is_empty():
+		return
+
+	for i in item_tasks.size():
+		var room: Node3D = rooms[i % rooms.size()]
+		var packed: PackedScene = load(item_tasks[i])
+		if packed == null:
+			push_error("[level1_spawner] Failed to load item: " + item_tasks[i])
+			continue
+		var item: Node3D = packed.instantiate()
+		var spread := Vector3(
+			rng.randf_range(-3.0, 3.0),
+			2.0,
+			rng.randf_range(-3.0, 3.0)
+		)
+		add_child(item)
+		item.global_position = room.global_position + spread
+
+
+## Recursively count item nodes that match known scene paths.
+func _count_existing_items(
+	node: Node,
+	scene_path_to_key: Dictionary,
+	counts: Dictionary
+) -> void:
+	if node == null:
+		return
+	var scene_file := node.scene_file_path
+	if not scene_file.is_empty() and scene_path_to_key.has(scene_file):
+		var key: String = scene_path_to_key[scene_file]
+		counts[key] = counts.get(key, 0) + 1
+		return  # no need to recurse into item internals
+	for child in node.get_children():
+		_count_existing_items(child, scene_path_to_key, counts)

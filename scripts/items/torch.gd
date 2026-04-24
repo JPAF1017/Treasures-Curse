@@ -63,6 +63,8 @@ func _ready() -> void:
 	_configure_item_physics()
 	if _fire_particle:
 		_fire_particle.visible = false
+	if _dropped_light:
+		_dropped_light.visible = false
 	_setup_item_durability_palette_colors()
 
 func _setup_item_durability_palette_colors() -> void:

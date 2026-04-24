@@ -9,6 +9,7 @@ size = Vector3(0.19555664, 2.3440552, 0.47279358)
 [node name="Sword" type="RigidBody3D" unique_id=204406245]
 script = ExtResource("1_rgvkb")
 held_item_position = Vector3(0.03, 0.05, 0.3)
+viewmodel_scale = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1683347819]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002319336, 0.23416138, -0.035972595)

@@ -3,7 +3,7 @@ extends RigidBody3D
 const HEALTH_SCENE_PATH := "res://assets/items/health.tscn"
 const HEALTH_ITEM_ICON: Texture2D = preload("res://assets/ui/health.png")
 const HEALTH_MODEL_SCENE: PackedScene = preload("res://assets/items assets/health.glb")
-static var MeleeShared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
 const HEALTH_RESTORE_AMOUNT := 30.0
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
@@ -43,11 +43,11 @@ func _ready() -> void:
 
 
 static func get_pickup_max_distance() -> float:
-	return MeleeShared.get_pickup_max_distance()
+	return melee_shared.get_pickup_max_distance()
 
 
 static func get_equip_action_name() -> StringName:
-	return MeleeShared.get_equip_action_name()
+	return melee_shared.get_equip_action_name()
 
 
 static func get_scene_path() -> String:
@@ -59,15 +59,15 @@ static func get_item_icon() -> Texture2D:
 
 
 static func is_health_node(node: Node) -> bool:
-	return MeleeShared.is_item_node(node, HEALTH_SCENE_PATH, "health")
+	return melee_shared.is_item_node(node, HEALTH_SCENE_PATH, "health")
 
 
 static func find_health_rigidbody_from_node(node: Node) -> RigidBody3D:
-	return MeleeShared.find_item_rigidbody_from_node(node, HEALTH_SCENE_PATH, "health")
+	return melee_shared.find_item_rigidbody_from_node(node, HEALTH_SCENE_PATH, "health")
 
 
 static func is_equip_input_just_pressed() -> bool:
-	var equip_input: Dictionary = MeleeShared.read_equip_input(get_equip_action_name(), equip_key_was_down)
+	var equip_input: Dictionary = melee_shared.read_equip_input(get_equip_action_name(), equip_key_was_down)
 	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
 	return bool(equip_input.get("just_pressed", false))
 
@@ -220,11 +220,11 @@ func _configure_item_physics() -> void:
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	MeleeShared.set_item_physics_enabled(self, enabled, HEALTH_PHYSICS_COLLISION_LAYER, HEALTH_PHYSICS_COLLISION_MASK, HEALTH_PHYSICS_MASS, HEALTH_PHYSICS_LINEAR_DAMP, HEALTH_PHYSICS_ANGULAR_DAMP)
+	melee_shared.set_item_physics_enabled(self, enabled, HEALTH_PHYSICS_COLLISION_LAYER, HEALTH_PHYSICS_COLLISION_MASK, HEALTH_PHYSICS_MASS, HEALTH_PHYSICS_LINEAR_DAMP, HEALTH_PHYSICS_ANGULAR_DAMP)
 
 
 func _set_item_visuals_visible(visibility: bool) -> void:
-	MeleeShared.set_visual_children_visible(self, visibility)
+	melee_shared.set_visual_children_visible(self, visibility)
 
 
 func _set_visual_layer_recursive(node: Node, layer: int) -> void:
