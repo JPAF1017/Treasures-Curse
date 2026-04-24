@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="5_qsoyl"]
 [ext_resource type="Texture2D" uid="uid://d2rbt1748nf7v" path="res://assets/ui/crosshairs_tilesheet_white.png" id="6_qsoyl"]
 [ext_resource type="Texture2D" uid="uid://3b05fn107wf4" path="res://assets/ui/E.png" id="7_6nm46"]
+[ext_resource type="AudioStream" uid="uid://b0s6ugv0j3xsn" path="res://sounds/player/background_music.mp3" id="8_music"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
 height = 4.002136
@@ -584,3 +585,13 @@ horizontal_alignment = 1
 
 [node name="FootstepPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034317]
 volume_db = -7.0
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034318]
+stream = ExtResource("8_music")
+volume_db = -15.0
+
+[node name="ChasePlayer" type="AudioStreamPlayer" parent="." unique_id=2135034319]
+volume_db = -10.0
+
+[node name="SwingPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034320]
+volume_db = -5.0

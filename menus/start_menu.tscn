@@ -2,7 +2,7 @@
 
 [ext_resource type="VideoStream" uid="uid://b4ixw8c7c4e07" path="res://assets/ui/wallpaper.ogv" id="1_wallpaper"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="2_1t8nw"]
-[ext_resource type="Script" path="res://menus/start_menu.gd" id="3_startmenu"]
+[ext_resource type="Script" uid="uid://kbb03ylb3yud" path="res://menus/start_menu.gd" id="3_startmenu"]
 
 [node name="StartMenu" type="Control" unique_id=2131559063]
 layout_mode = 3
@@ -37,9 +37,42 @@ grow_vertical = 0
 texture_filter = 1
 layout_mode = 0
 offset_left = 72.0
-offset_top = -78.0
+offset_top = -384.0
 offset_right = 258.0
-offset_bottom = -25.0
+offset_bottom = -331.0
 theme_override_fonts/font = ExtResource("2_1t8nw")
 theme_override_font_sizes/font_size = 50
 text = "Play"
+
+[node name="Quit" type="Button" parent="Button" unique_id=1302042999]
+texture_filter = 1
+layout_mode = 0
+offset_left = 72.0
+offset_top = -96.0
+offset_right = 258.0
+offset_bottom = -43.0
+theme_override_fonts/font = ExtResource("2_1t8nw")
+theme_override_font_sizes/font_size = 50
+text = "Quit"
+
+[node name="Tutorial" type="Button" parent="Button" unique_id=1964108592]
+texture_filter = 1
+layout_mode = 0
+offset_left = 72.0
+offset_top = -296.0
+offset_right = 568.0
+offset_bottom = -243.0
+theme_override_fonts/font = ExtResource("2_1t8nw")
+theme_override_font_sizes/font_size = 50
+text = "How to Play"
+
+[node name="Multiplayer" type="Button" parent="Button" unique_id=1102536706]
+texture_filter = 1
+layout_mode = 0
+offset_left = 72.0
+offset_top = -192.0
+offset_right = 568.0
+offset_bottom = -139.0
+theme_override_fonts/font = ExtResource("2_1t8nw")
+theme_override_font_sizes/font_size = 50
+text = "Multiplayer"

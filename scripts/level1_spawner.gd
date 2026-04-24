@@ -40,14 +40,28 @@ func _on_dungeon_ready(generator: Node) -> void:
 	var all_rooms: Array = generator.find_children("*", "DungeonRoom3D", true, false)
 	var start_room: Node3D = generator.find_child("StartRoom", true, false) as Node3D
 	var start_pos: Vector3 = start_room.global_position if start_room else Vector3.ZERO
+	var start_pos_xz := Vector2(start_pos.x, start_pos.z)
 
-	# Sort rooms by distance from StartRoom descending so farthest rooms are picked first.
+	# Voxel scale for converting grid distance to world units (default 10 units per voxel)
+	var voxel_xz: float = generator.get("voxel_scale").x
+	const MIN_ROOM_DIST_VOXELS := 4
+	var min_horiz_dist: float = MIN_ROOM_DIST_VOXELS * voxel_xz
+
+	# Eligible rooms: at least 4 voxels away horizontally, OR directly above/below start (same XZ).
 	var rooms: Array = all_rooms.filter(func(r: Node) -> bool:
-		return r.name != "StartRoom"
+		if r.name == "StartRoom":
+			return false
+		var rp := (r as Node3D).global_position
+		var rp_xz := Vector2(rp.x, rp.z)
+		var horiz_dist := rp_xz.distance_to(start_pos_xz)
+		# Allow rooms directly above/below start (within one voxel horizontally)
+		if horiz_dist < voxel_xz:
+			return true
+		return horiz_dist >= min_horiz_dist
 	)
-	rooms.sort_custom(func(a: Node, b: Node) -> bool:
-		return (a as Node3D).global_position.distance_to(start_pos) > (b as Node3D).global_position.distance_to(start_pos)
-	)
+
+	# Shuffle so NPCs are dispersed randomly across eligible rooms.
+	rooms.shuffle()
 
 	if rooms.is_empty():
 		return
@@ -65,10 +79,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 		var group_size: int = 2 if rng.randi() % 2 == 0 else 3
 		tasks.append([GNOME_SCENE, group_size])
 
-	# Shuffle tasks so enemy types are interleaved, but assign to rooms farthest-first.
+	# Shuffle tasks so enemy types are interleaved, dispersed across eligible rooms.
 	tasks.shuffle()
 
-	# Assign each task to rooms starting from the farthest, wrapping if needed.
+	# Assign tasks cycling through the shuffled room pool.
 	for i in tasks.size():
 		var room: Node3D = rooms[i % rooms.size()]
 		var scene: PackedScene = tasks[i][0]
@@ -94,14 +108,17 @@ func _on_dungeon_ready(generator: Node) -> void:
 		for floor_idx: int in floors:
 			var target_y := gen_origin_y + floor_idx * voxel_y
 			var floor_rooms := all_rooms.filter(func(r: Node) -> bool:
-				return r.name != "StartRoom" and abs((r as Node3D).global_position.y - target_y) < voxel_y * 0.5
+				if r.name == "StartRoom":
+					return false
+				var rp := (r as Node3D).global_position
+				if abs(rp.y - target_y) >= voxel_y * 0.5:
+					return false
+				var horiz_dist := Vector2(rp.x, rp.z).distance_to(start_pos_xz)
+				return horiz_dist < voxel_xz or horiz_dist >= min_horiz_dist
 			)
 			if floor_rooms.is_empty():
 				continue
-			# Pick the room farthest from the start on this floor.
-			floor_rooms.sort_custom(func(a: Node, b: Node) -> bool:
-				return (a as Node3D).global_position.distance_to(start_pos) > (b as Node3D).global_position.distance_to(start_pos)
-			)
+			floor_rooms.shuffle()
 			var enemy: Node3D = scene.instantiate()
 			var room: Node3D = floor_rooms[0]
 			add_child(enemy)

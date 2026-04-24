@@ -4,6 +4,7 @@ const TEST_MAP_PATH := "res://levels/level1.tscn"
 
 @onready var video_player: VideoStreamPlayer = $VideoStreamPlayer
 @onready var play_button: Button = $Button/MenuButton
+@onready var quit_button: Button = $Button/Quit
 
 var _map_instance: Node = null
 
@@ -11,10 +12,15 @@ var _map_instance: Node = null
 func _ready() -> void:
 	video_player.finished.connect(_on_video_finished)
 	play_button.pressed.connect(_on_play_pressed)
+	quit_button.pressed.connect(_on_quit_pressed)
 
 
 func _on_video_finished() -> void:
 	video_player.play()
+
+
+func _on_quit_pressed() -> void:
+	get_tree().quit()
 
 
 func _on_play_pressed() -> void:
