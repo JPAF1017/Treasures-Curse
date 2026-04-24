@@ -5,7 +5,7 @@ const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 1.5
-const RUN_SPEED = 10.0
+const RUN_SPEED = 12.0
 const DIR_CHANGE_MIN = 1.2
 const DIR_CHANGE_MAX = 3.0
 const ATTACK_COOLDOWN = 3.0

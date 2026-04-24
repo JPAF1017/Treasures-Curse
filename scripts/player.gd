@@ -58,6 +58,7 @@ const CHASE_SOUND_PATHS := [
 	"res://sounds/player/chase1.mp3",
 	"res://sounds/player/chase2.mp3",
 ]
+const CHASE_SHY_SOUND_PATH := "res://sounds/player/chase3.mp3"
 const SWING_SOUND_PATH := "res://sounds/player/swing.mp3"
 const STEP_ANIM_FPS := 30.0
 # Trigger frames for each animation (a step sound fires each time the position crosses one)
@@ -134,24 +135,31 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var loading_label2: Label = $CanvasLayer/Loading/Label2
 @onready var loading_label3: Label = $CanvasLayer/Loading/Label3
 @onready var loading_label4: Label = $CanvasLayer/Loading/Label4
+@onready var warning_control: Control = $CanvasLayer/Warning
 
 var _game_started: bool = false
 var _map_generated: bool = false
 var _loading_label_timer: float = 0.0
 const LOADING_LABEL_INTERVAL := 0.5
 var _loading_label_index: int = 0
+var _warning_timer: float = 0.0
+const WARNING_DISPLAY_TIME := 3.0
 var _step_sounds: Array = []
 var _chase_sounds: Array = []
 var _prev_anim_pos: float = -1.0
 var _chase_check_timer: float = 0.0
 const CHASE_CHECK_INTERVAL := 0.3
-const CHASE_VOLUME_DB := -5.0
 const CHASE_FADE_OUT_DURATION := 2.0
 var _is_being_chased: bool = false
+var _chase_volume_db: float = 0.0
+var _chased_by_shy: bool = false
+var _shy_chase_sound: AudioStream = null
 var _music_resume_position: float = 0.0
 var _swing_windup_was_active: bool = false
 var _chase_fade_tween: Tween = null
 const STATUE_SCRIPT_PATH := "res://scripts/npc/statue.gd"
+const SHY_SCRIPT_PATH := "res://scripts/npc/shy.gd"
+const CHARGER_SCRIPT_PATH := "res://scripts/npc/charger.gd"
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
@@ -188,7 +196,9 @@ func _ready():
 		_step_sounds.append(load(path))
 	for path in CHASE_SOUND_PATHS:
 		_chase_sounds.append(load(path))
+	_shy_chase_sound = load(CHASE_SHY_SOUND_PATH)
 	chase_player.finished.connect(_on_chase_sound_finished)
+	_chase_volume_db = chase_player.volume_db
 	swing_player.stream = load(SWING_SOUND_PATH)	
 	# Show loading screen until the player first moves.
 	hud_control.visible = false
@@ -256,6 +266,11 @@ func _unhandled_input(event):
 				if stamina <= 0.0:
 					return
 				var selected_item := _get_selected_primary_item()
+				if selected_item != null and selected_item.get_meta("puzzle_item", false) and not CandlePuzzleRoom.puzzle_door_opened:
+					if warning_control != null:
+						warning_control.visible = true
+						_warning_timer = WARNING_DISPLAY_TIME
+					return
 				if selected_item == null or not bool(selected_item.call("begin_primary_action", self)):
 					return
 			else:
@@ -282,6 +297,10 @@ func _physics_process(delta):
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
+	if _warning_timer > 0.0:
+		_warning_timer -= delta
+		if _warning_timer <= 0.0 and warning_control != null:
+			warning_control.visible = false
 	_update_smoke_overlay(delta)
 
 	# Freeze all NPCs and show loading until the player first moves.
@@ -1101,7 +1120,8 @@ func _update_chase_sound(delta: float) -> void:
 	if _chase_check_timer > 0.0:
 		return
 	_chase_check_timer = CHASE_CHECK_INTERVAL
-	var chased := false
+	var chaser_count := 0
+	var chased_by_shy := false
 	for npc in _get_all_npcs():
 		if not is_instance_valid(npc):
 			continue
@@ -1109,22 +1129,30 @@ func _update_chase_sound(delta: float) -> void:
 		if scr != null and scr.resource_path == STATUE_SCRIPT_PATH:
 			continue
 		var tp = npc.get("target_player")
+		if tp == null and scr != null and scr.resource_path == CHARGER_SCRIPT_PATH:
+			tp = npc.get("player")
 		if tp != null and is_instance_valid(tp) and tp == self:
-			chased = true
-			break
+			chaser_count += 1
+			if scr != null and scr.resource_path == SHY_SCRIPT_PATH:
+				chased_by_shy = true
+	var chased := chaser_count >= 3
 	if chased and not _is_being_chased:
 		_is_being_chased = true
+		_chased_by_shy = chased_by_shy
 		# Cancel any fade-out in progress and restore volume.
 		if _chase_fade_tween:
 			_chase_fade_tween.kill()
 			_chase_fade_tween = null
-		chase_player.volume_db = CHASE_VOLUME_DB
+		chase_player.volume_db = _chase_volume_db
 		# Pause background music and remember where it was.
 		if music_player.playing:
 			_music_resume_position = music_player.get_playback_position()
 			music_player.stop()
-		# Play a random chase track.
-		if not _chase_sounds.is_empty():
+		# Play chase3 for shy, random chase1/2 for others.
+		if _chased_by_shy and _shy_chase_sound != null:
+			chase_player.stream = _shy_chase_sound
+			chase_player.play()
+		elif not _chase_sounds.is_empty():
 			chase_player.stream = _chase_sounds[randi() % _chase_sounds.size()]
 			chase_player.play()
 	elif not chased and _is_being_chased:
@@ -1138,14 +1166,18 @@ func _update_chase_sound(delta: float) -> void:
 
 func _on_chase_sound_finished() -> void:
 	# Loop chase music while still being chased.
-	if _is_being_chased and not _chase_sounds.is_empty():
+	if not _is_being_chased:
+		return
+	if _chased_by_shy and _shy_chase_sound != null:
+		chase_player.stream = _shy_chase_sound
+		chase_player.play()
+	elif not _chase_sounds.is_empty():
 		chase_player.stream = _chase_sounds[randi() % _chase_sounds.size()]
 		chase_player.play()
 
 func _on_chase_fade_finished() -> void:
 	chase_player.stop()
-	chase_player.volume_db = CHASE_VOLUME_DB
-	_chase_fade_tween = null
+	chase_player.volume_db = _chase_volume_db
 	# Resume background music from where it was paused.
 	if _game_started and music_player != null:
 		music_player.play(_music_resume_position)

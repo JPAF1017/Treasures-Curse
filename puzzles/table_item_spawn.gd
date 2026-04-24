@@ -53,6 +53,7 @@ func _spawn_item(root: Node) -> void:
 		_registry[table_slot] = path
 	var item := (load(path) as PackedScene).instantiate() as Node3D
 	root.add_child(item)
+	item.set_meta("puzzle_item", true)
 	item.global_position = spawn_pos
 	# Freeze RigidBody items so CSG table collision has time to generate,
 	# preventing them from falling through the table on spawn.

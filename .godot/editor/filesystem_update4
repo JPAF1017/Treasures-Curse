@@ -48,3 +48,6 @@ res://assets/rooms/stair.tscn
 res://assets/rooms/big_room.tscn
 res://assets/rooms/bridge.tscn
 res://assets/rooms/l_shape_room.tscn
+res://entities/statue.tscn
+res://assets/room assets/fire_particle.tscn
+res://assets/room assets/fire_particle.gd

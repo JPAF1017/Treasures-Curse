@@ -12,10 +12,12 @@ const _PUZZLE_TABLE_PATHS: Array[String] = [
 # Shared across all instances so no two rooms pick the same table.
 static var _shared_pool: Array[String] = []
 static var _pool_idx: int = 0
+static var puzzle_door_opened: bool = false
 
 static func reset_for_generation() -> void:
 	_shared_pool.clear()
 	_pool_idx = 0
+	puzzle_door_opened = false
 
 func _ready() -> void:
 	super._ready()
@@ -76,6 +78,7 @@ func on_item_hold_unsatisfied() -> void:
 	_satisfied_count = max(_satisfied_count - 1, 0)
 
 func _open_door() -> void:
+	CandlePuzzleRoom.puzzle_door_opened = true
 	var door := get_node_or_null("Models/WallsLR/Door_01") as Node3D
 	if door == null:
 		return

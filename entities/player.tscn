@@ -64,7 +64,7 @@ collision_mask = 2
 shape = SubResource("CapsuleShape3D_vision")
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
-light_energy = 4.0
+light_energy = 7.0
 spot_range = 43.3203
 spot_attenuation = 0.5
 spot_angle = 55.0
@@ -583,6 +583,34 @@ theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Done"
 horizontal_alignment = 1
 
+[node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Warning" unique_id=2135034322]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "I can't use this yet..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="FootstepPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034317]
 volume_db = -7.0
 
@@ -591,7 +619,7 @@ stream = ExtResource("8_music")
 volume_db = -15.0
 
 [node name="ChasePlayer" type="AudioStreamPlayer" parent="." unique_id=2135034319]
-volume_db = -10.0
+volume_db = -25.0
 
 [node name="SwingPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034320]
 volume_db = -5.0
