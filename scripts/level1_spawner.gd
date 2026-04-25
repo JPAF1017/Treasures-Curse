@@ -190,11 +190,25 @@ func _spawn_map_items(
 	if item_tasks.is_empty() or rooms.is_empty():
 		return
 
-	for i in item_tasks.size():
-		var room: Node3D = rooms[i % rooms.size()]
-		var packed: PackedScene = load(item_tasks[i])
+	# Track items placed per room so we spread across the whole map.
+	# Items are placed in rooms with the fewest items first; the cap rises
+	# automatically when all rooms are equally loaded.
+	var room_item_counts: Dictionary = {}
+	for room in rooms:
+		room_item_counts[room] = 0
+
+	for scene_path: String in item_tasks:
+		# Find the current minimum load among all rooms.
+		var min_count: int = room_item_counts.values().min()
+		# Pick randomly from rooms that are at the minimum (least loaded).
+		var candidates: Array = rooms.filter(func(r: Node) -> bool:
+			return room_item_counts.get(r, 0) == min_count
+		)
+		var room: Node3D = candidates[rng.randi() % candidates.size()]
+
+		var packed: PackedScene = load(scene_path)
 		if packed == null:
-			push_error("[level1_spawner] Failed to load item: " + item_tasks[i])
+			push_error("[level1_spawner] Failed to load item: " + scene_path)
 			continue
 		var item: Node3D = packed.instantiate()
 		var spread := Vector3(
@@ -204,6 +218,7 @@ func _spawn_map_items(
 		)
 		add_child(item)
 		item.global_position = room.global_position + spread
+		room_item_counts[room] += 1
 
 
 ## Recursively count item nodes that match known scene paths.

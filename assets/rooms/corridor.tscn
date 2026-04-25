@@ -9,6 +9,7 @@
 
 [node name="Corridor" type="Node3D" unique_id=338039733]
 script = ExtResource("1_sogev")
+torch_spawn_chance = 0.25
 
 [node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=2047972908]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -5.68248e-07, 0, 0)
@@ -54,12 +55,14 @@ transform = Transform3D(1.01, 0, 0, 0, 1, 0, 0, 0, 0.07, 0, -10.013, -9.8259)
 
 [node name="Torch" parent="Models/B_WALL" unique_id=1870127561 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(0.990099, 0, 0, 0, 0.94466287, -0.3280424, 0, 4.68632, 13.495184, 0, 10.013, 7.728256)
+visible = false
 
 [node name="L_WALL" parent="Models" unique_id=54437670 instance=ExtResource("4_nymqs")]
 transform = Transform3D(-4.41485e-08, 0, 0.07, 0, 1, 0, -1.01, 0, -3.0598e-09, 9.82296, -10.013, -0.0209608)
 
 [node name="Torch" parent="Models/L_WALL" unique_id=403587094 instance=ExtResource("4_y5t7e")]
 transform = Transform3D(-3.9838202e-08, 1.691031e-08, -0.9900988, 0.39073113, 0.9205046, 0, 13.150069, -5.581872, -6.244482e-07, -0.020753244, 10.013, -8.142883)
+visible = false
 
 [node name="R_WALL" parent="Models" unique_id=2025305536 instance=ExtResource("4_nymqs")]
 transform = Transform3D(-4.41485e-08, 0, 0.07, 0, 1, 0, -1.01, 0, -3.0598e-09, -9.79688, -10.013, -0.0209608)
