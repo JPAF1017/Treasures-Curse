@@ -22,6 +22,7 @@
 [ext_resource type="Texture2D" uid="uid://cyh4fr002hyl8" path="res://assets/ui/S.png" id="13_dp3pk"]
 [ext_resource type="Texture2D" uid="uid://d2vrunaturtcu" path="res://assets/ui/5.png" id="13_hj0ki"]
 [ext_resource type="Texture2D" uid="uid://c0mfmyjjj7gie" path="res://assets/ui/SHIFTBIGGER.png" id="22_cicqb"]
+[ext_resource type="Texture2D" uid="uid://bnoee380ow3yv" path="res://assets/ui/CTRL.png" id="22_hj0ki"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
 height = 4.002136
@@ -614,40 +615,93 @@ texture = ExtResource("9_28s6d")
 [node name="Sprint" type="Control" parent="CanvasLayer/Control" unique_id=1982964387]
 visible = false
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 7
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
-anchor_bottom = 0.5
+anchor_bottom = 1.0
 offset_left = -20.0
-offset_top = -20.0
+offset_top = -40.0
 offset_right = 20.0
-offset_bottom = 20.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Sprint" unique_id=105136579]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 7
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -23.750061
-offset_top = 201.25
-offset_right = 136.24994
-offset_bottom = 224.25
+anchor_bottom = 1.0
+offset_left = -12.75
+offset_top = -174.75
+offset_right = 147.25
+offset_bottom = -151.75
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
 theme_override_font_sizes/font_size = 20
 text = "to sprint"
 
 [node name="Shiftbigger" type="Sprite2D" parent="CanvasLayer/Control/Sprint" unique_id=1626416715]
 texture_filter = 1
-position = Vector2(-67.75, 229.25)
+position = Vector2(-59.75, -126.75)
 scale = Vector2(1.4180328, 1.6428572)
 texture = ExtResource("22_cicqb")
+
+[node name="Grabbed" type="Control" parent="CanvasLayer/Control" unique_id=195239479]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Grabbed" unique_id=1112171573]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -259.0
+offset_top = -184.0
+offset_right = -28.0
+offset_bottom = -161.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "keep pressing"
+
+[node name="Space" type="Sprite2D" parent="CanvasLayer/Control/Grabbed" unique_id=1539631067]
+texture_filter = 1
+position = Vector2(54.62503, -132)
+scale = Vector2(1.5037318, 2.5)
+texture = ExtResource("9_q0i8f")
+
+[node name="Label2" type="Label" parent="CanvasLayer/Control/Grabbed" unique_id=1267481700]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 101.0
+offset_top = -184.0
+offset_right = 332.0
+offset_bottom = -161.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "to escape"
 
 [node name="Throw" type="Control" parent="CanvasLayer/Control" unique_id=1871257850]
 visible = false
@@ -901,36 +955,36 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Done
-NOW MOVE!"
+NOW MOVE UP TO ESCAPE!"
 horizontal_alignment = 1
 
 [node name="Space" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1891233397]
 texture_filter = 1
-position = Vector2(172.75, -284)
+position = Vector2(242.5, -340)
 scale = Vector2(2.0522387, 2.25)
 texture = ExtResource("9_q0i8f")
 
 [node name="W" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=580175752]
 texture_filter = 1
-position = Vector2(-23.250015, -318)
+position = Vector2(67.249985, -316)
 scale = Vector2(1.9999981, 1.9999981)
 texture = ExtResource("10_0i614")
 
 [node name="A" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1333614158]
 texture_filter = 1
-position = Vector2(-63.750008, -278)
+position = Vector2(26.749985, -276)
 scale = Vector2(1.9117647, 2)
 texture = ExtResource("11_oprnr")
 
 [node name="D" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=2096283317]
 texture_filter = 1
-position = Vector2(16.24999, -278)
+position = Vector2(106.749985, -276)
 scale = Vector2(1.9117647, 2)
 texture = ExtResource("12_8rie4")
 
 [node name="S" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1118295606]
 texture_filter = 1
-position = Vector2(-24.00001, -278)
+position = Vector2(66.499985, -276)
 scale = Vector2(1.9117647, 2)
 texture = ExtResource("13_dp3pk")
 
@@ -958,14 +1012,37 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 58.25
-offset_top = -276.5
-offset_right = 157.25
-offset_bottom = -253.5
+offset_left = 37.5
+offset_top = -334.5
+offset_right = 136.5
+offset_bottom = -311.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "jump"
+horizontal_alignment = 1
+
+[node name="Ctrl" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1549586899]
+texture_filter = 1
+position = Vector2(242.5, -268)
+scale = Vector2(1.9736842, 2)
+texture = ExtResource("22_hj0ki")
+
+[node name="Label3" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=200782942]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 37.5
+offset_top = -262.5
+offset_right = 136.5
+offset_bottom = -239.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "crouch"
 horizontal_alignment = 1
 
 [node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]
@@ -989,10 +1066,77 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "I can't use this yet..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="KeyWarning" type="Control" parent="CanvasLayer" unique_id=652923159]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/KeyWarning" unique_id=1535117967]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "I need this to escape"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EscapeWarning" type="Control" parent="CanvasLayer" unique_id=10699344]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/EscapeWarning" unique_id=473606818]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "I need more treasures"
 horizontal_alignment = 1
 vertical_alignment = 1
 

@@ -238,5 +238,7 @@ func _count_gold_in_hotbar() -> int:
 
 func _try_exit() -> void:
 	if _count_gold_in_hotbar() < GOLD_REQUIRED_TO_EXIT:
+		if _player != null and _player.has_method("show_escape_warning"):
+			_player.show_escape_warning()
 		return
 	get_tree().change_scene_to_file(EXIT_MENU_PATH)

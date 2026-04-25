@@ -138,12 +138,15 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var loading_label3: Label = $CanvasLayer/Loading/Label3
 @onready var loading_label4: Label = $CanvasLayer/Loading/Label4
 @onready var warning_control: Control = $CanvasLayer/Warning
+@onready var escape_warning_control: Control = $CanvasLayer/Control/EscapeWarning
+@onready var key_warning_control: Control = $CanvasLayer/Control/KeyWarning
 @onready var camera_hint_control: Control = $CanvasLayer/Control/Camera
 @onready var sprint_hint_control: Control = $CanvasLayer/Control/Sprint
 @onready var item_wheel_control: Control = $CanvasLayer/Control/ItemWheel
 @onready var throw_hint_control: Control = $CanvasLayer/Control/Throw
 @onready var use_hint_control: Control = $CanvasLayer/Control/Use
 @onready var attack_hint_control: Control = $CanvasLayer/Control/Attack
+@onready var grabbed_hint_control: Control = $CanvasLayer/Control/Grabbed
 
 var _game_started: bool = false
 var _map_generated: bool = false
@@ -152,6 +155,9 @@ const LOADING_LABEL_INTERVAL := 0.5
 var _loading_label_index: int = 0
 var _warning_timer: float = 0.0
 const WARNING_DISPLAY_TIME := 3.0
+var _escape_warning_timer: float = 0.0
+var _key_warning_timer: float = 0.0
+var _key_warning_shown: bool = false
 var _step_sounds: Array = []
 var _chase_sounds: Array = []
 var _prev_anim_pos: float = -1.0
@@ -167,7 +173,7 @@ var _swing_windup_was_active: bool = false
 var _chase_fade_tween: Tween = null
 var _camera_hint_active: bool = false
 var _camera_hint_timer: float = 0.0
-const CAMERA_HINT_DURATION := 2.0
+const CAMERA_HINT_DURATION := 1.0
 var _camera_moved_this_frame: bool = false
 var _sprint_hint_shown_once: bool = false
 var _sprint_hint_active: bool = false
@@ -180,6 +186,8 @@ const ITEM_WHEEL_HINT_SWITCH_THRESHOLD := 4
 var _throw_hint_dismissed: bool = false
 var _use_hint_dismissed: bool = false
 var _attack_hint_dismissed: bool = false
+var _grabbed_hint_dismissed: bool = false
+var _grabbed_hint_shown: bool = false
 const STATUE_SCRIPT_PATH := "res://scripts/npc/statue.gd"
 const SHY_SCRIPT_PATH := "res://scripts/npc/shy.gd"
 const CHARGER_SCRIPT_PATH := "res://scripts/npc/charger.gd"
@@ -252,6 +260,8 @@ func _ready():
 		use_hint_control.visible = false
 	if attack_hint_control != null:
 		attack_hint_control.visible = false
+	if grabbed_hint_control != null:
+		grabbed_hint_control.visible = false
 
 	# Connect to dungeon generator's done_generating to show Label4.
 	var generator := _find_dungeon_generator(get_tree().root)
@@ -379,6 +389,14 @@ func _physics_process(delta):
 		_warning_timer -= delta
 		if _warning_timer <= 0.0 and warning_control != null:
 			warning_control.visible = false
+	if _escape_warning_timer > 0.0:
+		_escape_warning_timer -= delta
+		if _escape_warning_timer <= 0.0 and escape_warning_control != null:
+			escape_warning_control.visible = false
+	if _key_warning_timer > 0.0:
+		_key_warning_timer -= delta
+		if _key_warning_timer <= 0.0 and key_warning_control != null:
+			key_warning_control.visible = false
 	_update_smoke_overlay(delta)
 
 	# Freeze all NPCs and show loading until the player first moves.
@@ -685,8 +703,17 @@ func set_movement_locked_by(locker: Node, locked: bool) -> void:
 	if locked:
 		if not movement_lock_sources.has(locker):
 			movement_lock_sources.append(locker)
+		if not _grabbed_hint_dismissed and locker.is_in_group("gnome"):
+			_grabbed_hint_shown = true
+			if grabbed_hint_control != null:
+				grabbed_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				grabbed_hint_control.visible = true
 	else:
 		movement_lock_sources.erase(locker)
+		if _grabbed_hint_shown and not _grabbed_hint_dismissed and locker.is_in_group("gnome"):
+			_grabbed_hint_dismissed = true
+			if grabbed_hint_control != null:
+				grabbed_hint_control.visible = false
 
 func _is_movement_locked() -> bool:
 	return movement_lock_sources.size() > 0
@@ -1087,6 +1114,12 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 			_set_hotbar_item(slot_index, item_body, item_body.call("get_hotbar_icon_texture"))
 			_refresh_selected_item_state()
 			_update_pickup_prompt_visibility()
+			if not _key_warning_shown and _is_gold_item_model(item_body):
+				_key_warning_shown = true
+				if key_warning_control != null:
+					key_warning_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+					key_warning_control.visible = true
+					_key_warning_timer = WARNING_DISPLAY_TIME
 	else:
 		push_warning("Pickup not implemented for item model: %s" % item_body.name)
 
@@ -1178,6 +1211,13 @@ func apply_damage(amount: float) -> void:
 	_apply_damage_camera_tilt()
 	if health <= 0.0:
 		get_tree().change_scene_to_file("res://menus/death_menu.tscn")
+
+func show_escape_warning() -> void:
+	if escape_warning_control == null:
+		return
+	escape_warning_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	escape_warning_control.visible = true
+	_escape_warning_timer = WARNING_DISPLAY_TIME
 
 func _get_all_npcs() -> Array:
 	var all_bodies := get_tree().root.find_children("*", "CharacterBody3D", true, false)

@@ -7,3 +7,4 @@ res://entities/overlay.gdshader
 res://entities/player.tscn
 res://assets/room assets/fire_particle.tscn
 res://scripts/player.gd
+res://scripts/rooms/skull_puzzle_controller.gd
