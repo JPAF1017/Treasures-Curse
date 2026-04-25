@@ -1,3 +1,4 @@
+Control
 Label
 CollisionShape3D
 Area3D
@@ -5,7 +6,6 @@ RigidBody3D
 CSGBox3D
 MeshInstance3D
 Node3D
-Control
 MenuButton
 NinePatchRect
 VideoStreamPlayer

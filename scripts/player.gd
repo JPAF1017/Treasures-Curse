@@ -138,6 +138,10 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var loading_label3: Label = $CanvasLayer/Loading/Label3
 @onready var loading_label4: Label = $CanvasLayer/Loading/Label4
 @onready var warning_control: Control = $CanvasLayer/Warning
+@onready var camera_hint_control: Control = $CanvasLayer/Control/Camera
+@onready var sprint_hint_control: Control = $CanvasLayer/Control/Sprint
+@onready var item_wheel_control: Control = $CanvasLayer/Control/ItemWheel
+@onready var throw_hint_control: Control = $CanvasLayer/Control/Throw
 
 var _game_started: bool = false
 var _map_generated: bool = false
@@ -159,6 +163,19 @@ var _shy_chase_sound: AudioStream = null
 var _music_resume_position: float = 0.0
 var _swing_windup_was_active: bool = false
 var _chase_fade_tween: Tween = null
+var _camera_hint_active: bool = false
+var _camera_hint_timer: float = 0.0
+const CAMERA_HINT_DURATION := 2.0
+var _camera_moved_this_frame: bool = false
+var _sprint_hint_shown_once: bool = false
+var _sprint_hint_active: bool = false
+var _sprint_hint_stamina_consumed: float = 0.0
+const SPRINT_HINT_STAMINA_THRESHOLD := 10.0
+var _item_wheel_hint_shown_once: bool = false
+var _item_wheel_hint_active: bool = false
+var _item_wheel_switch_count: int = 0
+const ITEM_WHEEL_HINT_SWITCH_THRESHOLD := 4
+var _throw_hint_dismissed: bool = false
 const STATUE_SCRIPT_PATH := "res://scripts/npc/statue.gd"
 const SHY_SCRIPT_PATH := "res://scripts/npc/shy.gd"
 const CHARGER_SCRIPT_PATH := "res://scripts/npc/charger.gd"
@@ -218,6 +235,15 @@ func _ready():
 	loading_label2.visible = false
 	loading_label3.visible = false
 	loading_label4.visible = false
+	# Ensure all tutorial hint nodes start hidden.
+	if camera_hint_control != null:
+		camera_hint_control.visible = false
+	if sprint_hint_control != null:
+		sprint_hint_control.visible = false
+	if item_wheel_control != null:
+		item_wheel_control.visible = false
+	if throw_hint_control != null:
+		throw_hint_control.visible = false
 
 	# Connect to dungeon generator's done_generating to show Label4.
 	var generator := _find_dungeon_generator(get_tree().root)
@@ -271,6 +297,8 @@ func _unhandled_input(event):
 		camera.rotate_x(-event.relative.y * sens)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(90))
 		_sync_visual_rotation_to_head()
+		if _camera_hint_active:
+			_camera_moved_this_frame = true
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -291,16 +319,24 @@ func _unhandled_input(event):
 		elif event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				_select_hotbar_slot((selected_hotbar_slot_index - 1 + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT)
+				_on_item_wheel_slot_switched()
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				_select_hotbar_slot((selected_hotbar_slot_index + 1) % HOTBAR_SLOT_COUNT)
+				_on_item_wheel_slot_switched()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_Q:
+			var had_item := _get_selected_hotbar_item() != null
 			_drop_selected_hotbar_item()
+			if had_item and not _throw_hint_dismissed:
+				_throw_hint_dismissed = true
+				if throw_hint_control != null:
+					throw_hint_control.visible = false
 			return
 
 		var slot_index := _hotbar_index_from_keycode(event.keycode)
 		if slot_index != -1:
 			_select_hotbar_slot(slot_index)
+			_on_item_wheel_slot_switched()
 
 #movement function
 func _physics_process(delta):
@@ -308,6 +344,21 @@ func _physics_process(delta):
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
+	if _camera_hint_active:
+		var cam_moved := _camera_moved_this_frame
+		_camera_moved_this_frame = false
+		if cam_moved:
+			_camera_hint_timer += delta
+			if _camera_hint_timer >= CAMERA_HINT_DURATION:
+				_camera_hint_active = false
+				if camera_hint_control != null:
+					camera_hint_control.visible = false
+				if not _item_wheel_hint_shown_once:
+					_item_wheel_hint_shown_once = true
+					_item_wheel_hint_active = true
+					if item_wheel_control != null:
+						item_wheel_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+						item_wheel_control.visible = true
 	if _warning_timer > 0.0:
 		_warning_timer -= delta
 		if _warning_timer <= 0.0 and warning_control != null:
@@ -330,6 +381,10 @@ func _physics_process(delta):
 			_game_started = true
 			hud_control.visible = true
 			loading_control.visible = false
+			if camera_hint_control != null:
+				camera_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				camera_hint_control.visible = true
+				_camera_hint_active = true
 			music_player.play()
 			# Unfreeze all NPCs by restoring inherited process mode.
 			for npc in _get_all_npcs():
@@ -390,11 +445,18 @@ func _physics_process(delta):
 		speed = WALK_SPEED
 
 	if is_sprinting:
-		stamina = max(stamina - STAMINA_DRAIN_PER_SECOND * delta, 0.0)
+		var drain: float = STAMINA_DRAIN_PER_SECOND * delta
+		stamina = max(stamina - drain, 0.0)
 		if stamina <= 0.0:
 			stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
 			is_sprinting = false
 			speed = WALK_SPEED
+		if _sprint_hint_active:
+			_sprint_hint_stamina_consumed += drain
+			if _sprint_hint_stamina_consumed >= SPRINT_HINT_STAMINA_THRESHOLD:
+				_sprint_hint_active = false
+				if sprint_hint_control != null:
+					sprint_hint_control.visible = false
 
 	if stamina_refill_delay_timer > 0.0:
 		stamina_refill_delay_timer = max(stamina_refill_delay_timer - delta, 0.0)
@@ -839,6 +901,15 @@ func _select_hotbar_slot(slot_index: int) -> void:
 
 	_refresh_selected_item_state()
 	_update_hotbar_windup_indicator()
+	if not _throw_hint_dismissed:
+		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
+		var has_item := item != null and is_instance_valid(item)
+		if throw_hint_control != null:
+			if has_item and not throw_hint_control.visible:
+				throw_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				throw_hint_control.visible = true
+			elif not has_item and throw_hint_control.visible:
+				throw_hint_control.visible = false
 
 func _hotbar_index_from_keycode(keycode: int) -> int:
 	match keycode:
@@ -1114,6 +1185,15 @@ func _on_map_generated() -> void:
 	loading_label3.visible = false
 	loading_label4.visible = true
 
+func _on_item_wheel_slot_switched() -> void:
+	if not _item_wheel_hint_active:
+		return
+	_item_wheel_switch_count += 1
+	if _item_wheel_switch_count >= ITEM_WHEEL_HINT_SWITCH_THRESHOLD:
+		_item_wheel_hint_active = false
+		if item_wheel_control != null:
+			item_wheel_control.visible = false
+
 func _update_footsteps() -> void:
 	if animation_player == null or not is_on_floor():
 		_prev_anim_pos = -1.0
@@ -1182,6 +1262,12 @@ func _update_chase_sound(delta: float) -> void:
 			if scr != null and scr.resource_path == SHY_SCRIPT_PATH:
 				chased_by_shy = true
 	var chased := chaser_count >= 3
+	if chaser_count >= 1 and not _sprint_hint_shown_once:
+		_sprint_hint_shown_once = true
+		_sprint_hint_active = true
+		if sprint_hint_control != null:
+			sprint_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			sprint_hint_control.visible = true
 	if chased and not _is_being_chased:
 		_is_being_chased = true
 		_chased_by_shy = chased_by_shy

@@ -9,6 +9,19 @@
 [ext_resource type="Texture2D" uid="uid://d2rbt1748nf7v" path="res://assets/ui/crosshairs_tilesheet_white.png" id="6_qsoyl"]
 [ext_resource type="Texture2D" uid="uid://3b05fn107wf4" path="res://assets/ui/E.png" id="7_6nm46"]
 [ext_resource type="AudioStream" uid="uid://b0s6ugv0j3xsn" path="res://sounds/player/background_music.mp3" id="8_music"]
+[ext_resource type="Texture2D" uid="uid://6dpflex02frq" path="res://assets/ui/Q.png" id="9_1n8aq"]
+[ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="9_28s6d"]
+[ext_resource type="Texture2D" uid="uid://ydh6oogo8hxq" path="res://assets/ui/1.png" id="9_cgp7q"]
+[ext_resource type="Texture2D" uid="uid://bmsg7se5bh4rq" path="res://assets/ui/SPACE.png" id="9_q0i8f"]
+[ext_resource type="Texture2D" uid="uid://c0qr74suslnqv" path="res://assets/ui/W.png" id="10_0i614"]
+[ext_resource type="Texture2D" uid="uid://b6xxstrowcl25" path="res://assets/ui/2.png" id="10_1n8aq"]
+[ext_resource type="Texture2D" uid="uid://bqv7vwjxx2gno" path="res://assets/ui/3.png" id="11_28s6d"]
+[ext_resource type="Texture2D" uid="uid://01mt3d2tq3ii" path="res://assets/ui/A.png" id="11_oprnr"]
+[ext_resource type="Texture2D" uid="uid://cixetblk2ev03" path="res://assets/ui/D.png" id="12_8rie4"]
+[ext_resource type="Texture2D" uid="uid://ca31thb8tkcyx" path="res://assets/ui/4.png" id="12_cicqb"]
+[ext_resource type="Texture2D" uid="uid://cyh4fr002hyl8" path="res://assets/ui/S.png" id="13_dp3pk"]
+[ext_resource type="Texture2D" uid="uid://d2vrunaturtcu" path="res://assets/ui/5.png" id="13_hj0ki"]
+[ext_resource type="Texture2D" uid="uid://c0mfmyjjj7gie" path="res://assets/ui/SHIFTBIGGER.png" id="22_cicqb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
 height = 4.002136
@@ -84,6 +97,7 @@ spot_angle = 55.0
 spot_angle_attenuation = 0.8
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Head/playerCamera" unique_id=1465749198]
+visible = false
 extra_cull_margin = 16384.0
 mesh = SubResource("QuadMesh_i623q")
 
@@ -468,18 +482,210 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -33.5
-offset_top = 18.5
-offset_right = 51.5
-offset_bottom = 41.5
+offset_left = -31.75
+offset_top = 24.0
+offset_right = 75.25
+offset_bottom = 47.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
 text = "pickup"
 
 [node name="E" type="Sprite2D" parent="CanvasLayer/Control/Pickup" unique_id=1631011629]
-position = Vector2(-30, 49)
+texture_filter = 1
+position = Vector2(-39.000015, 52.000015)
+scale = Vector2(1.5000018, 1.5000018)
 texture = ExtResource("7_6nm46")
+
+[node name="Attack" type="Control" parent="CanvasLayer/Control" unique_id=300440550]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1841008249]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -31.75
+offset_top = 24.0
+offset_right = 75.25
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "to swing"
+
+[node name="Left" type="Sprite2D" parent="CanvasLayer/Control/Attack" unique_id=982683950]
+texture_filter = 1
+position = Vector2(-55, 52)
+texture = ExtResource("9_28s6d")
+
+[node name="Left2" type="Sprite2D" parent="CanvasLayer/Control/Attack" unique_id=1250486715]
+texture_filter = 1
+position = Vector2(-79, 92)
+texture = ExtResource("9_28s6d")
+
+[node name="Label2" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1083565376]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -195.0
+offset_top = 64.0
+offset_right = -124.0
+offset_bottom = 87.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "hold"
+
+[node name="Label3" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1945456799]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.0
+offset_top = 64.0
+offset_right = 209.0
+offset_bottom = 87.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "to charge attack"
+
+[node name="Use" type="Control" parent="CanvasLayer/Control" unique_id=1863554358]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Use" unique_id=1656674712]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -31.75
+offset_top = 24.0
+offset_right = 75.25
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "to use"
+
+[node name="Left" type="Sprite2D" parent="CanvasLayer/Control/Use" unique_id=1850529351]
+texture_filter = 1
+position = Vector2(-39, 52)
+texture = ExtResource("9_28s6d")
+
+[node name="Sprint" type="Control" parent="CanvasLayer/Control" unique_id=1982964387]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Sprint" unique_id=105136579]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -23.750061
+offset_top = 201.25
+offset_right = 136.24994
+offset_bottom = 224.25
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "to sprint"
+
+[node name="Shiftbigger" type="Sprite2D" parent="CanvasLayer/Control/Sprint" unique_id=1626416715]
+texture_filter = 1
+position = Vector2(-67.75, 229.25)
+scale = Vector2(1.4180328, 1.6428572)
+texture = ExtResource("22_cicqb")
+
+[node name="Throw" type="Control" parent="CanvasLayer/Control" unique_id=1871257850]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Throw" unique_id=1635611101]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -19.0
+offset_top = 28.0
+offset_right = 88.0
+offset_bottom = 51.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "drop"
+
+[node name="Q" type="Sprite2D" parent="CanvasLayer/Control/Throw" unique_id=1228257765]
+texture_filter = 1
+position = Vector2(-18.25, 56)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("9_1n8aq")
 
 [node name="Interact" type="Control" parent="CanvasLayer/Control" unique_id=1333519528]
 visible = false
@@ -504,18 +710,115 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -42.5
-offset_top = 18.0
-offset_right = 71.5
-offset_bottom = 41.0
+offset_left = -51.75
+offset_top = 22.0
+offset_right = 90.25
+offset_bottom = 45.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
 text = "interact"
 
-[node name="E" type="Sprite2D" parent="CanvasLayer/Control/Interact" unique_id=1953546681]
-position = Vector2(-34.5, 48.5)
+[node name="E" type="Sprite2D" parent="CanvasLayer/Control/Interact" unique_id=1514370695]
+texture_filter = 1
+position = Vector2(-55.000015, 52.000015)
+scale = Vector2(1.5000018, 1.5000018)
 texture = ExtResource("7_6nm46")
+
+[node name="ItemWheel" type="Control" parent="CanvasLayer/Control" unique_id=332718513]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/ItemWheel" unique_id=1614140978]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -283.0
+offset_top = -172.0
+offset_right = 293.0
+offset_bottom = -149.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 17
+text = "scroll mouse wheel to switch item slot
+or "
+
+[node name="1" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1201586875]
+texture_filter = 1
+position = Vector2(-215, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("9_cgp7q")
+
+[node name="2" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=42857229]
+texture_filter = 1
+position = Vector2(-183, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("10_1n8aq")
+
+[node name="3" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1689220293]
+texture_filter = 1
+position = Vector2(-151, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("11_28s6d")
+
+[node name="4" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1999718274]
+texture_filter = 1
+position = Vector2(-119, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("12_cicqb")
+
+[node name="5" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1576755647]
+texture_filter = 1
+position = Vector2(-87, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("13_hj0ki")
+
+[node name="Camera" type="Control" parent="CanvasLayer/Control" unique_id=765974238]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Camera" unique_id=1152626245]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -219.0
+offset_top = 32.0
+offset_right = 225.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "move mouse to look around"
 
 [node name="Loading" type="Control" parent="CanvasLayer" unique_id=1907607165]
 visible = false
@@ -599,6 +902,70 @@ grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Done
 NOW MOVE!"
+horizontal_alignment = 1
+
+[node name="Space" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1891233397]
+texture_filter = 1
+position = Vector2(172.75, -284)
+scale = Vector2(2.0522387, 2.25)
+texture = ExtResource("9_q0i8f")
+
+[node name="W" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=580175752]
+texture_filter = 1
+position = Vector2(-23.250015, -318)
+scale = Vector2(1.9999981, 1.9999981)
+texture = ExtResource("10_0i614")
+
+[node name="A" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1333614158]
+texture_filter = 1
+position = Vector2(-63.750008, -278)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("11_oprnr")
+
+[node name="D" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=2096283317]
+texture_filter = 1
+position = Vector2(16.24999, -278)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("12_8rie4")
+
+[node name="S" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1118295606]
+texture_filter = 1
+position = Vector2(-24.00001, -278)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("13_dp3pk")
+
+[node name="Label" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1340453858]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -138.5
+offset_top = -270.5
+offset_right = -39.5
+offset_bottom = -247.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "move"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1605248558]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 58.25
+offset_top = -276.5
+offset_right = 157.25
+offset_bottom = -253.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "jump"
 horizontal_alignment = 1
 
 [node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]

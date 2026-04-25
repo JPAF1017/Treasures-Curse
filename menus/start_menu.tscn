@@ -37,9 +37,9 @@ grow_vertical = 0
 texture_filter = 1
 layout_mode = 0
 offset_left = 72.0
-offset_top = -384.0
+offset_top = -280.0
 offset_right = 258.0
-offset_bottom = -331.0
+offset_bottom = -227.0
 theme_override_fonts/font = ExtResource("2_1t8nw")
 theme_override_font_sizes/font_size = 50
 text = "Play"
@@ -54,17 +54,6 @@ offset_bottom = -43.0
 theme_override_fonts/font = ExtResource("2_1t8nw")
 theme_override_font_sizes/font_size = 50
 text = "Quit"
-
-[node name="Tutorial" type="Button" parent="Button" unique_id=1964108592]
-texture_filter = 1
-layout_mode = 0
-offset_left = 72.0
-offset_top = -296.0
-offset_right = 568.0
-offset_bottom = -243.0
-theme_override_fonts/font = ExtResource("2_1t8nw")
-theme_override_font_sizes/font_size = 50
-text = "How to Play"
 
 [node name="Multiplayer" type="Button" parent="Button" unique_id=1102536706]
 texture_filter = 1

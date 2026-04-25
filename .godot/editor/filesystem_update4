@@ -1,1 +1,9 @@
-res://scripts/level1_spawner.gd
+res://menus/start_menu.tscn
+res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
+res://assets/items/smoke_outer.gdshader
+res://assets/items/smoke_inner.gdshader
+res://assets/items/smoke_overlay.gdshader
+res://entities/overlay.gdshader
+res://entities/player.tscn
+res://assets/room assets/fire_particle.tscn
+res://scripts/player.gd
