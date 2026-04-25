@@ -142,6 +142,8 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var sprint_hint_control: Control = $CanvasLayer/Control/Sprint
 @onready var item_wheel_control: Control = $CanvasLayer/Control/ItemWheel
 @onready var throw_hint_control: Control = $CanvasLayer/Control/Throw
+@onready var use_hint_control: Control = $CanvasLayer/Control/Use
+@onready var attack_hint_control: Control = $CanvasLayer/Control/Attack
 
 var _game_started: bool = false
 var _map_generated: bool = false
@@ -176,6 +178,8 @@ var _item_wheel_hint_active: bool = false
 var _item_wheel_switch_count: int = 0
 const ITEM_WHEEL_HINT_SWITCH_THRESHOLD := 4
 var _throw_hint_dismissed: bool = false
+var _use_hint_dismissed: bool = false
+var _attack_hint_dismissed: bool = false
 const STATUE_SCRIPT_PATH := "res://scripts/npc/statue.gd"
 const SHY_SCRIPT_PATH := "res://scripts/npc/shy.gd"
 const CHARGER_SCRIPT_PATH := "res://scripts/npc/charger.gd"
@@ -244,6 +248,10 @@ func _ready():
 		item_wheel_control.visible = false
 	if throw_hint_control != null:
 		throw_hint_control.visible = false
+	if use_hint_control != null:
+		use_hint_control.visible = false
+	if attack_hint_control != null:
+		attack_hint_control.visible = false
 
 	# Connect to dungeon generator's done_generating to show Label4.
 	var generator := _find_dungeon_generator(get_tree().root)
@@ -312,6 +320,14 @@ func _unhandled_input(event):
 					return
 				if selected_item == null or not bool(selected_item.call("begin_primary_action", self)):
 					return
+				if not _use_hint_dismissed and not selected_item.get_meta("puzzle_item", false) and (_is_health_item_model(selected_item) or _is_smoke_item_model(selected_item)):
+					_use_hint_dismissed = true
+					if use_hint_control != null:
+						use_hint_control.visible = false
+				if not _attack_hint_dismissed and not selected_item.get_meta("puzzle_item", false) and (selected_item is Sword or selected_item is Bat or _is_shovel_item_model(selected_item)):
+					_attack_hint_dismissed = true
+					if attack_hint_control != null:
+						attack_hint_control.visible = false
 			else:
 				var selected_item := _get_selected_primary_item()
 				if selected_item:
@@ -910,6 +926,24 @@ func _select_hotbar_slot(slot_index: int) -> void:
 				throw_hint_control.visible = true
 			elif not has_item and throw_hint_control.visible:
 				throw_hint_control.visible = false
+	if not _use_hint_dismissed:
+		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
+		var has_usable: bool = item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (_is_health_item_model(item) or _is_smoke_item_model(item))
+		if use_hint_control != null:
+			if has_usable and not use_hint_control.visible:
+				use_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				use_hint_control.visible = true
+			elif not has_usable and use_hint_control.visible:
+				use_hint_control.visible = false
+	if not _attack_hint_dismissed:
+		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
+		var has_weapon: bool = item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (item is Sword or item is Bat or _is_shovel_item_model(item))
+		if attack_hint_control != null:
+			if has_weapon and not attack_hint_control.visible:
+				attack_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				attack_hint_control.visible = true
+			elif not has_weapon and attack_hint_control.visible:
+				attack_hint_control.visible = false
 
 func _hotbar_index_from_keycode(keycode: int) -> int:
 	match keycode:
