@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://bfxp12kopj5qv"]
+
+[ext_resource type="VideoStream" uid="uid://b4ixw8c7c4e07" path="res://assets/ui/wallpaper.ogv" id="2_denxo"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="3_vs4q4"]
+
+[node name="HostJoinMenu" type="Control" unique_id=2131559063]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1000000001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stream = ExtResource("2_denxo")
+autoplay = true
+expand = true
+
+[node name="Button" type="Control" parent="." unique_id=1314704547]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Host" type="Button" parent="Button" unique_id=276792559]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -64.0
+offset_top = -72.0
+offset_right = 64.0
+offset_bottom = -19.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 50
+text = "HOST"
+
+[node name="Join" type="Button" parent="Button" unique_id=2096599262]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -64.0
+offset_right = 63.0
+offset_bottom = 53.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 50
+text = "JOIN"

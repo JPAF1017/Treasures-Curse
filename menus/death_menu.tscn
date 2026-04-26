@@ -2,11 +2,10 @@
 
 [ext_resource type="VideoStream" uid="uid://b4ixw8c7c4e07" path="res://assets/ui/wallpaper.ogv" id="1_d5a6h"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="2_h22ob"]
-[ext_resource type="Script" path="res://menus/end_screen.gd" id="3_endscr"]
-[ext_resource type="AudioStream" path="res://sounds/player/death_sound.mp3" id="4_death_sound"]
+[ext_resource type="Script" uid="uid://c8omujdjul821" path="res://menus/end_screen.gd" id="3_endscr"]
+[ext_resource type="AudioStream" uid="uid://ddad5ctht8nqk" path="res://sounds/player/death_sound.mp3" id="4_death_sound"]
 
 [node name="EscapeMenu" type="Control" unique_id=2131559063]
-script = ExtResource("3_endscr")
 process_mode = 3
 layout_mode = 3
 anchors_preset = 15
@@ -14,6 +13,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("3_endscr")
 
 [node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1000000001]
 layout_mode = 1
@@ -27,6 +27,7 @@ autoplay = true
 expand = true
 
 [node name="Button" type="Control" parent="." unique_id=182493112]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -78,6 +79,7 @@ text = "Main Menu
 "
 
 [node name="Label" type="Label" parent="." unique_id=1914729486]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
