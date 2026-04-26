@@ -6,14 +6,14 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_uv5uo"]
 size = Vector3(2.9865265, 2.0850067, 1.5507813)
 
-[node name="Gold" type="RigidBody3D" unique_id=2016877817]
-script = ExtResource("1_script")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold"]
 albedo_color = Color(1, 0.8, 0.1, 1)
 metallic = 0.9
 roughness = 0.3
 emission_enabled = false
+
+[node name="Gold" type="RigidBody3D" unique_id=2016877817]
+script = ExtResource("1_script")
 
 [node name="gold" parent="." unique_id=368424173 instance=ExtResource("1_gmvxu")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)

@@ -75,8 +75,11 @@ func _on_dungeon_ready(generator: Node) -> void:
 	var min_horiz_dist: float = MIN_ROOM_DIST_VOXELS * voxel_xz
 
 	# Eligible rooms: at least 4 voxels away horizontally, OR directly above/below start (same XZ).
+	# Candle puzzle rooms are excluded so NPCs never spawn in them.
 	var rooms: Array = all_rooms.filter(func(r: Node) -> bool:
 		if r.name == "StartRoom":
+			return false
+		if r is CandlePuzzleRoom:
 			return false
 		var rp := (r as Node3D).global_position
 		var rp_xz := Vector2(rp.x, rp.z)
@@ -136,6 +139,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 			var target_y := gen_origin_y + floor_idx * voxel_y
 			var floor_rooms := all_rooms.filter(func(r: Node) -> bool:
 				if r.name == "StartRoom":
+					return false
+				if r is CandlePuzzleRoom:
 					return false
 				var rp := (r as Node3D).global_position
 				if abs(rp.y - target_y) >= voxel_y * 0.5:

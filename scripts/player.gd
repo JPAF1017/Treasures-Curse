@@ -139,6 +139,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var warning_control: Control = $CanvasLayer/Warning
 @onready var escape_warning_control: Control = $CanvasLayer/EscapeWarning
 @onready var key_warning_control: Control = $CanvasLayer/KeyWarning
+@onready var key_warning2_control: Control = $CanvasLayer/KeyWarning2
 @onready var camera_hint_control: Control = $CanvasLayer/Control/Camera
 @onready var sprint_hint_control: Control = $CanvasLayer/Control/Sprint
 @onready var item_wheel_control: Control = $CanvasLayer/Control/ItemWheel
@@ -157,6 +158,8 @@ const WARNING_DISPLAY_TIME := 3.0
 var _escape_warning_timer: float = 0.0
 var _key_warning_timer: float = 0.0
 var _key_warning_shown: bool = false
+var _key_warning2_timer: float = 0.0
+var _key_warning2_shown: bool = false
 var _step_sounds: Array = []
 var _chase_sounds: Array = []
 var _prev_anim_pos: float = -1.0
@@ -396,6 +399,10 @@ func _physics_process(delta):
 		_key_warning_timer -= delta
 		if _key_warning_timer <= 0.0 and key_warning_control != null:
 			key_warning_control.visible = false
+	if _key_warning2_timer > 0.0:
+		_key_warning2_timer -= delta
+		if _key_warning2_timer <= 0.0 and key_warning2_control != null:
+			key_warning2_control.visible = false
 	_update_smoke_overlay(delta)
 
 	# Freeze all NPCs and show loading until the player first moves.
@@ -954,7 +961,8 @@ func _select_hotbar_slot(slot_index: int) -> void:
 				throw_hint_control.visible = false
 	if not _use_hint_dismissed:
 		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
-		var has_usable: bool = item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (_is_health_item_model(item) or _is_smoke_item_model(item))
+		var throw_active := throw_hint_control != null and throw_hint_control.visible
+		var has_usable: bool = not throw_active and item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (_is_health_item_model(item) or _is_smoke_item_model(item))
 		if use_hint_control != null:
 			if has_usable and not use_hint_control.visible:
 				use_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -963,7 +971,8 @@ func _select_hotbar_slot(slot_index: int) -> void:
 				use_hint_control.visible = false
 	if not _attack_hint_dismissed:
 		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
-		var has_weapon: bool = item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (item is Sword or item is Bat or _is_shovel_item_model(item))
+		var throw_active := throw_hint_control != null and throw_hint_control.visible
+		var has_weapon: bool = not throw_active and item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (item is Sword or item is Bat or _is_shovel_item_model(item))
 		if attack_hint_control != null:
 			if has_weapon and not attack_hint_control.visible:
 				attack_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1119,6 +1128,12 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 					key_warning_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 					key_warning_control.visible = true
 					_key_warning_timer = WARNING_DISPLAY_TIME
+			if not _key_warning2_shown and item_body.get_meta("puzzle_item", false):
+				_key_warning2_shown = true
+				if key_warning2_control != null:
+					key_warning2_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+					key_warning2_control.visible = true
+					_key_warning2_timer = WARNING_DISPLAY_TIME
 	else:
 		push_warning("Pickup not implemented for item model: %s" % item_body.name)
 
@@ -1194,7 +1209,12 @@ func _update_pickup_prompt_visibility() -> void:
 	if pickup_control == null:
 		return
 
-	pickup_control.visible = _find_first_empty_hotbar_slot() != -1 and _get_pickup_candidate() != null
+	var throw_active := throw_hint_control != null and throw_hint_control.visible
+	var place_item_control := get_node_or_null("CanvasLayer/Control/PlaceItem") as Control
+	var place_active := place_item_control != null and place_item_control.visible
+	var warning2_control := get_node_or_null("CanvasLayer/Warning2") as Control
+	var warning2_active := warning2_control != null and warning2_control.visible
+	pickup_control.visible = not throw_active and not place_active and not warning2_active and _find_first_empty_hotbar_slot() != -1 and _get_pickup_candidate() != null
 
 func _has_any_primary_item_in_hotbar() -> bool:
 	for item_model in hotbar_item_models:

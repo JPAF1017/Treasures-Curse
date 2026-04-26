@@ -475,6 +475,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Pickup" unique_id=20301471]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -513,6 +514,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1841008249]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -540,6 +542,7 @@ position = Vector2(-79, 92)
 texture = ExtResource("9_28s6d")
 
 [node name="Label2" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1083565376]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -557,6 +560,7 @@ theme_override_font_sizes/font_size = 20
 text = "hold"
 
 [node name="Label3" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1945456799]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -589,6 +593,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Use" unique_id=1656674712]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -625,16 +630,17 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Sprint" unique_id=105136579]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -12.75
-offset_top = -174.75
-offset_right = 147.25
-offset_bottom = -151.75
+offset_left = -401.75
+offset_top = -70.75
+offset_right = -241.75
+offset_bottom = -47.75
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
@@ -643,7 +649,7 @@ text = "to sprint"
 
 [node name="Shiftbigger" type="Sprite2D" parent="CanvasLayer/Control/Sprint" unique_id=1626416715]
 texture_filter = 1
-position = Vector2(-59.75, -126.75)
+position = Vector2(-448.75, -22.75)
 scale = Vector2(1.4180328, 1.6428572)
 texture = ExtResource("22_cicqb")
 
@@ -662,16 +668,17 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Grabbed" unique_id=1112171573]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -259.0
-offset_top = -184.0
-offset_right = -28.0
-offset_bottom = -161.0
+offset_left = -272.0
+offset_top = -240.0
+offset_right = -41.0
+offset_bottom = -217.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
@@ -680,21 +687,22 @@ text = "keep pressing"
 
 [node name="Space" type="Sprite2D" parent="CanvasLayer/Control/Grabbed" unique_id=1539631067]
 texture_filter = 1
-position = Vector2(54.62503, -132)
+position = Vector2(41.62503, -188)
 scale = Vector2(1.5037318, 2.5)
 texture = ExtResource("9_q0i8f")
 
 [node name="Label2" type="Label" parent="CanvasLayer/Control/Grabbed" unique_id=1267481700]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 101.0
-offset_top = -184.0
-offset_right = 332.0
-offset_bottom = -161.0
+offset_left = 88.0
+offset_top = -240.0
+offset_right = 319.0
+offset_bottom = -217.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
@@ -717,6 +725,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/Throw" unique_id=1635611101]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -778,6 +787,45 @@ position = Vector2(-55.000015, 52.000015)
 scale = Vector2(1.5000018, 1.5000018)
 texture = ExtResource("7_6nm46")
 
+[node name="PlaceItem" type="Control" parent="CanvasLayer/Control" unique_id=500525814]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/PlaceItem" unique_id=386323053]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -51.75
+offset_top = 22.0
+offset_right = 90.25
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+theme_override_font_sizes/font_size = 20
+text = "place item"
+
+[node name="E" type="Sprite2D" parent="CanvasLayer/Control/PlaceItem" unique_id=221741318]
+texture_filter = 1
+position = Vector2(-76.000015, 52.000015)
+scale = Vector2(1.5000018, 1.5000018)
+texture = ExtResource("7_6nm46")
+
 [node name="ItemWheel" type="Control" parent="CanvasLayer/Control" unique_id=332718513]
 visible = false
 layout_mode = 1
@@ -793,6 +841,7 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="Label" type="Label" parent="CanvasLayer/Control/ItemWheel" unique_id=1614140978]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -888,6 +937,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Loading" unique_id=417141148]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -905,6 +955,7 @@ text = "Generating Map ."
 
 [node name="Label2" type="Label" parent="CanvasLayer/Loading" unique_id=1021823670]
 visible = false
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -922,6 +973,7 @@ text = "Generating Map .."
 
 [node name="Label3" type="Label" parent="CanvasLayer/Loading" unique_id=13819968]
 visible = false
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -939,6 +991,7 @@ text = "Generating Map ..."
 
 [node name="Label4" type="Label" parent="CanvasLayer/Loading" unique_id=1920088576]
 visible = false
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -987,6 +1040,7 @@ scale = Vector2(1.9117647, 2)
 texture = ExtResource("13_dp3pk")
 
 [node name="Label" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1340453858]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1004,6 +1058,7 @@ text = "move"
 horizontal_alignment = 1
 
 [node name="Label2" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1605248558]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1027,6 +1082,7 @@ scale = Vector2(1.9736842, 2)
 texture = ExtResource("22_hj0ki")
 
 [node name="Label3" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=200782942]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -1060,18 +1116,52 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/Warning" unique_id=2135034322]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -13.0
-offset_top = 36.0
+offset_top = 4.0
 offset_right = 14.0
-offset_bottom = 36.0
+offset_bottom = 4.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "I can't use this yet..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Warning2" type="Control" parent="CanvasLayer" unique_id=2095916132]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Warning2" unique_id=138779113]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 4.0
+offset_right = 14.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "I can't place this here..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -1092,6 +1182,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/KeyWarning" unique_id=1535117967]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -1104,6 +1195,39 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "I need this to escape"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="KeyWarning2" type="Control" parent="CanvasLayer" unique_id=1330400857]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/KeyWarning2" unique_id=774999295]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "This feels too important..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -1124,6 +1248,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Label" type="Label" parent="CanvasLayer/EscapeWarning" unique_id=473606818]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

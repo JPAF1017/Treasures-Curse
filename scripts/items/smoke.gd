@@ -178,6 +178,10 @@ func update_primary_action(player: Node, delta: float) -> bool:
 	return false
 
 
+func release_primary_action(_player: Node) -> void:
+	pass
+
+
 func pick_up_into_hotbar(player: Node, slot_index: int) -> bool:
 	if player == null:
 		return false

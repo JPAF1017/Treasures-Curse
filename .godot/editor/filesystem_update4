@@ -1,10 +1,10 @@
-res://levels/level1.tscn
+res://scripts/player.gd
+res://scripts/items/smoke.gd
+res://scripts/level1_spawner.gd
+res://entities/player.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 res://assets/items/smoke_outer.gdshader
 res://assets/items/smoke_inner.gdshader
 res://entities/filter.gdshader
 res://assets/items/smoke_overlay.gdshader
-res://entities/player.tscn
-res://assets/rooms/big_room.tscn
-res://assets/rooms/treasure_room.tscn
-res://assets/items/gold.tscn
+res://scripts/rooms/candle_puzzle_room.gd
