@@ -953,16 +953,18 @@ func _select_hotbar_slot(slot_index: int) -> void:
 	if not _throw_hint_dismissed:
 		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
 		var has_item := item != null and is_instance_valid(item)
+		var kw2_active := key_warning2_control != null and key_warning2_control.visible
 		if throw_hint_control != null:
-			if has_item and not throw_hint_control.visible:
+			if has_item and not kw2_active and not throw_hint_control.visible:
 				throw_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				throw_hint_control.visible = true
-			elif not has_item and throw_hint_control.visible:
+			elif (not has_item or kw2_active) and throw_hint_control.visible:
 				throw_hint_control.visible = false
 	if not _use_hint_dismissed:
 		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
 		var throw_active := throw_hint_control != null and throw_hint_control.visible
-		var has_usable: bool = not throw_active and item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (_is_health_item_model(item) or _is_smoke_item_model(item))
+		var kw2_active := key_warning2_control != null and key_warning2_control.visible
+		var has_usable: bool = not throw_active and not kw2_active and item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (_is_health_item_model(item) or _is_smoke_item_model(item))
 		if use_hint_control != null:
 			if has_usable and not use_hint_control.visible:
 				use_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -972,7 +974,8 @@ func _select_hotbar_slot(slot_index: int) -> void:
 	if not _attack_hint_dismissed:
 		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
 		var throw_active := throw_hint_control != null and throw_hint_control.visible
-		var has_weapon: bool = not throw_active and item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (item is Sword or item is Bat or _is_shovel_item_model(item))
+		var kw2_active := key_warning2_control != null and key_warning2_control.visible
+		var has_weapon: bool = not throw_active and not kw2_active and item != null and is_instance_valid(item) and not item.get_meta("puzzle_item", false) and (item is Sword or item is Bat or _is_shovel_item_model(item))
 		if attack_hint_control != null:
 			if has_weapon and not attack_hint_control.visible:
 				attack_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1214,7 +1217,8 @@ func _update_pickup_prompt_visibility() -> void:
 	var place_active := place_item_control != null and place_item_control.visible
 	var warning2_control := get_node_or_null("CanvasLayer/Warning2") as Control
 	var warning2_active := warning2_control != null and warning2_control.visible
-	pickup_control.visible = not throw_active and not place_active and not warning2_active and _find_first_empty_hotbar_slot() != -1 and _get_pickup_candidate() != null
+	var key_warning2_active := key_warning2_control != null and key_warning2_control.visible
+	pickup_control.visible = not throw_active and not place_active and not warning2_active and not key_warning2_active and _find_first_empty_hotbar_slot() != -1 and _get_pickup_candidate() != null
 
 func _has_any_primary_item_in_hotbar() -> bool:
 	for item_model in hotbar_item_models:
