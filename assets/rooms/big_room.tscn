@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://dp6j0b5dhrjx8" path="res://assets/room assets/block_half.tscn" id="4_fk1er"]
 [ext_resource type="PackedScene" uid="uid://d4b5hb4e4emkt" path="res://assets/room assets/skull_wall.tscn" id="5_lgu3a"]
 [ext_resource type="PackedScene" uid="uid://bo6jeems25wnu" path="res://assets/room assets/wall_border_02.tscn" id="5_o34fn"]
+[ext_resource type="PackedScene" uid="uid://d1e1ffdtkokq8" path="res://assets/room assets/torch.tscn" id="5_ylye7"]
 [ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="6_lgu3a"]
 [ext_resource type="PackedScene" uid="uid://c5tachymoo3s2" path="res://assets/room assets/wall_01.tscn" id="6_ywxgb"]
 [ext_resource type="PackedScene" uid="uid://brta7m5puqnyt" path="res://assets/room assets/crate.tscn" id="7_fk1er"]
@@ -96,6 +97,21 @@ transform = Transform3D(0.12897216, 0, 0.37863728, 0, 0.4, 0, -0.37863728, 0, 0.
 
 [node name="Barrel3" parent="Models/Props" unique_id=986170816 instance=ExtResource("8_o34fn")]
 transform = Transform3D(0.37696114, 0, -0.13379201, 0, 0.4, 0, 0.13379201, 0, 0.37696114, -7.5385747, -8.68611, -13.048137)
+
+[node name="Torch" parent="Models/Props" unique_id=788604045 instance=ExtResource("5_ylye7")]
+transform = Transform3D(-0.49999997, -2.8731732e-08, 3.6155463e-08, 6.513504e-16, 0.4708851, 0.16812854, -4.371139e-08, 0.16812855, -0.47088513, -5, 0, 7.4367905)
+
+[node name="Torch2" parent="Models/Props" unique_id=28226159 instance=ExtResource("5_ylye7")]
+transform = Transform3D(-0.49999997, -2.8731732e-08, 3.6155463e-08, 6.513504e-16, 0.4708851, 0.16812854, -4.371139e-08, 0.16812855, -0.47088513, 5, 0, 7.4367905)
+
+[node name="Torch3" parent="Models/Props" unique_id=1321037158 instance=ExtResource("5_ylye7")]
+transform = Transform3D(-2.1855696e-08, 0.16812856, -0.47088513, 1.9540512e-15, 0.47088516, 0.16812856, 0.5, 7.349133e-09, -2.0583041e-08, -14, -1.6319497, 0.06767148)
+
+[node name="Torch4" parent="Models/Props" unique_id=1340408607 instance=ExtResource("5_ylye7")]
+transform = Transform3D(6.5567086e-08, -0.16812858, 0.47088513, 1.509962e-15, 0.47088516, 0.16812856, -0.5, -2.2047399e-08, 6.174913e-08, 14, -1.6319497, 0.06767148)
+
+[node name="Torch5" parent="Models/Props" unique_id=1864348436 instance=ExtResource("5_ylye7")]
+transform = Transform3D(-0.5, -6.647909e-10, 4.6176705e-08, 3.2863189e-15, 0.47088516, 0.16812856, -4.3711385e-08, 0.16812858, -0.47088513, 0, -1.6319497, -13.932328)
 
 [node name="Wall" type="Node3D" parent="Models" unique_id=622696885]
 

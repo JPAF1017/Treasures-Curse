@@ -261,16 +261,16 @@ transform = Transform3D(-8.742278e-09, 0.2, -8.742278e-09, 0, -8.742278e-09, -0.
 [node name="Torches" type="Node3D" parent="Decor" unique_id=2104603182]
 
 [node name="Torch" parent="Decor/Torches" unique_id=271323833 instance=ExtResource("11_mvry0")]
-transform = Transform3D(0.70710677, 0.23776962, -0.66593194, 0, 0.94177014, 0.33625707, 0.7071068, -0.23776965, 0.665932, 6.5, -4, -6.5)
+transform = Transform3D(0.35355338, 0.11888484, -0.33296606, 0, 0.47088513, 0.16812855, 0.35355338, -0.11888484, 0.33296606, 6.25, -4, -6.25)
 
 [node name="Torch2" parent="Decor/Torches" unique_id=1599801268 instance=ExtResource("11_mvry0")]
-transform = Transform3D(0.7071068, -0.23776963, 0.665932, 0, 0.94177026, 0.3362571, -0.7071068, -0.23776962, 0.6659319, -6.5, -4, -6.5)
+transform = Transform3D(0.35355338, -0.1188848, 0.33296606, 0, 0.47088513, 0.1681285, -0.35355338, -0.1188848, 0.33296606, -6.25, -4, -6.25)
 
 [node name="Torch3" parent="Decor/Torches" unique_id=1844346637 instance=ExtResource("11_mvry0")]
-transform = Transform3D(-0.7071068, -0.23776962, 0.66593176, -8.881784e-16, 0.94177026, 0.3362571, -0.7071067, 0.23776957, -0.66593194, -6.5, -4, 6.5)
+transform = Transform3D(-0.35355338, -0.118884794, 0.33296606, -4.4408918e-16, 0.47088513, 0.16812849, -0.35355338, 0.118884794, -0.33296606, -6.25, -4, 6.25)
 
 [node name="Torch4" parent="Decor/Torches" unique_id=1943627047 instance=ExtResource("11_mvry0")]
-transform = Transform3D(-0.70710665, 0.23776954, -0.6659319, 1.0536711e-08, 0.94177026, 0.3362571, 0.7071069, 0.2377696, -0.6659317, 6.5, -4, 6.5)
+transform = Transform3D(-0.3535533, 0.118884824, -0.33296615, 5.2683555e-09, 0.47088513, 0.16812848, 0.35355347, 0.11888474, -0.33296597, 6.25, -4, 6.25)
 
 [node name="Wall" type="Node3D" parent="." unique_id=1324940223]
 

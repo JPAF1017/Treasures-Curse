@@ -30,21 +30,20 @@ sky_material = SubResource("ProceduralSkyMaterial_27e7b")
 
 [sub_resource type="Environment" id="Environment_yplof"]
 background_mode = 1
-background_color = Color(0, 0, 0, 1)
 sky = SubResource("Sky_rasb4")
 ambient_light_source = 2
-ambient_light_color = Color(0.12, 0.08, 0.04, 1)
-ambient_light_energy = 0.3
+ambient_light_color = Color(1, 1, 1, 1)
 tonemap_mode = 2
 sdfgi_enabled = true
 glow_enabled = true
-fog_enabled = true
-fog_light_color = Color(0, 0, 0, 1)
-fog_density = 0.08
+fog_mode = 1
+fog_light_color = Color(0.23031491, 0.23031494, 0.23031494, 1)
+fog_density = 1.0
 fog_depth_curve = 2.0
 volumetric_fog_enabled = true
 volumetric_fog_density = 0.01
-volumetric_fog_albedo = Color(0.85, 0.75, 0.6, 1)
+volumetric_fog_albedo = Color(0.34781712, 0.3478169, 0.34781685, 1)
+volumetric_fog_emission = Color(0.24477637, 0.24477643, 0.24477634, 1)
 
 [node name="test map" type="Node3D" unique_id=1262865494]
 script = ExtResource("99_spawner")
@@ -83,9 +82,9 @@ transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, -80,
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)
-visible = false
-light_color = Color(0, 0, 0, 1)
-light_volumetric_fog_energy = 0.5
+light_color = Color(0.3328807, 0.33288068, 0.33288068, 1)
+light_energy = 1.673
+light_indirect_energy = 1.935
 light_bake_mode = 1
 shadow_enabled = true
 

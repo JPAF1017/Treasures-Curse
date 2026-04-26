@@ -64,7 +64,7 @@ light_color = Color(0.855485, 0.46624, 0, 1)
 light_energy = 3.736
 shadow_enabled = true
 shadow_bias = 0.5
-omni_range = 11.562098
+omni_range = 7.9761314
 
 [node name="TorchSound" type="AudioStreamPlayer3D" parent="." unique_id=144952107]
 stream = ExtResource("3_torch")

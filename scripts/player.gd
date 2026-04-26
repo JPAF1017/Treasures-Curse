@@ -58,7 +58,6 @@ const STEP_SOUND_PATHS := [
 ]
 const CHASE_SOUND_PATHS := [
 	"res://sounds/player/chase1.mp3",
-	"res://sounds/player/chase2.mp3",
 ]
 const CHASE_SHY_SOUND_PATH := "res://sounds/player/chase3.mp3"
 const SWING_SOUND_PATH := "res://sounds/player/swing.mp3"
@@ -138,8 +137,8 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var loading_label3: Label = $CanvasLayer/Loading/Label3
 @onready var loading_label4: Label = $CanvasLayer/Loading/Label4
 @onready var warning_control: Control = $CanvasLayer/Warning
-@onready var escape_warning_control: Control = $CanvasLayer/Control/EscapeWarning
-@onready var key_warning_control: Control = $CanvasLayer/Control/KeyWarning
+@onready var escape_warning_control: Control = $CanvasLayer/EscapeWarning
+@onready var key_warning_control: Control = $CanvasLayer/KeyWarning
 @onready var camera_hint_control: Control = $CanvasLayer/Control/Camera
 @onready var sprint_hint_control: Control = $CanvasLayer/Control/Sprint
 @onready var item_wheel_control: Control = $CanvasLayer/Control/ItemWheel

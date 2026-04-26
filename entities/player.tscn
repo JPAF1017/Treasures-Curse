@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
-[ext_resource type="Shader" uid="uid://dx8i8cu4cr7rs" path="res://entities/overlay.gdshader" id="2_ef06p"]
+[ext_resource type="Shader" uid="uid://bmag55qj360ls" path="res://entities/filter.gdshader" id="2_hj0ki"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
 [ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="5_qsoyl"]
@@ -40,13 +40,11 @@ height = 1.1181335
 radius = 2.0
 height = 12.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_tjdhl"]
-render_priority = 3
-shader = ExtResource("2_ef06p")
-shader_parameter/pixel_size = 0.0
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fruft"]
+render_priority = -100
+shader = ExtResource("2_hj0ki")
 
-[sub_resource type="QuadMesh" id="QuadMesh_i623q"]
-material = SubResource("ShaderMaterial_tjdhl")
+[sub_resource type="QuadMesh" id="QuadMesh_slxql"]
 flip_faces = true
 size = Vector2(2, 2)
 
@@ -79,7 +77,7 @@ transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 0.869, 0
 [node name="playerCamera" type="Camera3D" parent="Head" unique_id=25879993]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0222359, 0.00750554)
 fov = 85.0
-far = 60.0
+far = 100.0
 
 [node name="Vision" type="Area3D" parent="Head/playerCamera" unique_id=442017822 groups=["player_vision"]]
 collision_layer = 8
@@ -97,10 +95,10 @@ spot_attenuation = 0.5
 spot_angle = 55.0
 spot_angle_attenuation = 0.8
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Head/playerCamera" unique_id=1465749198]
-visible = false
+[node name="Filter" type="MeshInstance3D" parent="Head/playerCamera" unique_id=63140070]
+material_override = SubResource("ShaderMaterial_fruft")
 extra_cull_margin = 16384.0
-mesh = SubResource("QuadMesh_i623q")
+mesh = SubResource("QuadMesh_slxql")
 
 [node name="player" parent="." unique_id=1414178216 instance=ExtResource("2_b0kkn")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
@@ -1078,6 +1076,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="KeyWarning" type="Control" parent="CanvasLayer" unique_id=652923159]
+visible = false
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
