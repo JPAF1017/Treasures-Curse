@@ -209,6 +209,36 @@ var hotbar_font: FontFile = null
 
 #function on startup
 func _ready():
+	# In multiplayer, only the authority (local) player gets full HUD/camera/audio setup.
+	if not is_multiplayer_authority():
+		if camera != null:
+			camera.current = false
+		if player_canvas_layer != null:
+			player_canvas_layer.visible = false
+		if footstep_player != null:
+			footstep_player.volume_db = -80.0
+		if music_player != null:
+			music_player.volume_db = -80.0
+		if chase_player != null:
+			chase_player.volume_db = -80.0
+		if swing_player != null:
+			swing_player.volume_db = -80.0
+		_configure_vision_area()
+		if visual_root:
+			visual_root.rotation.y = head.rotation.y + deg_to_rad(visual_yaw_offset_degrees)
+			# Do NOT call _configure_player_visual_visibility() here — that would move the
+			# remote player's mesh to render layer 2 which the local camera has culled out,
+			# making the remote player invisible.  Leave it on layer 1 so everyone can see it.
+		# MultiplayerSynchronizer must exist on ALL peers so the non-authority peers
+		# receive position/rotation updates. Spawned player2 nodes get it added in
+		# _do_spawn() before the MultiplayerSpawner registers them; for the host's
+		# embedded player node _ready() creates it here.
+		if multiplayer.has_multiplayer_peer() and get_node_or_null("PositionSync") == null:
+			_setup_multiplayer_sync()
+		return
+	# Ensure this player's camera is current (important when spawned at runtime in multiplayer).
+	if camera != null:
+		camera.current = true
 	#detects mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	floor_snap_length = 0.7
@@ -266,9 +296,16 @@ func _ready():
 		grabbed_hint_control.visible = false
 
 	# Connect to dungeon generator's done_generating to show Label4.
+	# In multiplayer, player2 spawns AFTER generation is complete so the signal
+	# has already fired — detect that and call _on_map_generated() immediately.
 	var generator := _find_dungeon_generator(get_tree().root)
 	if generator:
-		generator.done_generating.connect(_on_map_generated)
+		var stage = generator.get("stage")
+		# BuildStage.DONE = 5
+		if stage != null and int(stage) >= 5:
+			_on_map_generated()
+		else:
+			generator.done_generating.connect(_on_map_generated)
 	else:
 		_on_map_generated()
 
@@ -278,6 +315,11 @@ func _ready():
 		_configure_player_visual_visibility()
 	else:
 		print("WARNING: Player visual root not found!")
+
+	# Sync position and head rotation to all peers so players can see each other move.
+	# Only create if not already added by _do_spawn() (spawned player2 case).
+	if multiplayer.has_multiplayer_peer() and get_node_or_null("PositionSync") == null:
+		_setup_multiplayer_sync()
 
 func _configure_player_visual_visibility() -> void:
 	if visual_root == null or camera == null:
@@ -311,6 +353,8 @@ func _configure_vision_area():
 
 #camera function
 func _unhandled_input(event):
+	if not is_multiplayer_authority():
+		return
 	if event is InputEventMouseMotion:
 		var sens := SENSITIVITY * STUN_SENSITIVITY_MULTIPLIER if stun_timer > 0.0 else SENSITIVITY
 		head.rotate_y(-event.relative.x * sens)
@@ -368,6 +412,17 @@ func _unhandled_input(event):
 
 #movement function
 func _physics_process(delta):
+	if multiplayer.has_multiplayer_peer():
+		# Guard against calling is_multiplayer_authority() while the peer is still
+		# connecting — that state causes a "multiplayer instance isn't active" spam.
+		var peer := multiplayer.multiplayer_peer
+		if peer == null or peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+			return
+		if not is_multiplayer_authority():
+			# Keep remote player's visual model facing the synced head direction.
+			if visual_root:
+				visual_root.rotation.y = head.rotation.y + deg_to_rad(visual_yaw_offset_degrees)
+			return
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
@@ -1100,10 +1155,18 @@ func _drop_selected_hotbar_item() -> void:
 		return
 
 	if _is_primary_item_model(selected_item):
+		var scene_path := selected_item.scene_file_path
 		if bool(selected_item.call("drop_from_hotbar", self)):
 			_set_hotbar_item(selected_hotbar_slot_index, null, null)
 			_refresh_selected_item_state()
 			_update_pickup_prompt_visibility()
+			if multiplayer.has_multiplayer_peer() and not scene_path.is_empty():
+				var drop_pos := (selected_item as Node3D).global_position
+				var drop_vel := Vector3.ZERO
+				if selected_item is RigidBody3D:
+					drop_vel = selected_item.linear_velocity
+				var is_puzzle_item: bool = selected_item.get_meta("puzzle_item", false)
+				rpc("_sync_item_dropped", scene_path, drop_pos, drop_vel, is_puzzle_item)
 	else:
 		push_warning("Drop not implemented for selected item model: %s" % selected_item.name)
 
@@ -1121,7 +1184,10 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 			push_warning("Hotbar is full. Cannot pick up item.")
 			return
 
+		var item_world_path := str(item_body.get_path())
 		if bool(item_body.call("pick_up_into_hotbar", self, slot_index)):
+			if multiplayer.has_multiplayer_peer():
+				rpc("_sync_item_removed", item_world_path)
 			_set_hotbar_item(slot_index, item_body, item_body.call("get_hotbar_icon_texture"))
 			_refresh_selected_item_state()
 			_update_pickup_prompt_visibility()
@@ -1226,6 +1292,33 @@ func _has_any_primary_item_in_hotbar() -> bool:
 			return true
 	return false
 
+## Removes the world item at the given absolute path on all peers when the authority
+## player picks it up.
+@rpc("any_peer", "call_remote", "reliable")
+func _sync_item_removed(item_path: String) -> void:
+	var item := get_node_or_null(NodePath(item_path))
+	if item != null:
+		item.queue_free()
+
+
+## Spawns a dropped item on all peers so they see it appear in the world.
+@rpc("any_peer", "call_remote", "reliable")
+func _sync_item_dropped(scene_path: String, drop_pos: Vector3, drop_vel: Vector3, is_puzzle_item: bool = false) -> void:
+	var packed := load(scene_path) as PackedScene
+	if packed == null:
+		return
+	var item := packed.instantiate() as Node3D
+	# force_readable_name=true avoids the "reserved name @ClassName@N" error that
+	# the ItemSpawner raises when it detects new children added to the scene root.
+	get_tree().current_scene.add_child(item, true)
+	item.global_position = drop_pos
+	if item is RigidBody3D:
+		item.linear_velocity = drop_vel
+	if is_puzzle_item:
+		item.set_meta("puzzle_item", true)
+
+
+@rpc("any_peer", "call_local", "reliable")
 func apply_damage(amount: float) -> void:
 	if amount <= 0.0:
 		return
@@ -1421,9 +1514,11 @@ func _apply_damage_camera_tilt() -> void:
 	damage_tilt_tween = create_tween()
 	damage_tilt_tween.tween_property(camera, "rotation:z", 0.0, DAMAGE_TILT_DURATION).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_ELASTIC)
 
+@rpc("any_peer", "call_local", "reliable")
 func apply_stun_state(duration: float) -> void:
 	stun_timer = maxf(stun_timer, duration)
 
+@rpc("any_peer", "call_local", "reliable")
 func apply_knockback(direction: Vector3, strength: float) -> void:
 	var knock_dir := direction
 	knock_dir.y = 0.0
@@ -1517,6 +1612,8 @@ func _log_player_position() -> void:
 
 # Debug function to check collision state
 func _input(event):
+	if not is_multiplayer_authority():
+		return
 	if event.is_action_pressed("ui_cancel"):
 		_open_pause_menu()
 		return
@@ -1539,6 +1636,22 @@ func _set_layer_recursive(node: Node, layer: int):
 		node.layers = 1 << (layer - 1)
 	for child in node.get_children():
 		_set_layer_recursive(child, layer)
+
+## Creates a MultiplayerSynchronizer so all peers can see this player's position
+## and head rotation, regardless of who has authority over this node.
+func _setup_multiplayer_sync() -> void:
+	var sync := MultiplayerSynchronizer.new()
+	sync.name = "PositionSync"
+	var config := SceneReplicationConfig.new()
+	config.add_property(NodePath(".:position"))
+	config.add_property(NodePath("Head:rotation"))
+	sync.replication_config = config
+	add_child(sync)
+	# The authority must match the player node's authority so only the owning
+	# peer broadcasts their own data. Without this it defaults to server (1)
+	# which causes the server to overwrite player2's position and head rotation.
+	sync.set_multiplayer_authority(get_multiplayer_authority())
+
 
 func _resolve_visual_root() -> Node3D:
 	if not visual_root_path.is_empty():

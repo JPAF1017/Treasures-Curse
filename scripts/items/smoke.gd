@@ -116,7 +116,7 @@ func begin_primary_action(player: Node) -> bool:
 	var old_parent := get_parent()
 	if old_parent:
 		old_parent.remove_child(self)
-	world_root.add_child(self)
+	world_root.add_child(self, true)
 
 	global_position = spawn_pos
 	_set_visual_layer_recursive(self, 1)
@@ -227,7 +227,7 @@ func drop_from_hotbar(player: Node) -> bool:
 	if old_parent:
 		old_parent.remove_child(self)
 	if world_root:
-		world_root.add_child(self)
+		world_root.add_child(self, true)
 	else:
 		player.add_child(self)
 

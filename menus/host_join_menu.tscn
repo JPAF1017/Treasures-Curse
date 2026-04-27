@@ -2,6 +2,7 @@
 
 [ext_resource type="VideoStream" uid="uid://b4ixw8c7c4e07" path="res://assets/ui/wallpaper.ogv" id="2_denxo"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="3_vs4q4"]
+[ext_resource type="Script" uid="uid://dsr8xhoi1wfu8" path="res://menus/host_join_menu.gd" id="4_script"]
 
 [node name="HostJoinMenu" type="Control" unique_id=2131559063]
 layout_mode = 3
@@ -10,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("4_script")
 
 [node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1000000001]
 layout_mode = 1
@@ -22,7 +24,7 @@ stream = ExtResource("2_denxo")
 autoplay = true
 expand = true
 
-[node name="Button" type="Control" parent="." unique_id=1314704547]
+[node name="Buttons" type="VBoxContainer" parent="." unique_id=200000001]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -30,32 +32,39 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -96.0
+offset_top = -90.0
+offset_right = 96.0
+offset_bottom = 90.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Host" type="Button" parent="Button" unique_id=276792559]
+[node name="Host" type="Button" parent="Buttons" unique_id=276792559]
 texture_filter = 1
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -64.0
-offset_top = -72.0
-offset_right = 64.0
-offset_bottom = -19.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("3_vs4q4")
 theme_override_font_sizes/font_size = 50
 text = "HOST"
 
-[node name="Join" type="Button" parent="Button" unique_id=2096599262]
+[node name="Join" type="Button" parent="Buttons" unique_id=2096599262]
+texture_filter = 1
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 50
+text = "JOIN"
+
+[node name="Back" type="Button" parent="Buttons" unique_id=300000001]
+texture_filter = 1
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 50
+text = "BACK"
+
+[node name="ConnectPanel" type="VBoxContainer" parent="." unique_id=400000001]
+visible = false
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
@@ -63,11 +72,47 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -64.0
-offset_right = 63.0
-offset_bottom = 53.0
+offset_left = -200.0
+offset_top = -80.0
+offset_right = 200.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="IPInput" type="LineEdit" parent="ConnectPanel" unique_id=500000001]
+texture_filter = 1
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 30
+placeholder_text = "Server IP (default: 127.0.0.1)"
+
+[node name="Connect" type="Button" parent="ConnectPanel" unique_id=600000001]
+texture_filter = 1
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("3_vs4q4")
 theme_override_font_sizes/font_size = 50
-text = "JOIN"
+text = "CONNECT"
+
+[node name="CancelJoin" type="Button" parent="ConnectPanel" unique_id=700000001]
+texture_filter = 1
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 50
+text = "CANCEL"
+
+[node name="StatusLabel" type="Label" parent="." unique_id=800000001]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("3_vs4q4")
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1

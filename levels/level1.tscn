@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="13_ou4v7"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
+[ext_resource type="Script" path="res://scripts/multiplayer/player_spawner.gd" id="100_playerspawner"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav01"]
 
@@ -96,3 +97,12 @@ script = ExtResource("98_optimizer")
 
 [node name="player" parent="." unique_id=1588251422 instance=ExtResource("7_8bcou")]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -35, -9, 64)
+
+[node name="PlayerSpawner" type="Node" parent="." unique_id=2000000001]
+script = ExtResource("100_playerspawner")
+
+[node name="NPCSpawner" type="MultiplayerSpawner" parent="." unique_id=2000000002]
+spawn_path = NodePath("..")
+
+[node name="ItemSpawner" type="MultiplayerSpawner" parent="." unique_id=2000000003]
+spawn_path = NodePath("..")

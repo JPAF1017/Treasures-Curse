@@ -294,7 +294,7 @@ func drop_from_hotbar(player: Node) -> bool:
 	if old_parent:
 		old_parent.remove_child(self)
 	if world_root:
-		world_root.add_child(self)
+		world_root.add_child(self, true)
 	else:
 		player.add_child(self)
 

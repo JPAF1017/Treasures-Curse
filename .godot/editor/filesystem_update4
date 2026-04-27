@@ -1,12 +1,1 @@
-res://menus/death_menu.tscn
-res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
-res://assets/items/smoke_outer.gdshader
-res://assets/items/smoke_inner.gdshader
-res://entities/filter.gdshader
-res://assets/items/smoke_overlay.gdshader
-res://menus/escape_menu.tscn
-res://menus/pause_menu.tscn
-res://menus/start_menu.tscn
-res://entities/shy.tscn
-res://entities/player.tscn
-res://menus/host_join_menu.tscn
+res://scripts/player.gd
