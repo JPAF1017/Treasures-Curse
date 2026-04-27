@@ -1,7 +1,7 @@
 class_name MeleeItemSharedComponent
 extends RefCounted
 
-const DEFAULT_PICKUP_DISTANCE := 2.0
+const DEFAULT_PICKUP_DISTANCE := 3.5
 const DEFAULT_EQUIP_ACTION: StringName = &"e"
 
 

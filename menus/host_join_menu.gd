@@ -1,7 +1,7 @@
 extends Control
 
 const PORT := 7777
-const MAX_CLIENTS := 4
+const MAX_CLIENTS := 3
 const GAME_SCENE_PATH := "res://levels/level1.tscn"
 
 @onready var host_button: Button = $Buttons/Host

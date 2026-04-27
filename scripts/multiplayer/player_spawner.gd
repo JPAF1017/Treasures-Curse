@@ -7,6 +7,11 @@ extends Node
 ## assigns multiplayer authority so each player controls only their own character.
 
 const PLAYER_SCENE := preload("res://entities/player2.tscn")
+const PLAYER_SCENES: Array = [
+	preload("res://entities/player2.tscn"),
+	preload("res://entities/player3.tscn"),
+	preload("res://entities/player4.tscn"),
+]
 
 # Side offset applied between each extra player so they don't overlap on spawn.
 const SPAWN_SIDE_OFFSET := Vector3(2.5, 0.0, 0.0)
@@ -74,11 +79,12 @@ func _count_spawned_players() -> int:
 
 func _spawn_for_peer(peer_id: int, index: int) -> void:
 	var pos := _start_position + SPAWN_SIDE_OFFSET * float(index)
-	_spawner.spawn({"id": peer_id, "pos": pos})
+	_spawner.spawn({"id": peer_id, "pos": pos, "index": index})
 
 
 func _do_spawn(data: Dictionary) -> Node:
-	var player: Node3D = PLAYER_SCENE.instantiate() as Node3D
+	var scene_index: int = clampi(data.get("index", 1) - 1, 0, PLAYER_SCENES.size() - 1)
+	var player: Node3D = PLAYER_SCENES[scene_index].instantiate() as Node3D
 	player.name = str(data["id"])
 	player.set_multiplayer_authority(data["id"])
 	player.position = data["pos"]

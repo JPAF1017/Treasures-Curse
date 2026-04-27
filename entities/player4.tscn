@@ -1,0 +1,1279 @@
+[gd_scene format=3 uid="uid://dp6l8ou3r1an4"]
+
+[ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_seuas"]
+[ext_resource type="Shader" uid="uid://bmag55qj360ls" path="res://entities/filter.gdshader" id="2_uykod"]
+[ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="3_utv4u"]
+[ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="4_ata78"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="5_j1ckg"]
+[ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="6_ry7xb"]
+[ext_resource type="Texture2D" uid="uid://d2rbt1748nf7v" path="res://assets/ui/crosshairs_tilesheet_white.png" id="7_81doa"]
+[ext_resource type="Texture2D" uid="uid://3b05fn107wf4" path="res://assets/ui/E.png" id="8_3xmq3"]
+[ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="9_hbdag"]
+[ext_resource type="Texture2D" uid="uid://c0mfmyjjj7gie" path="res://assets/ui/SHIFTBIGGER.png" id="10_hp42b"]
+[ext_resource type="Texture2D" uid="uid://bmsg7se5bh4rq" path="res://assets/ui/SPACE.png" id="11_ivy1v"]
+[ext_resource type="Texture2D" uid="uid://6dpflex02frq" path="res://assets/ui/Q.png" id="12_v6vqa"]
+[ext_resource type="Texture2D" uid="uid://ydh6oogo8hxq" path="res://assets/ui/1.png" id="13_56ijv"]
+[ext_resource type="Texture2D" uid="uid://b6xxstrowcl25" path="res://assets/ui/2.png" id="14_cob3m"]
+[ext_resource type="Texture2D" uid="uid://bqv7vwjxx2gno" path="res://assets/ui/3.png" id="15_8kb3y"]
+[ext_resource type="Texture2D" uid="uid://ca31thb8tkcyx" path="res://assets/ui/4.png" id="16_0ukvo"]
+[ext_resource type="Texture2D" uid="uid://d2vrunaturtcu" path="res://assets/ui/5.png" id="17_1anrh"]
+[ext_resource type="Texture2D" uid="uid://c0qr74suslnqv" path="res://assets/ui/W.png" id="18_6qire"]
+[ext_resource type="Texture2D" uid="uid://01mt3d2tq3ii" path="res://assets/ui/A.png" id="19_ajd2c"]
+[ext_resource type="Texture2D" uid="uid://cixetblk2ev03" path="res://assets/ui/D.png" id="20_h8fc0"]
+[ext_resource type="Texture2D" uid="uid://cyh4fr002hyl8" path="res://assets/ui/S.png" id="21_cj8ho"]
+[ext_resource type="Texture2D" uid="uid://bnoee380ow3yv" path="res://assets/ui/CTRL.png" id="22_wloxx"]
+[ext_resource type="AudioStream" uid="uid://b0s6ugv0j3xsn" path="res://sounds/player/background_music.mp3" id="23_bd1a6"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
+height = 4.002136
+radius = 1.6201172
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_27e7b"]
+radius = 0.3305664
+height = 1.8477783
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b0kkn"]
+radius = 0.3310547
+height = 1.1181335
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_vision"]
+radius = 2.0
+height = 12.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fruft"]
+shader = ExtResource("2_uykod")
+
+[node name="player" type="CharacterBody3D" unique_id=1588251422 groups=["player"]]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
+collision_layer = 3
+script = ExtResource("1_seuas")
+debug_attack_overlap_logs = false
+
+[node name="Attack" type="Area3D" parent="." unique_id=756317047]
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Attack" unique_id=1951894750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.07150269, 1.405999)
+shape = SubResource("CylinderShape3D_6nm46")
+
+[node name="Stand" type="CollisionShape3D" parent="." unique_id=1922993831]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, -0.13699949, 0)
+shape = SubResource("CapsuleShape3D_27e7b")
+
+[node name="Crouch" type="CollisionShape3D" parent="." unique_id=73071658]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, -0.79269105, 0)
+shape = SubResource("CapsuleShape3D_b0kkn")
+disabled = true
+
+[node name="Head" type="Node3D" parent="." unique_id=882895973]
+transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 0.869, 0)
+
+[node name="playerCamera" type="Camera3D" parent="Head" unique_id=25879993]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0222359, 0.00750554)
+fov = 85.0
+far = 100.0
+
+[node name="Vision" type="Area3D" parent="Head/playerCamera" unique_id=442017822 groups=["player_vision"]]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Head/playerCamera/Vision" unique_id=1577182091]
+shape = SubResource("CapsuleShape3D_vision")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
+light_energy = 0.0
+light_indirect_energy = 0.0
+light_bake_mode = 0
+light_volumetric_fog_energy = 0.0
+spot_range = 43.3203
+spot_attenuation = 0.5
+spot_angle = 55.0
+spot_angle_attenuation = 0.8
+
+[node name="player" parent="." unique_id=1414178216 instance=ExtResource("3_utv4u")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]
+
+[node name="Filter" type="ColorRect" parent="CanvasLayer" unique_id=63140070]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_fruft")
+
+[node name="Control" type="Control" parent="CanvasLayer" unique_id=2102173205]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Stamina" type="Control" parent="CanvasLayer/Control" unique_id=1969874441]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="StaminaBarContainer" type="NinePatchRect" parent="CanvasLayer/Control/Stamina" unique_id=389236086]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -342.0
+offset_top = -72.0
+offset_right = -22.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("4_ata78")
+region_rect = Rect2(0, 8, 8, 8)
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="StaminaBar" type="NinePatchRect" parent="CanvasLayer/Control/Stamina" unique_id=1048321657]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -342.0
+offset_top = -72.0
+offset_right = -22.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("4_ata78")
+draw_center = false
+region_rect = Rect2(24, 80, 24, 24)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Stamina" unique_id=1794551111]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -342.0
+offset_top = -96.0
+offset_right = -242.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "Stamina"
+
+[node name="LabelDigit" type="Label" parent="CanvasLayer/Control/Stamina" unique_id=2105953396]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -126.0
+offset_top = -96.0
+offset_right = -26.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "100"
+horizontal_alignment = 2
+
+[node name="Health" type="Control" parent="CanvasLayer/Control" unique_id=906819521]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -38.0
+offset_top = -112.0
+offset_right = 2.0
+offset_bottom = -72.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="HealthBarContainer" type="NinePatchRect" parent="CanvasLayer/Control/Health" unique_id=2128171878]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -72.0
+offset_right = -24.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("4_ata78")
+region_rect = Rect2(0, 8, 8, 8)
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="HealthBar" type="NinePatchRect" parent="CanvasLayer/Control/Health" unique_id=623540728]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -72.0
+offset_right = -24.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("4_ata78")
+draw_center = false
+region_rect = Rect2(24, 80, 24, 24)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Health" unique_id=1751555667]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -96.0
+offset_right = -244.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "Health"
+
+[node name="LabelDigit" type="Label" parent="CanvasLayer/Control/Health" unique_id=64566892]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -128.0
+offset_top = -96.0
+offset_right = -28.0
+offset_bottom = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "100"
+horizontal_alignment = 2
+
+[node name="Hotbar" type="Control" parent="CanvasLayer/Control" unique_id=2072693231]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Slot1" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=955799714]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -195.0
+offset_top = -120.0
+offset_right = -115.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_ry7xb")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot2" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=694914384]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -115.0
+offset_top = -120.0
+offset_right = -35.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_ry7xb")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot3" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=389048436]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -35.0
+offset_top = -120.0
+offset_right = 45.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_ry7xb")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot4" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=96544235]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 45.0
+offset_top = -120.0
+offset_right = 125.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_ry7xb")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Slot5" type="NinePatchRect" parent="CanvasLayer/Control/Hotbar" unique_id=1577401734]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 125.0
+offset_top = -120.0
+offset_right = 205.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("6_ry7xb")
+draw_center = false
+region_rect = Rect2(64, 0, 8, 8)
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="Crosshair" type="Control" parent="CanvasLayer/Control" unique_id=1886904404]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="NinePatchRect" type="NinePatchRect" parent="CanvasLayer/Control/Crosshair" unique_id=197895871]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.0
+offset_top = -8.5
+offset_right = 8.0
+offset_bottom = 8.5
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_81doa")
+region_rect = Rect2(24, 24, 16, 16)
+
+[node name="Pickup" type="Control" parent="CanvasLayer/Control" unique_id=20051029]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Pickup" unique_id=20301471]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -31.75
+offset_top = 24.0
+offset_right = 75.25
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "pickup"
+
+[node name="E" type="Sprite2D" parent="CanvasLayer/Control/Pickup" unique_id=1631011629]
+texture_filter = 1
+position = Vector2(-39.000015, 52.000015)
+scale = Vector2(1.5000018, 1.5000018)
+texture = ExtResource("8_3xmq3")
+
+[node name="Attack" type="Control" parent="CanvasLayer/Control" unique_id=300440550]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1841008249]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -31.75
+offset_top = 24.0
+offset_right = 75.25
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "to swing"
+
+[node name="Left" type="Sprite2D" parent="CanvasLayer/Control/Attack" unique_id=982683950]
+texture_filter = 1
+position = Vector2(-55, 52)
+texture = ExtResource("9_hbdag")
+
+[node name="Left2" type="Sprite2D" parent="CanvasLayer/Control/Attack" unique_id=1250486715]
+texture_filter = 1
+position = Vector2(-79, 92)
+texture = ExtResource("9_hbdag")
+
+[node name="Label2" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1083565376]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -195.0
+offset_top = 64.0
+offset_right = -124.0
+offset_bottom = 87.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "hold"
+
+[node name="Label3" type="Label" parent="CanvasLayer/Control/Attack" unique_id=1945456799]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.0
+offset_top = 64.0
+offset_right = 209.0
+offset_bottom = 87.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "to charge attack"
+
+[node name="Use" type="Control" parent="CanvasLayer/Control" unique_id=1863554358]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Use" unique_id=1656674712]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -31.75
+offset_top = 24.0
+offset_right = 75.25
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "to use"
+
+[node name="Left" type="Sprite2D" parent="CanvasLayer/Control/Use" unique_id=1850529351]
+texture_filter = 1
+position = Vector2(-39, 52)
+texture = ExtResource("9_hbdag")
+
+[node name="Sprint" type="Control" parent="CanvasLayer/Control" unique_id=1982964387]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Sprint" unique_id=105136579]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -401.75
+offset_top = -70.75
+offset_right = -241.75
+offset_bottom = -47.75
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "to sprint"
+
+[node name="Shiftbigger" type="Sprite2D" parent="CanvasLayer/Control/Sprint" unique_id=1626416715]
+texture_filter = 1
+position = Vector2(-448.75, -22.75)
+scale = Vector2(1.4180328, 1.6428572)
+texture = ExtResource("10_hp42b")
+
+[node name="Grabbed" type="Control" parent="CanvasLayer/Control" unique_id=195239479]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Grabbed" unique_id=1112171573]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -272.0
+offset_top = -240.0
+offset_right = -41.0
+offset_bottom = -217.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "keep pressing"
+
+[node name="Space" type="Sprite2D" parent="CanvasLayer/Control/Grabbed" unique_id=1539631067]
+texture_filter = 1
+position = Vector2(41.62503, -188)
+scale = Vector2(1.5037318, 2.5)
+texture = ExtResource("11_ivy1v")
+
+[node name="Label2" type="Label" parent="CanvasLayer/Control/Grabbed" unique_id=1267481700]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 88.0
+offset_top = -240.0
+offset_right = 319.0
+offset_bottom = -217.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "to escape"
+
+[node name="Throw" type="Control" parent="CanvasLayer/Control" unique_id=1871257850]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Throw" unique_id=1635611101]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -19.0
+offset_top = 28.0
+offset_right = 88.0
+offset_bottom = 51.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "drop"
+
+[node name="Q" type="Sprite2D" parent="CanvasLayer/Control/Throw" unique_id=1228257765]
+texture_filter = 1
+position = Vector2(-18.25, 56)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("12_v6vqa")
+
+[node name="Interact" type="Control" parent="CanvasLayer/Control" unique_id=1333519528]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Interact" unique_id=1432130651]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -51.75
+offset_top = 22.0
+offset_right = 90.25
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "interact"
+
+[node name="E" type="Sprite2D" parent="CanvasLayer/Control/Interact" unique_id=1514370695]
+texture_filter = 1
+position = Vector2(-55.000015, 52.000015)
+scale = Vector2(1.5000018, 1.5000018)
+texture = ExtResource("8_3xmq3")
+
+[node name="PlaceItem" type="Control" parent="CanvasLayer/Control" unique_id=500525814]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/PlaceItem" unique_id=386323053]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -51.75
+offset_top = 22.0
+offset_right = 90.25
+offset_bottom = 45.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "place item"
+
+[node name="E" type="Sprite2D" parent="CanvasLayer/Control/PlaceItem" unique_id=221741318]
+texture_filter = 1
+position = Vector2(-76.000015, 52.000015)
+scale = Vector2(1.5000018, 1.5000018)
+texture = ExtResource("8_3xmq3")
+
+[node name="ItemWheel" type="Control" parent="CanvasLayer/Control" unique_id=332718513]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/ItemWheel" unique_id=1614140978]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -283.0
+offset_top = -172.0
+offset_right = 293.0
+offset_bottom = -149.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 17
+text = "scroll mouse wheel to switch item slot
+or "
+
+[node name="1" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1201586875]
+texture_filter = 1
+position = Vector2(-215, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("13_56ijv")
+
+[node name="2" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=42857229]
+texture_filter = 1
+position = Vector2(-183, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("14_cob3m")
+
+[node name="3" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1689220293]
+texture_filter = 1
+position = Vector2(-151, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("15_8kb3y")
+
+[node name="4" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1999718274]
+texture_filter = 1
+position = Vector2(-119, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("16_0ukvo")
+
+[node name="5" type="Sprite2D" parent="CanvasLayer/Control/ItemWheel" unique_id=1576755647]
+texture_filter = 1
+position = Vector2(-87, -120)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("17_1anrh")
+
+[node name="Camera" type="Control" parent="CanvasLayer/Control" unique_id=765974238]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Camera" unique_id=1152626245]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -219.0
+offset_top = 32.0
+offset_right = 225.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+theme_override_font_sizes/font_size = 20
+text = "move mouse to look around"
+
+[node name="Loading" type="Control" parent="CanvasLayer" unique_id=1907607165]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Loading" unique_id=417141148]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -67.0
+offset_top = 300.0
+offset_right = 66.0
+offset_bottom = 323.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "Generating Map ."
+
+[node name="Label2" type="Label" parent="CanvasLayer/Loading" unique_id=1021823670]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -67.0
+offset_top = 300.0
+offset_right = 66.0
+offset_bottom = 323.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "Generating Map .."
+
+[node name="Label3" type="Label" parent="CanvasLayer/Loading" unique_id=13819968]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -67.0
+offset_top = 300.0
+offset_right = 66.0
+offset_bottom = 323.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "Generating Map ..."
+
+[node name="Label4" type="Label" parent="CanvasLayer/Loading" unique_id=1920088576]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -67.0
+offset_top = 300.0
+offset_right = 66.0
+offset_bottom = 323.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "Done
+NOW MOVE UP TO ESCAPE!"
+horizontal_alignment = 1
+
+[node name="Space" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1891233397]
+texture_filter = 1
+position = Vector2(242.5, -340)
+scale = Vector2(2.0522387, 2.25)
+texture = ExtResource("11_ivy1v")
+
+[node name="W" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=580175752]
+texture_filter = 1
+position = Vector2(67.249985, -316)
+scale = Vector2(1.9999981, 1.9999981)
+texture = ExtResource("18_6qire")
+
+[node name="A" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1333614158]
+texture_filter = 1
+position = Vector2(26.749985, -276)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("19_ajd2c")
+
+[node name="D" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=2096283317]
+texture_filter = 1
+position = Vector2(106.749985, -276)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("20_h8fc0")
+
+[node name="S" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1118295606]
+texture_filter = 1
+position = Vector2(66.499985, -276)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("21_cj8ho")
+
+[node name="Label" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1340453858]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -138.5
+offset_top = -270.5
+offset_right = -39.5
+offset_bottom = -247.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "move"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1605248558]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 37.5
+offset_top = -334.5
+offset_right = 136.5
+offset_bottom = -311.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "jump"
+horizontal_alignment = 1
+
+[node name="Ctrl" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1549586899]
+texture_filter = 1
+position = Vector2(242.5, -268)
+scale = Vector2(1.9736842, 2)
+texture = ExtResource("22_wloxx")
+
+[node name="Label3" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=200782942]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 37.5
+offset_top = -262.5
+offset_right = 136.5
+offset_bottom = -239.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "crouch"
+horizontal_alignment = 1
+
+[node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Warning" unique_id=2135034322]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 4.0
+offset_right = 14.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "I can't use this yet..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Warning2" type="Control" parent="CanvasLayer" unique_id=2095916132]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Warning2" unique_id=138779113]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 4.0
+offset_right = 14.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "I can't place this here..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="KeyWarning" type="Control" parent="CanvasLayer" unique_id=652923159]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/KeyWarning" unique_id=1535117967]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "I need this to escape"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="KeyWarning2" type="Control" parent="CanvasLayer" unique_id=1330400857]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/KeyWarning2" unique_id=774999295]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "This feels too important..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EscapeWarning" type="Control" parent="CanvasLayer" unique_id=10699344]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -20.0
+offset_right = 150.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/EscapeWarning" unique_id=473606818]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -13.0
+offset_top = 36.0
+offset_right = 14.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("5_j1ckg")
+text = "I need more treasures"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FootstepPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034317]
+volume_db = -7.0
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034318]
+stream = ExtResource("23_bd1a6")
+volume_db = -20.0
+
+[node name="ChasePlayer" type="AudioStreamPlayer" parent="." unique_id=2135034319]
+volume_db = -18.0
+
+[node name="SwingPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034320]
+volume_db = -5.0

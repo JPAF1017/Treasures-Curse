@@ -67,6 +67,7 @@ var swing_force_release: bool = false
 var swing_was_released_early: bool = false
 var swing_damage_ready: bool = false
 var swing_momentum_applied: bool = false
+var swing_momentum_applied_dir: Vector3 = Vector3.ZERO
 var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
 var swing_damaged_targets: Dictionary = {}
 var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
@@ -203,6 +204,13 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 		if not swing_momentum_applied:
 			_apply_swing_momentum(player)
 			swing_momentum_applied = true
+
+	# Stop forward momentum on contact with a hurtbox.
+	if swing_momentum_applied_dir != Vector3.ZERO and _attack_area_has_hurtbox(player):
+		if player is CharacterBody3D:
+			(player as CharacterBody3D).velocity.x = 0.0
+			(player as CharacterBody3D).velocity.z = 0.0
+		swing_momentum_applied_dir = Vector3.ZERO
 
 	if swing_damage_ready and animation_player.current_animation_position < _swing_frame_to_time(SWING_STOP_FRAME):
 		_apply_attack_damage(player, current_swing_damage)
@@ -396,6 +404,10 @@ func _apply_swing_momentum(player: Node) -> void:
 	if camera == null:
 		return
 	
+	# Skip momentum if the attack area already contains a hurtbox.
+	if _attack_area_has_hurtbox(player):
+		return
+	
 	# Apply forward momentum in the direction the camera is facing
 	var forward_direction := -camera.global_transform.basis.z
 	var momentum := forward_direction * SWING_MOMENTUM_SPEED
@@ -407,6 +419,17 @@ func _apply_swing_momentum(player: Node) -> void:
 		new_velocity.x += momentum.x
 		new_velocity.z += momentum.z
 		char_player.velocity = new_velocity
+		swing_momentum_applied_dir = momentum
+
+
+func _attack_area_has_hurtbox(player: Node) -> bool:
+	var attack_area := player.get_node_or_null("Attack") as Area3D
+	if attack_area == null:
+		return false
+	for area in attack_area.get_overlapping_areas():
+		if area != null and area.name.to_lower().contains("hurtbox"):
+			return true
+	return false
 
 
 func _detach_from_hand(player: Node) -> void:
@@ -608,6 +631,7 @@ func _reset_swing_state(player: Node) -> void:
 	swing_damage_ready = false
 	swing_was_released_early = false
 	swing_momentum_applied = false
+	swing_momentum_applied_dir = Vector3.ZERO
 	swing_damaged_targets.clear()
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):

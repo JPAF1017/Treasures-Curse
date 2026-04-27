@@ -16,3 +16,11 @@ res://entities/charger.tscn
 res://entities/shambler.tscn
 res://scripts/npc/charger.gd
 res://scripts/npc/shambler.gd
+res://menus/host_join_menu.gd
+res://scripts/items/MeleeItemSharedComponent.gd
+res://entities/player3.tscn
+res://entities/player4.tscn
+res://scripts/items/axe.gd
+res://scripts/items/bat.gd
+res://scripts/items/shovel.gd
+res://scripts/items/sword.gd
