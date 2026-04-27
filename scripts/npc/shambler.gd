@@ -92,6 +92,7 @@ var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	top_level = true
+	_fix_glb_metallic(self)
 	randomize()
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7
@@ -109,6 +110,23 @@ func _ready() -> void:
 	_pick_new_direction()
 	_reset_direction_timer()
 	_play_walk_animation()
+
+
+func _fix_glb_metallic(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in mesh_inst.get_surface_override_material_count():
+			var mat: Material = mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std_mat := mat as StandardMaterial3D
+				if std_mat.metallic > 0.0:
+					var fixed := std_mat.duplicate() as StandardMaterial3D
+					fixed.metallic = 0.0
+					fixed.metallic_specular = 0.5
+					mesh_inst.set_surface_override_material(i, fixed)
+	for child in node.get_children():
+		_fix_glb_metallic(child)
+
 
 func _physics_process(delta: float) -> void:
 	if is_dead:

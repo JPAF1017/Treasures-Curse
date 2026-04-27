@@ -92,6 +92,7 @@ func _do_spawn(data: Dictionary) -> Node:
 	config.add_property(NodePath("Head:rotation"))
 	config.add_property(NodePath(".:_net_anim"))
 	config.add_property(NodePath(".:_net_anim_backwards"))
+	config.add_property(NodePath(".:_net_held_scene"))
 	sync.replication_config = config
 	player.add_child(sync)
 	# Authority must be set on the sync AFTER add_child (so it has a path)

@@ -424,4 +424,6 @@ func _do_spawn_item(data: Dictionary) -> Node:
 		if node is RigidBody3D:
 			(node as RigidBody3D).freeze = true
 			node.call_deferred("set", "freeze", false)
+	# Mark so player.gd knows the MultiplayerSpawner will auto-despawn it on reparent.
+	node.set_meta("spawner_managed", true)
 	return node

@@ -24,7 +24,7 @@ const TORCH_LIGHT_ENERGY := 12.0
 const TORCH_LIGHT_COLOR := Color(0.855485, 0.46624, 0.0)
 const TORCH_LIGHT_TWEEN_DURATION := 0.4
 const TORCH_LIGHT_RANGE := 200.0
-const DEFAULT_LIGHT_ENERGY := 7.0
+const DEFAULT_LIGHT_ENERGY := 0.0
 const DEFAULT_LIGHT_COLOR := Color(1.0, 1.0, 1.0)
 const DEFAULT_LIGHT_RANGE := 43.3203
 
@@ -437,16 +437,21 @@ func _apply_torch_light(player: Node, torch_on: bool) -> void:
 	var camera := _get_player_camera(player)
 	if camera == null:
 		return
-	var spotlight := camera.get_node_or_null("SpotLight3D") as SpotLight3D
-	if spotlight:
-		var target_energy := TORCH_LIGHT_ENERGY if torch_on else DEFAULT_LIGHT_ENERGY
-		var target_color := TORCH_LIGHT_COLOR if torch_on else DEFAULT_LIGHT_COLOR
-		var target_range := TORCH_LIGHT_RANGE if torch_on else DEFAULT_LIGHT_RANGE
-		var tween := spotlight.create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(spotlight, "light_energy", target_energy, TORCH_LIGHT_TWEEN_DURATION)
-		tween.tween_property(spotlight, "light_color", target_color, TORCH_LIGHT_TWEEN_DURATION)
-		tween.tween_property(spotlight, "spot_range", target_range, TORCH_LIGHT_TWEEN_DURATION)
+	# Only apply the first-person SpotLight for the local authority player.
+	# On remote players the spotlight is a world-space light visible to all
+	# cameras, so we skip it and rely solely on the OmniLight.
+	var is_local_authority: bool = player.has_method("is_multiplayer_authority") and player.is_multiplayer_authority()
+	if is_local_authority:
+		var spotlight := camera.get_node_or_null("SpotLight3D") as SpotLight3D
+		if spotlight:
+			var target_energy := TORCH_LIGHT_ENERGY if torch_on else DEFAULT_LIGHT_ENERGY
+			var target_color := TORCH_LIGHT_COLOR if torch_on else DEFAULT_LIGHT_COLOR
+			var target_range := TORCH_LIGHT_RANGE if torch_on else DEFAULT_LIGHT_RANGE
+			var tween := spotlight.create_tween()
+			tween.set_parallel(true)
+			tween.tween_property(spotlight, "light_energy", target_energy, TORCH_LIGHT_TWEEN_DURATION)
+			tween.tween_property(spotlight, "light_color", target_color, TORCH_LIGHT_TWEEN_DURATION)
+			tween.tween_property(spotlight, "spot_range", target_range, TORCH_LIGHT_TWEEN_DURATION)
 
 	if torch_on:
 		if _carried_omni == null or not is_instance_valid(_carried_omni):
@@ -457,6 +462,7 @@ func _apply_torch_light(player: Node, torch_on: bool) -> void:
 			_carried_omni.omni_range = 12.0
 			_carried_omni.shadow_enabled = false
 			_carried_omni.light_volumetric_fog_energy = 0.0
+			_carried_omni.light_bake_mode = Light3D.BAKE_DISABLED
 			camera.add_child(_carried_omni)
 		_carried_omni.visible = true
 	else:

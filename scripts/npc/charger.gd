@@ -114,6 +114,7 @@ const SLOPE_ALIGN_SPEED = 10.0  # How fast to tilt toward the slope
 
 func _ready():
 	top_level = true
+	_fix_glb_metallic(self)
 	# Configure slope handling
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7
@@ -159,6 +160,23 @@ func _ready():
 	idle_sound_player = get_node_or_null("Sounds/IdleSound") as AudioStreamPlayer3D
 	idle_sound_timer = randf_range(2.0, 3.0)
 	growl_sound_player = get_node_or_null("Sounds/GrowlSound") as AudioStreamPlayer3D
+
+
+func _fix_glb_metallic(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in mesh_inst.get_surface_override_material_count():
+			var mat: Material = mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std_mat := mat as StandardMaterial3D
+				if std_mat.metallic > 0.0:
+					var fixed := std_mat.duplicate() as StandardMaterial3D
+					fixed.metallic = 0.0
+					fixed.metallic_specular = 0.5
+					mesh_inst.set_surface_override_material(i, fixed)
+	for child in node.get_children():
+		_fix_glb_metallic(child)
+
 
 func _on_detector_body_entered(body):
 	if body.is_in_group("player") and _can_detect_crouching_player(body):

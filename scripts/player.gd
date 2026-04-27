@@ -125,6 +125,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var health_bar_fill: NinePatchRect = $CanvasLayer/Control/Health/HealthBarContainer
 @onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
 @onready var player_canvas_layer: CanvasLayer = $CanvasLayer
+@onready var filter_rect: ColorRect = $CanvasLayer/Filter
 @onready var pickup_control: Control = $CanvasLayer/Control/Pickup
 @onready var footstep_player: AudioStreamPlayer = $FootstepPlayer
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
@@ -175,6 +176,9 @@ var _swing_windup_was_active: bool = false
 var _chase_fade_tween: Tween = null
 var _net_anim: String = ""
 var _net_anim_backwards: bool = false
+var _net_held_scene: String = ""
+var _prev_net_held_scene: String = ""
+var _remote_held_proxy: Node3D = null
 var _camera_hint_active: bool = false
 var _camera_hint_timer: float = 0.0
 const CAMERA_HINT_DURATION := 1.0
@@ -245,6 +249,9 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	floor_snap_length = 0.7
 	_configure_vision_area()
+	# When the host disconnects, send the client back to the start menu.
+	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
+		multiplayer.server_disconnected.connect(_on_host_disconnected)
 	_set_control_mouse_filter_recursive(pickup_control, Control.MOUSE_FILTER_IGNORE)
 	initial_head_position = head.position
 	target_head_y = initial_head_position.y
@@ -275,6 +282,7 @@ func _ready():
 	_chase_volume_db = chase_player.volume_db
 	swing_player.stream = load(SWING_SOUND_PATH)	
 	# Show loading screen until the player first moves.
+	filter_rect.visible = false
 	hud_control.visible = false
 	loading_control.visible = true
 	loading_label1.visible = true
@@ -432,6 +440,10 @@ func _physics_process(delta):
 				else:
 					if animation_player.current_animation != _net_anim or animation_player.speed_scale < 0.0:
 						animation_player.play(_net_anim)
+			# Update the held-item visual proxy when the equipped scene changes.
+			if _net_held_scene != _prev_net_held_scene:
+				_prev_net_held_scene = _net_held_scene
+				_update_remote_held_proxy()
 			return
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	position_log_timer = max(position_log_timer - delta, 0.0)
@@ -484,6 +496,7 @@ func _physics_process(delta):
 		var jump_input := Input.is_action_just_pressed("ui_accept")
 		if move_input != Vector2.ZERO or jump_input:
 			_game_started = true
+			filter_rect.visible = true
 			hud_control.visible = true
 			loading_control.visible = false
 			if camera_hint_control != null:
@@ -1133,6 +1146,10 @@ func _refresh_selected_item_state() -> void:
 	for item_model in hotbar_item_models:
 		if _is_primary_item_model(item_model) and is_instance_valid(item_model):
 			item_model.call("refresh_inventory_state", self, selected_hotbar_slot_index, is_sprinting)
+	# Broadcast the currently held item scene path so remote peers can show a visual proxy.
+	if multiplayer.has_multiplayer_peer() and is_multiplayer_authority():
+		var held := _get_selected_hotbar_item()
+		_net_held_scene = held.scene_file_path if held != null and is_instance_valid(held) else ""
 
 func _update_selected_item_action(delta: float) -> bool:
 	var selected_item := _get_selected_primary_item()
@@ -1169,6 +1186,10 @@ func _drop_selected_hotbar_item() -> void:
 
 	if _is_primary_item_model(selected_item):
 		var scene_path := selected_item.scene_file_path
+		# Capture burning state BEFORE drop_from_hotbar resets it.
+		var was_burning: bool = bool(selected_item.get("is_burning")) if selected_item.get("is_burning") != null else false
+		# Capture name BEFORE reparenting so we know the world-scene name the remote must use.
+		var drop_item_name: String = selected_item.name
 		if bool(selected_item.call("drop_from_hotbar", self)):
 			_set_hotbar_item(selected_hotbar_slot_index, null, null)
 			_refresh_selected_item_state()
@@ -1179,7 +1200,7 @@ func _drop_selected_hotbar_item() -> void:
 				if selected_item is RigidBody3D:
 					drop_vel = selected_item.linear_velocity
 				var is_puzzle_item: bool = selected_item.get_meta("puzzle_item", false)
-				rpc("_sync_item_dropped", scene_path, drop_pos, drop_vel, is_puzzle_item)
+				rpc("_sync_item_dropped", scene_path, drop_pos, drop_vel, is_puzzle_item, was_burning, drop_item_name)
 	else:
 		push_warning("Drop not implemented for selected item model: %s" % selected_item.name)
 
@@ -1198,8 +1219,16 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 			return
 
 		var item_world_path := str(item_body.get_path())
+		# If the item was spawned by the MultiplayerSpawner it will auto-despawn on
+		# all peers when reparented away from the spawner's spawn_path — sending
+		# _sync_item_removed as well causes a double-free that breaks the spawner's
+		# net_id tracking for future spawns. Only send the RPC for loose items that
+		# the spawner doesn't know about (e.g. previously dropped items).
+		var is_spawner_managed: bool = item_body.get_meta("spawner_managed", false)
+		if is_spawner_managed:
+			item_body.remove_meta("spawner_managed")
 		if bool(item_body.call("pick_up_into_hotbar", self, slot_index)):
-			if multiplayer.has_multiplayer_peer():
+			if multiplayer.has_multiplayer_peer() and not is_spawner_managed:
 				rpc("_sync_item_removed", item_world_path)
 			_set_hotbar_item(slot_index, item_body, item_body.call("get_hotbar_icon_texture"))
 			_refresh_selected_item_state()
@@ -1314,21 +1343,46 @@ func _sync_item_removed(item_path: String) -> void:
 		item.queue_free()
 
 
+## Called when the host closes the connection. Returns this client to the start menu.
+func _on_host_disconnected() -> void:
+	# Disconnect immediately so a second signal fire can't re-enter.
+	if multiplayer.server_disconnected.is_connected(_on_host_disconnected):
+		multiplayer.server_disconnected.disconnect(_on_host_disconnected)
+	get_tree().paused = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer.close()
+		multiplayer.multiplayer_peer = null
+	# Defer the scene change so it happens after the current signal/frame unwinds.
+	get_tree().call_deferred("change_scene_to_file", "res://menus/start_menu.tscn")
+
+
 ## Spawns a dropped item on all peers so they see it appear in the world.
 @rpc("any_peer", "call_remote", "reliable")
-func _sync_item_dropped(scene_path: String, drop_pos: Vector3, drop_vel: Vector3, is_puzzle_item: bool = false) -> void:
+func _sync_item_dropped(scene_path: String, drop_pos: Vector3, drop_vel: Vector3, is_puzzle_item: bool = false, is_lit: bool = false, item_name: String = "") -> void:
 	var packed := load(scene_path) as PackedScene
 	if packed == null:
 		return
 	var item := packed.instantiate() as Node3D
-	# force_readable_name=true avoids the "reserved name @ClassName@N" error that
-	# the ItemSpawner raises when it detects new children added to the scene root.
+	# Set the name BEFORE add_child so the node path matches what the dropper captured
+	# for _sync_item_removed. Without this, a name like "PlayerTorch" stays local while
+	# the remote gets the default scene name ("Torch"), breaking the removal lookup.
+	if not item_name.is_empty():
+		item.name = item_name
 	get_tree().current_scene.add_child(item, true)
 	item.global_position = drop_pos
 	if item is RigidBody3D:
 		item.linear_velocity = drop_vel
 	if is_puzzle_item:
 		item.set_meta("puzzle_item", true)
+	if is_lit:
+		item.set("is_burning", true)
+		var fire_particle := item.get_node_or_null("fire_particle")
+		if fire_particle:
+			fire_particle.visible = true
+		var dropped_light := item.get_node_or_null("OmniLight3D")
+		if dropped_light:
+			dropped_light.visible = true
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -1650,6 +1704,41 @@ func _set_layer_recursive(node: Node, layer: int):
 	for child in node.get_children():
 		_set_layer_recursive(child, layer)
 
+## Creates a local-only visual proxy for the item currently held by a remote player.
+## Called whenever the synced _net_held_scene value changes on a non-authority peer.
+func _update_remote_held_proxy() -> void:
+	# Clean up previous proxy (also frees any torch lights it may have added).
+	if _remote_held_proxy != null and is_instance_valid(_remote_held_proxy):
+		if _remote_held_proxy.has_method("refresh_inventory_state"):
+			_remote_held_proxy.call("refresh_inventory_state", self, -1, false)
+		_remote_held_proxy.queue_free()
+	_remote_held_proxy = null
+	if _net_held_scene.is_empty():
+		return
+	var packed := load(_net_held_scene) as PackedScene
+	if packed == null:
+		return
+	var proxy := packed.instantiate() as Node3D
+	if proxy.has_method("pick_up_into_hotbar") and bool(proxy.call("pick_up_into_hotbar", self, 0)):
+		if proxy.has_method("refresh_inventory_state"):
+			# Snapshot the remote camera's children so we can identify and remove
+			# any first-person viewmodel nodes added during equip. Those nodes are
+			# 3D world-space objects that would be rendered by every player's camera.
+			var remote_cam := camera as Camera3D
+			var cam_children_before: Array = remote_cam.get_children().duplicate() if remote_cam else []
+			proxy.call("refresh_inventory_state", self, 0, false)
+			# Free any viewmodel nodes that refresh_inventory_state added to the camera.
+			if remote_cam:
+				for child in remote_cam.get_children():
+					if not cam_children_before.has(child):
+						child.queue_free()
+		# _equip_to_right_hand sets meshes to layer 2 (hidden from local camera).
+		# Override back to layer 1 so the local player can see the remote player's item.
+		_set_layer_recursive(proxy, 1)
+		_remote_held_proxy = proxy
+	else:
+		proxy.queue_free()
+
 ## Creates a MultiplayerSynchronizer so all peers can see this player's position
 ## and head rotation, regardless of who has authority over this node.
 func _setup_multiplayer_sync() -> void:
@@ -1660,6 +1749,7 @@ func _setup_multiplayer_sync() -> void:
 	config.add_property(NodePath("Head:rotation"))
 	config.add_property(NodePath(".:_net_anim"))
 	config.add_property(NodePath(".:_net_anim_backwards"))
+	config.add_property(NodePath(".:_net_held_scene"))
 	sync.replication_config = config
 	add_child(sync)
 	# The authority must match the player node's authority so only the owning
