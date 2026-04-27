@@ -90,6 +90,8 @@ func _do_spawn(data: Dictionary) -> Node:
 	var config := SceneReplicationConfig.new()
 	config.add_property(NodePath(".:position"))
 	config.add_property(NodePath("Head:rotation"))
+	config.add_property(NodePath(".:_net_anim"))
+	config.add_property(NodePath(".:_net_anim_backwards"))
 	sync.replication_config = config
 	player.add_child(sync)
 	# Authority must be set on the sync AFTER add_child (so it has a path)

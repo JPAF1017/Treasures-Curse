@@ -173,6 +173,8 @@ var _shy_chase_sound: AudioStream = null
 var _music_resume_position: float = 0.0
 var _swing_windup_was_active: bool = false
 var _chase_fade_tween: Tween = null
+var _net_anim: String = ""
+var _net_anim_backwards: bool = false
 var _camera_hint_active: bool = false
 var _camera_hint_timer: float = 0.0
 const CAMERA_HINT_DURATION := 1.0
@@ -422,6 +424,14 @@ func _physics_process(delta):
 			# Keep remote player's visual model facing the synced head direction.
 			if visual_root:
 				visual_root.rotation.y = head.rotation.y + deg_to_rad(visual_yaw_offset_degrees)
+			# Apply the synced animation state from the authority peer.
+			if animation_player and not _net_anim.is_empty():
+				if _net_anim_backwards:
+					if animation_player.current_animation != _net_anim or animation_player.speed_scale > 0.0:
+						animation_player.play_backwards(_net_anim)
+				else:
+					if animation_player.current_animation != _net_anim or animation_player.speed_scale < 0.0:
+						animation_player.play(_net_anim)
 			return
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	position_log_timer = max(position_log_timer - delta, 0.0)
@@ -643,6 +653,9 @@ func _physics_process(delta):
 		elif animation_player.has_animation("idle") and animation_player.current_animation != "idle":
 			# Fallback when no jump animation exists.
 			animation_player.play("idle")
+		# Broadcast the current animation state so remote peers can mirror it.
+		_net_anim = animation_player.current_animation
+		_net_anim_backwards = animation_player.speed_scale < 0.0
 	
 	if is_on_floor():
 		if direction:
@@ -1645,6 +1658,8 @@ func _setup_multiplayer_sync() -> void:
 	var config := SceneReplicationConfig.new()
 	config.add_property(NodePath(".:position"))
 	config.add_property(NodePath("Head:rotation"))
+	config.add_property(NodePath(".:_net_anim"))
+	config.add_property(NodePath(".:_net_anim_backwards"))
 	sync.replication_config = config
 	add_child(sync)
 	# The authority must match the player node's authority so only the owning
