@@ -131,7 +131,7 @@ func begin_primary_action(player: Node) -> bool:
 			print("[SwordDbg] begin_primary_action blocked — slot=%d swing=%s equipped=%s on_floor=%s attachment=%s" % [
 				inventory_slot_index, str(swing_in_progress), str(is_equipped_in_hand()),
 				str(_is_wielding_player_on_floor()),
-				(right_hand_attachment.name if is_instance_valid(right_hand_attachment) else "null")])
+				(str(right_hand_attachment.name) if is_instance_valid(right_hand_attachment) else "null")])
 		return false
 
 	swing_animation_finished = false
@@ -320,7 +320,7 @@ func drop_from_hotbar(player: Node) -> bool:
 	return true
 
 
-func refresh_inventory_state(player: Node, selected_slot_index: int, is_sprinting: bool) -> void:
+func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinting: bool) -> void:
 	if player == null or inventory_slot_index < 0:
 		return
 

@@ -9,6 +9,7 @@ const SHAMBLER_SCENE := preload("res://entities/shambler.tscn")
 const GNOME_SCENE   := preload("res://entities/gnome.tscn")
 const STATUE_SCENE  := preload("res://entities/statue.tscn")
 const SHY_SCENE     := preload("res://entities/shy.tscn")
+const KNIGHT_SCENE  := preload("res://entities/knight.tscn")
 
 const CHARGER_COUNT  := 5
 const FLY_COUNT      := 5
@@ -17,6 +18,8 @@ const GNOME_GROUPS   := 3  # each group spawns 2 or 3 gnomes in the same room
 # Floors (0-based index) where statues and shy spawn (one per floor)
 const STATUE_FLOORS  := [1, 3]
 const SHY_FLOORS     := [1, 3]
+# Knights: one on the 2nd floor (index 1) and one on the 3rd floor (index 2)
+const KNIGHT_FLOORS  := [1, 2]
 
 # ---------- Item spawning configuration ----------
 # Scene paths must match the paths used by big_room.gd
@@ -65,7 +68,7 @@ func _ready() -> void:
 	if _npc_spawner:
 		_npc_spawner.spawn_path = get_path()
 		_npc_spawner.spawn_function = _do_spawn_npc
-		for s in [CHARGER_SCENE, FLY_SCENE, SHAMBLER_SCENE, GNOME_SCENE, STATUE_SCENE, SHY_SCENE]:
+		for s in [CHARGER_SCENE, FLY_SCENE, SHAMBLER_SCENE, GNOME_SCENE, STATUE_SCENE, SHY_SCENE, KNIGHT_SCENE]:
 			_npc_spawner.add_spawnable_scene(s.resource_path)
 	if _item_spawner:
 		_item_spawner.spawn_path = get_path()
@@ -197,9 +200,9 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	if rooms.is_empty() or not is_server:
 		# Still need to activate player spawner on clients after generation.
-		var player_spawner := get_node_or_null("PlayerSpawner")
-		if player_spawner and player_spawner.has_method("activate"):
-			player_spawner.call("activate", start_pos + Vector3(0, 1.0, 0))
+		var ps := get_node_or_null("PlayerSpawner")
+		if ps and ps.has_method("activate"):
+			ps.call("activate", start_pos + Vector3(0, 1.0, 0))
 		return
 
 	# Build a list of spawn tasks: [scene, count]
@@ -242,7 +245,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# (server only — MultiplayerSpawner replicates to clients)
 	var gen_origin_y: float = (generator as Node3D).global_position.y
 	var voxel_y: float = generator.get("voxel_scale").y
-	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS]]:
+	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS], [KNIGHT_SCENE, KNIGHT_FLOORS]]:
 		var scene: PackedScene = floor_data[0]
 		var floors: Array = floor_data[1]
 		for floor_idx: int in floors:
@@ -343,7 +346,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 ## Fills in the ITEM_TARGET_COUNTS quota beyond what was already placed in big rooms.
 ## pre_spawned: dict of {key → count} tracking items already spawned in big rooms.
 func _spawn_map_items(
-	generator: Node, rooms: Array, rng: RandomNumberGenerator, pre_spawned: Dictionary
+	_generator: Node, rooms: Array, rng: RandomNumberGenerator, pre_spawned: Dictionary
 ) -> void:
 	# Build a flat list of item spawn tasks: each entry is a scene path string.
 	# pre_spawned accounts for items already placed in big rooms so we don't exceed targets.

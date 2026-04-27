@@ -327,7 +327,7 @@ func drop_from_hotbar(player: Node) -> bool:
 	return true
 
 
-func refresh_inventory_state(player: Node, selected_slot_index: int, is_sprinting: bool) -> void:
+func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinting: bool) -> void:
 	if player == null or inventory_slot_index < 0:
 		return
 
