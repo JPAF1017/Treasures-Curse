@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://dxba5x3v7oeoe"]
 
+[ext_resource type="Script" path="res://menus/cutscene.gd" id="0_script"]
+
 [ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="1_6ps3c"]
 [ext_resource type="Texture2D" uid="uid://dbgq7420nemg1" path="res://assets/ui/cutscene/1.png" id="2_vd4vi"]
 [ext_resource type="Texture2D" uid="uid://8alxyjnf5wec" path="res://assets/ui/cutscene/2.png" id="3_s2gdk"]
@@ -8,6 +10,7 @@
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="6_t0cc7"]
 
 [node name="Cutscene" type="Control" unique_id=2131559063]
+script = ExtResource("0_script")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -11,3 +11,11 @@ res://scripts/npc/charger.gd
 res://scripts/npc/gnome.gd
 res://scripts/npc/knight.gd
 res://menus/cutscene.tscn
+res://menus/host_join_menu.gd
+res://menus/start_menu.gd
+res://menus/cutscene.gd
+res://scripts/items/torch.gd
+res://assets/rooms/corridor.gd
+res://entities/player2.tscn
+res://entities/player3.tscn
+res://entities/player4.tscn

@@ -47,16 +47,6 @@ shader = ExtResource("2_hj0ki")
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 3
 script = ExtResource("1_u63mc")
-vision_distance = null
-vision_radius = null
-debug_position_logs = null
-debug_attack_overlap_logs = null
-hide_visual_from_player_camera = null
-visual_yaw_offset_degrees = null
-crouch_head_y = null
-crouch_transition_speed = null
-visual_root_path = null
-animation_player_path = null
 
 [node name="Attack" type="Area3D" parent="." unique_id=756317047]
 collision_layer = 0
@@ -930,8 +920,107 @@ theme_override_fonts/font = ExtResource("4_rfe5m")
 theme_override_font_sizes/font_size = 20
 text = "move mouse to look around"
 
+[node name="Movement" type="Control" parent="CanvasLayer/Control" unique_id=896104111]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -20.0
+offset_right = 40.0
+offset_bottom = 20.0
+grow_vertical = 2
+
+[node name="Space" type="Sprite2D" parent="CanvasLayer/Control/Movement" unique_id=592493118]
+texture_filter = 1
+position = Vector2(96, -76)
+scale = Vector2(2.0522387, 2.25)
+texture = ExtResource("9_q0i8f")
+
+[node name="W" type="Sprite2D" parent="CanvasLayer/Control/Movement" unique_id=1798715889]
+texture_filter = 1
+position = Vector2(96.75, -236.00002)
+scale = Vector2(1.9999981, 1.9999981)
+texture = ExtResource("10_0i614")
+
+[node name="A" type="Sprite2D" parent="CanvasLayer/Control/Movement" unique_id=1378791649]
+texture_filter = 1
+position = Vector2(56.25, -196.00003)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("11_oprnr")
+
+[node name="D" type="Sprite2D" parent="CanvasLayer/Control/Movement" unique_id=1356576485]
+texture_filter = 1
+position = Vector2(136.25, -196.00003)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("12_8rie4")
+
+[node name="S" type="Sprite2D" parent="CanvasLayer/Control/Movement" unique_id=874303161]
+texture_filter = 1
+position = Vector2(96, -196.00003)
+scale = Vector2(1.9117647, 2)
+texture = ExtResource("13_dp3pk")
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/Movement" unique_id=230965630]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = -192.0
+offset_right = 127.0
+offset_bottom = -169.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "move"
+horizontal_alignment = 1
+
+[node name="Label2" type="Label" parent="CanvasLayer/Control/Movement" unique_id=443393984]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = -64.0
+offset_right = 127.0
+offset_bottom = -41.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "jump"
+horizontal_alignment = 1
+
+[node name="Ctrl" type="Sprite2D" parent="CanvasLayer/Control/Movement" unique_id=537331607]
+texture_filter = 1
+position = Vector2(96, 36)
+scale = Vector2(1.9736842, 2)
+texture = ExtResource("22_hj0ki")
+
+[node name="Label3" type="Label" parent="CanvasLayer/Control/Movement" unique_id=905816698]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = 48.0
+offset_right = 127.0
+offset_bottom = 71.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("4_rfe5m")
+text = "crouch"
+horizontal_alignment = 1
+
 [node name="Loading" type="Control" parent="CanvasLayer" unique_id=1907607165]
-visible = false
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -1016,96 +1105,6 @@ grow_vertical = 0
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Done
 NOW MOVE UP TO ESCAPE!"
-horizontal_alignment = 1
-
-[node name="Space" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1891233397]
-texture_filter = 1
-position = Vector2(242.5, -340)
-scale = Vector2(2.0522387, 2.25)
-texture = ExtResource("9_q0i8f")
-
-[node name="W" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=580175752]
-texture_filter = 1
-position = Vector2(67.249985, -316)
-scale = Vector2(1.9999981, 1.9999981)
-texture = ExtResource("10_0i614")
-
-[node name="A" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1333614158]
-texture_filter = 1
-position = Vector2(26.749985, -276)
-scale = Vector2(1.9117647, 2)
-texture = ExtResource("11_oprnr")
-
-[node name="D" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=2096283317]
-texture_filter = 1
-position = Vector2(106.749985, -276)
-scale = Vector2(1.9117647, 2)
-texture = ExtResource("12_8rie4")
-
-[node name="S" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1118295606]
-texture_filter = 1
-position = Vector2(66.499985, -276)
-scale = Vector2(1.9117647, 2)
-texture = ExtResource("13_dp3pk")
-
-[node name="Label" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1340453858]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -138.5
-offset_top = -270.5
-offset_right = -39.5
-offset_bottom = -247.5
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "move"
-horizontal_alignment = 1
-
-[node name="Label2" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=1605248558]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = 37.5
-offset_top = -334.5
-offset_right = 136.5
-offset_bottom = -311.5
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "jump"
-horizontal_alignment = 1
-
-[node name="Ctrl" type="Sprite2D" parent="CanvasLayer/Loading/Label4" unique_id=1549586899]
-texture_filter = 1
-position = Vector2(242.5, -268)
-scale = Vector2(1.9736842, 2)
-texture = ExtResource("22_hj0ki")
-
-[node name="Label3" type="Label" parent="CanvasLayer/Loading/Label4" unique_id=200782942]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = 37.5
-offset_top = -262.5
-offset_right = 136.5
-offset_bottom = -239.5
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "crouch"
 horizontal_alignment = 1
 
 [node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]

@@ -62,7 +62,28 @@ func _on_map_ready() -> void:
 	var tree := get_tree()
 	tree.root.remove_child(self)
 	tree.current_scene = _map_instance
+
+	# Lock the player so WASD doesn't skip the cutscene
+	var player := _find_player(_map_instance)
+	if player != null and "cutscene_active" in player:
+		player.cutscene_active = true
+
+	# Show the cutscene as a top-level overlay (layer 100 puts it above all game UI)
+	var cutscene_canvas := CanvasLayer.new()
+	cutscene_canvas.layer = 100
+	tree.root.add_child(cutscene_canvas)
+	var cutscene_packed: PackedScene = load("res://menus/cutscene.tscn")
+	cutscene_canvas.add_child(cutscene_packed.instantiate())
+
 	queue_free()
+
+
+func _find_player(from: Node) -> Node:
+	var p := from.find_child("player", true, false)
+	if p != null:
+		return p
+	var players := from.find_children("*", "CharacterBody3D", true, false)
+	return players[0] if not players.is_empty() else null
 
 
 func _move_player_to_start_room() -> void:

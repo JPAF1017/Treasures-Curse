@@ -52,8 +52,11 @@ static var equip_key_was_down: bool = false
 var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
 var viewmodel_instance: Node3D = null
+const TORCH_SOUND_PATH := "res://sounds/torch/torch.mp3"
+
 var viewmodel_bob_time: float = 0.0
 var _carried_omni: OmniLight3D = null
+var _held_sound: AudioStreamPlayer = null
 
 @onready var _fire_particle: Node3D = $fire_particle
 @onready var _dropped_light: OmniLight3D = get_node_or_null("OmniLight3D")
@@ -465,10 +468,21 @@ func _apply_torch_light(player: Node, torch_on: bool) -> void:
 			_carried_omni.light_bake_mode = Light3D.BAKE_DISABLED
 			camera.add_child(_carried_omni)
 		_carried_omni.visible = true
+		# Start the held-torch looping sound (2D so it's always audible regardless of position)
+		if _held_sound == null or not is_instance_valid(_held_sound):
+			_held_sound = AudioStreamPlayer.new()
+			_held_sound.stream = load(TORCH_SOUND_PATH)
+			_held_sound.volume_db = -10.0
+			add_child(_held_sound)
+		if not _held_sound.playing:
+			_held_sound.play()
 	else:
 		if _carried_omni and is_instance_valid(_carried_omni):
 			_carried_omni.queue_free()
 			_carried_omni = null
+		# Stop held-torch sound when unequipped
+		if _held_sound and is_instance_valid(_held_sound):
+			_held_sound.stop()
 
 
 func _hide_viewmodel() -> void:

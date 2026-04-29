@@ -36,13 +36,10 @@ ambient_light_source = 2
 ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.0
 tonemap_mode = 2
-sdfgi_enabled = false
 glow_enabled = true
 fog_enabled = true
-fog_mode = 0
 fog_light_color = Color(0.04, 0.03, 0.02, 1)
 fog_density = 0.07
-volumetric_fog_enabled = false
 volumetric_fog_density = 0.01
 volumetric_fog_albedo = Color(0.34781712, 0.3478169, 0.34781685, 1)
 volumetric_fog_emission = Color(0.24477637, 0.24477643, 0.24477634, 1)
@@ -56,7 +53,7 @@ navigation_mesh = SubResource("NavigationMesh_nav01")
 [node name="DungeonGenerator3D" type="Node3D" parent="NavigationRegion3D" unique_id=1968456005]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 script = ExtResource("1_8hd6v")
-room_scenes = Array[PackedScene]([ExtResource("2_045es"), ExtResource("4_jq2cn"), ExtResource("5_a5s8o"), ExtResource("9_w7ck5"), ExtResource("10_2nn5w"), ExtResource("13_ou4v7")])
+room_scenes = Array[PackedScene]([ExtResource("2_045es"), ExtResource("4_jq2cn"), ExtResource("5_a5s8o"), ExtResource("9_w7ck5"), ExtResource("10_2nn5w")])
 corridor_room_scene = ExtResource("3_omn1t")
 dungeon_size = Vector3i(17, 3, 17)
 metadata/_custom_type_script = "uid://bqeu73gvoygbb"
@@ -81,6 +78,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 10, -19.999996)
 
 [node name="SkullRoom2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1662865710 instance=ExtResource("5_yydhl")]
 transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, -80, 10, 80)
+
+[node name="TreasureRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=731915099 instance=ExtResource("13_ou4v7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.999996, 5, -60.000004)
+
+[node name="TreasureRoom2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=57142322 instance=ExtResource("13_ou4v7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.000004, 5, 59.999996)
+
+[node name="TreasureRoom3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1625933742 instance=ExtResource("13_ou4v7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 5, 9.1793913e-07)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)

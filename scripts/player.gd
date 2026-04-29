@@ -144,12 +144,14 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var camera_hint_control: Control = $CanvasLayer/Control/Camera
 @onready var sprint_hint_control: Control = $CanvasLayer/Control/Sprint
 @onready var item_wheel_control: Control = $CanvasLayer/Control/ItemWheel
+@onready var movement_hint_control: Control = $CanvasLayer/Control/Movement
 @onready var throw_hint_control: Control = $CanvasLayer/Control/Throw
 @onready var use_hint_control: Control = $CanvasLayer/Control/Use
 @onready var attack_hint_control: Control = $CanvasLayer/Control/Attack
 @onready var grabbed_hint_control: Control = $CanvasLayer/Control/Grabbed
 
 var _game_started: bool = false
+var cutscene_active: bool = false
 var _map_generated: bool = false
 var _loading_label_timer: float = 0.0
 const LOADING_LABEL_INTERVAL := 0.5
@@ -191,6 +193,8 @@ var _item_wheel_hint_shown_once: bool = false
 var _item_wheel_hint_active: bool = false
 var _item_wheel_switch_count: int = 0
 const ITEM_WHEEL_HINT_SWITCH_THRESHOLD := 4
+var _movement_hint_timer: float = 0.0
+const MOVEMENT_HINT_DISPLAY_TIME := 10.0
 var _throw_hint_dismissed: bool = false
 var _throw_hint_timer: float = 0.0
 const THROW_HINT_DISPLAY_TIME := 1.0
@@ -287,6 +291,13 @@ func _ready():
 		_step_sounds.append(load(path))
 	for path in CHASE_SOUND_PATHS:
 		_chase_sounds.append(load(path))
+	# Use polyphonic stream so each step plays in its own voice and
+	# never abruptly cuts the previous one (which causes a click/pop).
+	if footstep_player != null:
+		var poly := AudioStreamPolyphonic.new()
+		poly.polyphony = 4
+		footstep_player.stream = poly
+		footstep_player.play()
 	_shy_chase_sound = load(CHASE_SHY_SOUND_PATH)
 	chase_player.finished.connect(_on_chase_sound_finished)
 	_chase_volume_db = chase_player.volume_db
@@ -460,6 +471,10 @@ func _physics_process(delta):
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
 	_pickup_vis_timer = max(_pickup_vis_timer - delta, 0.0)
+	if movement_hint_control != null and movement_hint_control.visible:
+		_movement_hint_timer -= delta
+		if _movement_hint_timer <= 0.0:
+			movement_hint_control.visible = false
 	if throw_hint_control != null and throw_hint_control.visible and not _throw_hint_dismissed:
 		_throw_hint_timer -= delta
 		if _throw_hint_timer <= 0.0:
@@ -509,7 +524,7 @@ func _physics_process(delta):
 				loading_label3.visible = _loading_label_index == 2
 		var move_input := Input.get_vector("a", "d", "w", "s")
 		var jump_input := Input.is_action_just_pressed("ui_accept")
-		if move_input != Vector2.ZERO or jump_input:
+		if not cutscene_active and (move_input != Vector2.ZERO or jump_input):
 			_game_started = true
 			filter_rect.visible = true
 			hud_control.visible = true
@@ -1461,6 +1476,30 @@ func _on_map_generated() -> void:
 	loading_label3.visible = false
 	loading_label4.visible = true
 
+
+func hide_loading_screen() -> void:
+	loading_control.visible = false
+
+
+func start_from_cutscene() -> void:
+	if _game_started:
+		return
+	cutscene_active = false
+	_game_started = true
+	filter_rect.visible = true
+	hud_control.visible = true
+	loading_control.visible = false
+	if movement_hint_control != null:
+		movement_hint_control.visible = true
+		_movement_hint_timer = MOVEMENT_HINT_DISPLAY_TIME
+	if camera_hint_control != null:
+		camera_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		camera_hint_control.visible = true
+		_camera_hint_active = true
+	music_player.play()
+	for npc in _get_all_npcs():
+		npc.process_mode = Node.PROCESS_MODE_INHERIT
+
 func _on_item_wheel_slot_switched() -> void:
 	if not _item_wheel_hint_active:
 		return
@@ -1498,8 +1537,11 @@ func _update_footsteps() -> void:
 func _play_random_step() -> void:
 	if _step_sounds.is_empty() or footstep_player == null:
 		return
-	footstep_player.stream = _step_sounds[randi() % _step_sounds.size()]
-	footstep_player.play()
+	var playback := footstep_player.get_stream_playback() as AudioStreamPlaybackPolyphonic
+	if playback == null:
+		return
+	var stream: AudioStream = _step_sounds[randi() % _step_sounds.size()]
+	playback.play_stream(stream, 0.0, footstep_player.volume_db)
 
 func _update_swing_sound(swing_active: bool) -> void:
 	var item := _get_selected_primary_item()

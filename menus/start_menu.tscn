@@ -23,6 +23,7 @@ grow_vertical = 2
 stream = ExtResource("1_wallpaper")
 autoplay = true
 expand = true
+volume = 0.0
 
 [node name="Button" type="Control" parent="." unique_id=182493112]
 texture_filter = 1

@@ -144,6 +144,19 @@ func _on_map_ready() -> void:
 	var tree := get_tree()
 	tree.root.remove_child(self)
 	tree.current_scene = _map_instance
+
+	# Lock the local player so WASD doesn't skip the cutscene
+	var embedded_player := _map_instance.get_node_or_null("player")
+	if embedded_player != null and "cutscene_active" in embedded_player:
+		embedded_player.cutscene_active = true
+
+	# Show the cutscene as a top-level overlay (layer 100 puts it above all game UI)
+	var cutscene_canvas := CanvasLayer.new()
+	cutscene_canvas.layer = 100
+	tree.root.add_child(cutscene_canvas)
+	var cutscene_packed: PackedScene = load("res://menus/cutscene.tscn")
+	cutscene_canvas.add_child(cutscene_packed.instantiate())
+
 	queue_free()
 
 
