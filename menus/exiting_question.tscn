@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://dqfqpq72vbxy4"]
 
+[ext_resource type="Script" uid="uid://bpexq5rjnmc7d" path="res://menus/exiting_question.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="2_tclx5"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="7_kdc1k"]
 
 [node name="Cutscene" type="Control" unique_id=2131559063]
+script = ExtResource("1_script")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -2,8 +2,8 @@ extends Node3D
 
 const SKULL_KEY_SCENE_PATH := "res://puzzles/skull_key.tscn"
 const GOLD_ITEM_SCRIPT: Script = preload("res://scripts/items/gold.gd")
-const EXIT_MENU_PATH := "res://menus/escape_menu.tscn"
-const GOLD_REQUIRED_TO_EXIT := 3
+const EXITING_QUESTION_PATH := "res://menus/exiting_question.tscn"
+const ENDING_BAD_PATH := "res://menus/ending_bad.tscn"
 const DOOR_OPEN_Y_DEGREES := 60.0
 const DOOR_OPEN_DURATION := 1.5
 const RAYCAST_DISTANCE := 5.0
@@ -223,10 +223,8 @@ func _open_door() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
-func _count_gold_in_hotbar() -> int:
-	if _player == null:
-		return 0
-	var models = _player.get("hotbar_item_models")
+func _count_gold_for_player(player: Node) -> int:
+	var models = player.get("hotbar_item_models")
 	if models == null:
 		return 0
 	var count := 0
@@ -236,10 +234,58 @@ func _count_gold_in_hotbar() -> int:
 	return count
 
 
+func _count_items_for_player(player: Node) -> int:
+	var models = player.get("hotbar_item_models")
+	if models == null:
+		return 0
+	var count := 0
+	for item in models:
+		if item != null and is_instance_valid(item):
+			count += 1
+	return count
+
+
 func _try_exit() -> void:
-	if _count_gold_in_hotbar() < GOLD_REQUIRED_TO_EXIT:
-		if _player != null and _player.has_method("show_escape_warning"):
-			_player.show_escape_warning()
+	if multiplayer.has_multiplayer_peer():
+		_handle_multiplayer_exit()
+	else:
+		_handle_solo_exit()
+
+
+func _handle_solo_exit() -> void:
+	if _player == null:
 		return
-	GameStats.stop_timer()
-	get_tree().change_scene_to_file(EXIT_MENU_PATH)
+	var gold := _count_gold_for_player(_player)
+	var items := _count_items_for_player(_player)
+	if items == 0:
+		_show_exit_question("empty")
+	elif gold == 5 and items == 5:
+		GameStats.stop_timer()
+		get_tree().change_scene_to_file(ENDING_BAD_PATH)
+	else:
+		_show_exit_question("incomplete")
+
+
+func _handle_multiplayer_exit() -> void:
+	var all_players := get_tree().get_nodes_in_group("player")
+	var all_empty := true
+	var all_have_gold := true
+	for p in all_players:
+		if _count_items_for_player(p) > 0:
+			all_empty = false
+		if _count_gold_for_player(p) < 1:
+			all_have_gold = false
+	if all_empty:
+		_show_exit_question("empty")
+	elif all_have_gold:
+		GameStats.stop_timer()
+		get_tree().change_scene_to_file(ENDING_BAD_PATH)
+	else:
+		_show_exit_question("multiplayer_incomplete")
+
+
+func _show_exit_question(mode: String) -> void:
+	var packed := load(EXITING_QUESTION_PATH) as PackedScene
+	var node := packed.instantiate()
+	get_tree().current_scene.add_child(node)
+	node.setup(mode)
