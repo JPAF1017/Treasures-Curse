@@ -15,11 +15,10 @@ const WARNING2_DISPLAY_TIME := 3.0
 
 # Maps table item scene path → expected item script path (mirrors item_hold_check.gd)
 const _SCENE_TO_SCRIPT: Dictionary = {
-	"res://assets/items/sword.tscn":  "res://scripts/items/sword.gd",
-	"res://assets/items/bat.tscn":    "res://scripts/items/bat.gd",
-	"res://assets/items/shovel.tscn": "res://scripts/items/shovel.gd",
-	"res://assets/items/health.tscn": "res://scripts/items/health.gd",
-	"res://assets/items/smoke.tscn":  "res://scripts/items/smoke.gd",
+	"res://assets/items/Gem_key1.tscn": "res://scripts/items/gem_key1.gd",
+	"res://assets/items/Gem_key2.tscn": "res://scripts/items/gem_key2.gd",
+	"res://assets/items/Gem_key3.tscn": "res://scripts/items/gem_key3.gd",
+	"res://assets/items/Gem_key4.tscn": "res://scripts/items/gem_key4.gd",
 }
 
 # Shared across all instances so no two rooms pick the same table.
@@ -87,21 +86,22 @@ func _process(delta: float) -> void:
 	if _hovered_hold_index >= 0 and Input.is_action_just_pressed("e"):
 		_try_place_item(_hovered_hold_index)
 
-	# Detect if the player picked up a placed item from the table
-	for i in _placed_items.size():
-		var placed := _placed_items[i]
-		if placed == null or not is_instance_valid(placed):
-			_slot_occupied[i] = false
-			_placed_items[i] = null
-			continue
-		if _slot_occupied[i] and int(placed.get("inventory_slot_index")) >= 0:
-			# Item was picked back up — free the slot
-			if _slot_correct[i]:
-				_satisfied_count = max(_satisfied_count - 1, 0)
-				_slot_correct[i] = false
-			placed.scale = Vector3.ONE
-			_slot_occupied[i] = false
-			_placed_items[i] = null
+	# Detect if the player picked up a placed item from the table (only before door opens)
+	if not _door_opened:
+		for i in _placed_items.size():
+			var placed := _placed_items[i]
+			if placed == null or not is_instance_valid(placed):
+				_slot_occupied[i] = false
+				_placed_items[i] = null
+				continue
+			if _slot_occupied[i] and int(placed.get("inventory_slot_index")) >= 0:
+				# Item was picked back up — free the slot
+				if _slot_correct[i]:
+					_satisfied_count = max(_satisfied_count - 1, 0)
+					_slot_correct[i] = false
+				placed.scale = Vector3.ONE
+				_slot_occupied[i] = false
+				_placed_items[i] = null
 
 
 func _find_player_if_needed() -> void:
@@ -217,17 +217,13 @@ func _try_place_item(hold_index: int) -> void:
 			item.call("_set_item_visuals_visible", true)
 		if item.has_method("_set_visual_layer_recursive"):
 			item.call("_set_visual_layer_recursive", item, 1)
-		# Per-item scale and Y-offset adjustments
+		# Per-item scale adjustments
 		var item_script := item.get_script() as Script
 		var script_path := item_script.resource_path if item_script != null else ""
 		match script_path:
-			"res://scripts/items/health.gd", "res://scripts/items/smoke.gd":
-				item.scale = Vector3(1.8, 1.8, 1.8)
-			"res://scripts/items/sword.gd":
-				item.scale = Vector3(1.3, 1.3, 1.3)
-				item.global_position.y += ITEM_PLACE_Y_OFFSET * 0.3
-			"res://scripts/items/bat.gd", "res://scripts/items/shovel.gd":
-				item.scale = Vector3(1.3, 1.3, 1.3)
+			"res://scripts/items/gem_key1.gd", "res://scripts/items/gem_key2.gd", \
+			"res://scripts/items/gem_key3.gd", "res://scripts/items/gem_key4.gd":
+				item.scale = Vector3(1.5, 1.5, 1.5)
 
 	# Mark slot occupied, track placed item, clear prompt
 	_slot_occupied[hold_index] = true
@@ -272,18 +268,15 @@ func _open_door() -> void:
 		var tween := create_tween()
 		tween.tween_property(door, "rotation:y", door.rotation.y + PI / 2.0, 1.0) \
 			.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
-	# Release all placed items back into the world as normal pickups
+	# Keep gem keys frozen in place as decorative trophies.
+	# Disable their collision so they cannot be picked up from the hold.
 	for placed_item in _placed_items:
 		if placed_item == null or not is_instance_valid(placed_item):
 			continue
-		placed_item.remove_meta("puzzle_item")
-		placed_item.scale = Vector3.ONE
 		if placed_item is RigidBody3D:
-			(placed_item as RigidBody3D).freeze = false
-		if placed_item.has_method("_set_item_visuals_visible"):
-			placed_item.call("_set_item_visuals_visible", true)
-		if placed_item.has_method("_set_visual_layer_recursive"):
-			placed_item.call("_set_visual_layer_recursive", placed_item, 1)
+			var rb := placed_item as RigidBody3D
+			rb.collision_layer = 0
+			rb.collision_mask = 0
 
 
 func _randomize_tables() -> void:

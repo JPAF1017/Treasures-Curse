@@ -15,7 +15,6 @@
 [ext_resource type="PackedScene" uid="uid://djgwx2fo8gck3" path="res://assets/rooms/l_shape_room.tscn" id="9_w7ck5"]
 [ext_resource type="PackedScene" uid="uid://scxkscsgrow5" path="res://assets/rooms/narrow.tscn" id="10_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="13_ou4v7"]
-[ext_resource type="PackedScene" uid="uid://cxxtdoqmu0k7l" path="res://assets/items/Gem_key1.tscn" id="19_l7nqg"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 [ext_resource type="Script" uid="uid://pnceodedcutd" path="res://scripts/multiplayer/player_spawner.gd" id="100_playerspawner"]
@@ -114,6 +113,3 @@ spawn_path = NodePath("..")
 
 [node name="ItemSpawner" type="MultiplayerSpawner" parent="." unique_id=2000000003]
 spawn_path = NodePath("..")
-
-[node name="GemKey1" parent="." unique_id=1331693529 instance=ExtResource("19_l7nqg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, -10, 80)

@@ -75,6 +75,13 @@ func _ready() -> void:
 		_item_spawner.spawn_function = _do_spawn_item
 		for path in ITEM_SCENES.values():
 			_item_spawner.add_spawnable_scene(path)
+		for path: String in [
+			"res://assets/items/Gem_key1.tscn",
+			"res://assets/items/Gem_key2.tscn",
+			"res://assets/items/Gem_key3.tscn",
+			"res://assets/items/Gem_key4.tscn",
+		]:
+			_item_spawner.add_spawnable_scene(path)
 
 	var generator := _find_dungeon_generator(self)
 	if generator:
@@ -309,9 +316,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 		return pa.z < pb.z
 	)
 	var table_pool: Array = [
-		"res://assets/items/sword.tscn", "res://assets/items/bat.tscn",
-		"res://assets/items/shovel.tscn", "res://assets/items/health.tscn",
-		"res://assets/items/smoke.tscn"
+		"res://assets/items/Gem_key1.tscn",
+		"res://assets/items/Gem_key2.tscn",
+		"res://assets/items/Gem_key3.tscn",
+		"res://assets/items/Gem_key4.tscn",
 	]
 	_rng_shuffle(table_pool, rng)
 	var table_reg: Dictionary = {}

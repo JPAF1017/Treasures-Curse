@@ -3,11 +3,10 @@ extends Area3D
 @export var table_slot: int = 1
 
 const _SCENE_TO_SCRIPT: Dictionary = {
-	"res://assets/items/sword.tscn": "res://scripts/items/sword.gd",
-	"res://assets/items/bat.tscn": "res://scripts/items/bat.gd",
-	"res://assets/items/shovel.tscn": "res://scripts/items/shovel.gd",
-	"res://assets/items/health.tscn": "res://scripts/items/health.gd",
-	"res://assets/items/smoke.tscn": "res://scripts/items/smoke.gd",
+	"res://assets/items/Gem_key1.tscn": "res://scripts/items/gem_key1.gd",
+	"res://assets/items/Gem_key2.tscn": "res://scripts/items/gem_key2.gd",
+	"res://assets/items/Gem_key3.tscn": "res://scripts/items/gem_key3.gd",
+	"res://assets/items/Gem_key4.tscn": "res://scripts/items/gem_key4.gd",
 }
 
 var _satisfied: bool = false

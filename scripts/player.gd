@@ -49,6 +49,10 @@ const SMOKE_ITEM_SCRIPT: Script = preload("res://scripts/items/smoke.gd")
 const SKULL_KEY_ITEM_SCRIPT: Script = preload("res://scripts/items/skull_key.gd")
 const TORCH_ITEM_SCRIPT: Script = preload("res://scripts/items/torch.gd")
 const GOLD_ITEM_SCRIPT: Script = preload("res://scripts/items/gold.gd")
+const GEM_KEY1_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key1.gd")
+const GEM_KEY2_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key2.gd")
+const GEM_KEY3_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key3.gd")
+const GEM_KEY4_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key4.gd")
 const STEP_SOUND_PATHS := [
 	"res://sounds/player/step1.mp3",
 	"res://sounds/player/step2.mp3",
@@ -400,7 +404,7 @@ func _unhandled_input(event):
 				if stamina <= 0.0:
 					return
 				var selected_item := _get_selected_primary_item()
-				if selected_item != null and selected_item.get_meta("puzzle_item", false) and not CandlePuzzleRoom.puzzle_door_opened:
+				if selected_item != null and (_is_gem_key_item_model(selected_item) or (selected_item.get_meta("puzzle_item", false) and not CandlePuzzleRoom.puzzle_door_opened)):
 					if warning_control != null:
 						warning_control.visible = true
 						_warning_timer = WARNING_DISPLAY_TIME
@@ -479,6 +483,7 @@ func _physics_process(delta):
 		_throw_hint_timer -= delta
 		if _throw_hint_timer <= 0.0:
 			throw_hint_control.visible = false
+			_throw_hint_dismissed = true
 	if _camera_hint_active:
 		var cam_moved := _camera_moved_this_frame
 		_camera_moved_this_frame = false
@@ -1138,7 +1143,7 @@ func _get_selected_hotbar_item() -> Node3D:
 	return selected_item
 
 func _is_primary_item_model(item_model: Node) -> bool:
-	return item_model is Sword or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model) or _is_skull_key_item_model(item_model) or _is_torch_item_model(item_model) or _is_gold_item_model(item_model)
+	return item_model is Sword or item_model is Bat or _is_shovel_item_model(item_model) or _is_health_item_model(item_model) or _is_smoke_item_model(item_model) or _is_skull_key_item_model(item_model) or _is_torch_item_model(item_model) or _is_gold_item_model(item_model) or _is_gem_key_item_model(item_model)
 
 func _is_shovel_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == SHOVEL_ITEM_SCRIPT
@@ -1157,6 +1162,12 @@ func _is_torch_item_model(item_model: Node) -> bool:
 
 func _is_gold_item_model(item_model: Node) -> bool:
 	return item_model != null and item_model.get_script() == GOLD_ITEM_SCRIPT
+
+func _is_gem_key_item_model(item_model: Node) -> bool:
+	if item_model == null:
+		return false
+	var s: Variant = item_model.get_script()
+	return s == GEM_KEY1_ITEM_SCRIPT or s == GEM_KEY2_ITEM_SCRIPT or s == GEM_KEY3_ITEM_SCRIPT or s == GEM_KEY4_ITEM_SCRIPT
 
 func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()
@@ -1241,7 +1252,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 	if item_body == null:
 		return
 
-	if item_body is Sword or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body) or _is_skull_key_item_model(item_body) or _is_torch_item_model(item_body) or _is_gold_item_model(item_body):
+	if item_body is Sword or item_body is Bat or _is_shovel_item_model(item_body) or _is_health_item_model(item_body) or _is_smoke_item_model(item_body) or _is_skull_key_item_model(item_body) or _is_torch_item_model(item_body) or _is_gold_item_model(item_body) or _is_gem_key_item_model(item_body):
 		if _has_item_in_hotbar(item_body):
 			return
 
@@ -1284,7 +1295,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 func _try_auto_equip_item() -> void:
 	if _find_first_empty_hotbar_slot() == -1:
 		return
-	if not (Sword.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SKULL_KEY_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(TORCH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(GOLD_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
+	if not (Sword.is_equip_input_just_pressed() or bool(SHOVEL_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(HEALTH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SMOKE_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(SKULL_KEY_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(TORCH_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(GOLD_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(GEM_KEY1_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(GEM_KEY2_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(GEM_KEY3_ITEM_SCRIPT.call("is_equip_input_just_pressed")) or bool(GEM_KEY4_ITEM_SCRIPT.call("is_equip_input_just_pressed"))):
 		return
 
 	var item_body := _get_pickup_candidate()
@@ -1304,7 +1315,7 @@ func _get_pickup_candidate() -> RigidBody3D:
 		return null
 
 	var origin: Vector3 = camera.global_transform.origin
-	var pickup_distance: float = maxf(Sword.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(SKULL_KEY_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(TORCH_ITEM_SCRIPT.call("get_pickup_max_distance")), float(GOLD_ITEM_SCRIPT.call("get_pickup_max_distance")))))))))
+	var pickup_distance: float = maxf(Sword.get_pickup_max_distance(), maxf(Bat.get_pickup_max_distance(), maxf(float(SHOVEL_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(HEALTH_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(SMOKE_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(SKULL_KEY_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(TORCH_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(GOLD_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(GEM_KEY1_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(GEM_KEY2_ITEM_SCRIPT.call("get_pickup_max_distance")), maxf(float(GEM_KEY3_ITEM_SCRIPT.call("get_pickup_max_distance")), float(GEM_KEY4_ITEM_SCRIPT.call("get_pickup_max_distance")))))))))))))
 	var end: Vector3 = origin + (-camera.global_transform.basis.z * pickup_distance)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.exclude = [self]
@@ -1347,7 +1358,23 @@ func _get_pickup_candidate() -> RigidBody3D:
 	if health_candidate:
 		return health_candidate
 
+	var gem_key_candidate := _get_pickup_gem_key_candidate(collider)
+	if gem_key_candidate:
+		return gem_key_candidate
+
 	return GOLD_ITEM_SCRIPT.call("find_gold_rigidbody_from_node", collider) as RigidBody3D
+
+func _get_pickup_gem_key_candidate(collider: Node) -> RigidBody3D:
+	var c1 := GEM_KEY1_ITEM_SCRIPT.call("find_gem_key1_rigidbody_from_node", collider) as RigidBody3D
+	if c1:
+		return c1
+	var c2 := GEM_KEY2_ITEM_SCRIPT.call("find_gem_key2_rigidbody_from_node", collider) as RigidBody3D
+	if c2:
+		return c2
+	var c3 := GEM_KEY3_ITEM_SCRIPT.call("find_gem_key3_rigidbody_from_node", collider) as RigidBody3D
+	if c3:
+		return c3
+	return GEM_KEY4_ITEM_SCRIPT.call("find_gem_key4_rigidbody_from_node", collider) as RigidBody3D
 
 func _update_pickup_prompt_visibility() -> void:
 	if pickup_control == null:

@@ -11,3 +11,12 @@ res://assets/items/Gem_key4.tscn
 res://levels/level1.tscn
 res://scripts/items/torch.gd
 res://assets/room assets/floor_tiles.tscn
+res://scripts/player.gd
+res://scripts/items/gem_key1.gd
+res://scripts/items/gem_key2.gd
+res://scripts/items/gem_key3.gd
+res://scripts/items/gem_key4.gd
+res://assets/ui/gem.png
+res://puzzles/item_hold_check.gd
+res://scripts/level1_spawner.gd
+res://scripts/rooms/candle_puzzle_room.gd
