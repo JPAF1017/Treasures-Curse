@@ -1,7 +1,8 @@
 CollisionShape3D
-RigidBody3D
-Control
 Label
+Control
+Button
+RigidBody3D
 MeshInstance3D
 Area3D
 CSGBox3D
@@ -11,4 +12,3 @@ NinePatchRect
 VideoStreamPlayer
 DungeonRoom3D
 CollisionPolygon3D
-CSGMesh3D

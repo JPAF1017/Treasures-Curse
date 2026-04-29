@@ -1,0 +1,156 @@
+[gd_scene format=3 uid="uid://dqfqpq72vbxy4"]
+
+[ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="2_tclx5"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="7_kdc1k"]
+
+[node name="Cutscene" type="Control" unique_id=2131559063]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Black" type="Sprite2D" parent="." unique_id=202645738]
+position = Vector2(640, 480.00003)
+scale = Vector2(2.4999998, 1.8750001)
+texture = ExtResource("2_tclx5")
+
+[node name="Buttons" type="Control" parent="." unique_id=1131302586]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="incomplete" type="Button" parent="Buttons" unique_id=2113451706]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -72.0
+offset_top = 32.0
+offset_right = 78.0
+offset_bottom = 76.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_kdc1k")
+theme_override_font_sizes/font_size = 40
+text = "okay"
+
+[node name="emptyYes" type="Button" parent="Buttons" unique_id=2013137657]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -192.0
+offset_top = 32.0
+offset_right = -42.0
+offset_bottom = 76.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_kdc1k")
+theme_override_font_sizes/font_size = 40
+text = "yes
+"
+
+[node name="emptyNo" type="Button" parent="Buttons" unique_id=978456878]
+visible = false
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 182.0
+offset_bottom = 76.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_kdc1k")
+theme_override_font_sizes/font_size = 40
+text = "no"
+
+[node name="Texts" type="Control" parent="." unique_id=1823983071]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="incomplete" type="Label" parent="Texts" unique_id=221973383]
+visible = false
+layout_mode = 0
+offset_left = -396.0
+offset_top = -148.0
+offset_right = 436.0
+offset_bottom = 5.0
+theme_override_fonts/font = ExtResource("7_kdc1k")
+theme_override_font_sizes/font_size = 40
+text = "\"Your pockets still hunger, and the dungeon still provides.\""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="empty" type="Label" parent="Texts" unique_id=12138220]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -416.0
+offset_top = -240.0
+offset_right = 416.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_kdc1k")
+theme_override_font_sizes/font_size = 40
+text = "The door has seen many leave with full hands and none leave with empty ones. Are you certain you wish to be the first?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="multiplayerIncomplete" type="Label" parent="Texts" unique_id=1346029046]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -416.0
+offset_top = -240.0
+offset_right = 416.0
+offset_bottom = -48.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("7_kdc1k")
+theme_override_font_sizes/font_size = 40
+text = "Not all souls before you carry their burden. The dungeon expects no less from each."
+horizontal_alignment = 1
+autowrap_mode = 3

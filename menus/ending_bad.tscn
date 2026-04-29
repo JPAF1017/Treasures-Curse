@@ -1,0 +1,156 @@
+[gd_scene format=3 uid="uid://b8q4qe4edx5wo"]
+
+[ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="2_2phy6"]
+[ext_resource type="Texture2D" uid="uid://dbgq7420nemg1" path="res://assets/ui/cutscene/1.png" id="3_pp87p"]
+[ext_resource type="Texture2D" uid="uid://62pmvshc74xf" path="res://assets/ui/cutscene/bad3.png" id="4_5bclw"]
+[ext_resource type="Texture2D" uid="uid://0hvnq368076n" path="res://assets/ui/cutscene/bad1.png" id="5_fxgik"]
+[ext_resource type="Texture2D" uid="uid://d0bosgblf4msh" path="res://assets/ui/cutscene/bad2.png" id="6_phwlt"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="7_2gu1c"]
+[ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="8_6qrnl"]
+
+[node name="EndingBad" type="Control" unique_id=2131559063]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Black" type="Sprite2D" parent="." unique_id=202645738]
+position = Vector2(640, 480.00003)
+scale = Vector2(2.4999998, 1.8750001)
+texture = ExtResource("2_2phy6")
+
+[node name="Images" type="Control" parent="." unique_id=328065538]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="1" type="Sprite2D" parent="Images" unique_id=499369908]
+position = Vector2(21.297913, -173.25)
+scale = Vector2(0.6079622, 0.6079622)
+texture = ExtResource("5_fxgik")
+
+[node name="2" type="Sprite2D" parent="Images" unique_id=681233322]
+visible = false
+position = Vector2(20.000061, -172)
+scale = Vector2(0.6078167, 0.6078167)
+texture = ExtResource("6_phwlt")
+
+[node name="3" type="Sprite2D" parent="Images" unique_id=1848695168]
+visible = false
+position = Vector2(20, -172)
+scale = Vector2(0.60810816, 0.6081081)
+texture = ExtResource("4_5bclw")
+
+[node name="4" type="Sprite2D" parent="Images" unique_id=1736860988]
+visible = false
+position = Vector2(20, -172)
+scale = Vector2(0.60883904, 0.6088391)
+texture = ExtResource("3_pp87p")
+
+[node name="Texts" type="Control" parent="." unique_id=1747497087]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label1" type="Label" parent="Texts" unique_id=850848567]
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("7_2gu1c")
+theme_override_font_sizes/font_size = 25
+text = "You made it. After everything, you are finally standing in front of the door, and your arms are full. "
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label2" type="Label" parent="Texts" unique_id=661205773]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("7_2gu1c")
+theme_override_font_sizes/font_size = 25
+text = "The Warden appears, and for a moment it is completely silent. Then it speaks. It says you carried all of it, fought through all of it, and still could not let a single piece go. "
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label3" type="Label" parent="Texts" unique_id=125115407]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("7_2gu1c")
+theme_override_font_sizes/font_size = 25
+text = "The door opens just long enough for you to see what is on the other side, and then it shuts. "
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label4" type="Label" parent="Texts" unique_id=430244719]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("7_2gu1c")
+theme_override_font_sizes/font_size = 25
+text = "The dungeon goes dark. And when the light comes back, you are right where you started."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Input" type="Control" parent="." unique_id=1756603676]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Left" type="Sprite2D" parent="Input" unique_id=1177102028]
+texture_filter = 1
+position = Vector2(-92, -20)
+scale = Vector2(1.75, 1.75)
+texture = ExtResource("8_6qrnl")
+
+[node name="Label" type="Label" parent="Input" unique_id=1042039564]
+layout_mode = 0
+offset_left = -52.0
+offset_top = -28.0
+offset_right = 19.0
+offset_bottom = -5.0
+theme_override_fonts/font = ExtResource("7_2gu1c")
+theme_override_font_sizes/font_size = 20
+text = "skip"

@@ -551,6 +551,8 @@ func _physics_process(delta):
 	var input_dir := Vector2.ZERO
 	if not is_movement_locked:
 		input_dir = Input.get_vector("a", "d", "w", "s")
+		if input_dir != Vector2.ZERO:
+			GameStats.start_timer()
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta

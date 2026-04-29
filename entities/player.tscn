@@ -1196,17 +1196,19 @@ mouse_filter = 2
 [node name="Label" type="Label" parent="CanvasLayer/KeyWarning" unique_id=1535117967]
 texture_filter = 1
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -13.0
-offset_top = 36.0
-offset_right = 14.0
-offset_bottom = 36.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -284.5
+offset_top = -7.5
+offset_right = 284.5
+offset_bottom = 7.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "I need this to escape"
+text = "I need to bring this with me at the gate"
 horizontal_alignment = 1
 vertical_alignment = 1
 

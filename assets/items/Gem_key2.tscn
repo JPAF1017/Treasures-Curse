@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://3bt24b70o1ki"]
 
-[ext_resource type="Script" uid="uid://cgemk2greenky2" path="res://scripts/items/gem_key2.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://xu1ueblnsxlj" path="res://scripts/items/gem_key2.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://mlb0gm6b2e3j" path="res://assets/items assets/green_gem.glb" id="1_y1rox"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_x1bbo"]
@@ -8,7 +8,8 @@ radius = 0.7305445
 
 [node name="GemKey1" type="RigidBody3D" unique_id=1331693529]
 script = ExtResource("1_script")
-viewmodel_scale = 0.2
+held_item_scale = 0.2
+viewmodel_scale = 0.09999999999999999
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=349752415]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -0.20202407, 0.008880615)

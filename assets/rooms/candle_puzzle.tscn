@@ -12,11 +12,17 @@
 [ext_resource type="PackedScene" uid="uid://d1e1ffdtkokq8" path="res://assets/room assets/torch.tscn" id="9_unj6a"]
 [ext_resource type="PackedScene" uid="uid://cmbs8fd85a0pi" path="res://puzzles/candle_puzzle_table2.tscn" id="10_odr6k"]
 [ext_resource type="Script" uid="uid://bxm3lavrq6pw2" path="res://puzzles/item_hold_check.gd" id="11_hold"]
-[ext_resource type="PackedScene" uid="uid://cxjwpa386eouw" path="res://assets/items/gold.tscn" id="13_antyk"]
+[ext_resource type="Script" uid="uid://cnbhlfgj2c6gs" path="res://scripts/rooms/chest_interact.gd" id="13_7a61i"]
+[ext_resource type="PackedScene" uid="uid://tml4ayda8oy6" path="res://assets/room assets/chest.tscn" id="14_h8qr3"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_qr0it"]
 height = 8.706543
 radius = 18.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hdfjr"]
+size = Vector3(5, 3, 3.406128)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_tn782"]
 
 [node name="CandlePuzzle" type="Node3D" unique_id=1505842369]
 script = ExtResource("1_1dfcl")
@@ -219,5 +225,22 @@ transform = Transform3D(0.35355338, 0.11888484, -0.33296606, 0, 0.47088513, 0.16
 [node name="Torch2" parent="Models/Props" unique_id=1944606852 instance=ExtResource("9_unj6a")]
 transform = Transform3D(0.35355338, -0.11888482, 0.33296603, 6.452392e-09, 0.4708851, 0.16812852, -0.35355338, -0.11888482, 0.33296603, 4, -5, -1)
 
-[node name="Gold" parent="." unique_id=2016877817 instance=ExtResource("13_antyk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
+[node name="Treasure" type="Node3D" parent="Models" unique_id=214853260]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2861567, -20)
+script = ExtResource("13_7a61i")
+
+[node name="Chest" parent="Models/Treasure" unique_id=1771850102 instance=ExtResource("14_h8qr3")]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, -6, 0)
+
+[node name="Area3D" type="Area3D" parent="Models/Treasure/Chest" unique_id=509083029]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Models/Treasure/Chest/Area3D" unique_id=2082913674]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -0.009338379)
+shape = SubResource("BoxShape3D_hdfjr")
+
+[node name="Spawn" type="Area3D" parent="Models/Treasure/Chest" unique_id=1785925639]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.6836224, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Models/Treasure/Chest/Spawn" unique_id=1556020925]
+shape = SubResource("SphereShape3D_tn782")

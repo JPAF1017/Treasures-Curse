@@ -337,6 +337,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	GameStats.record_kill("knight")
 	health = 0
 	hit_reaction_timer = 0.0
 	is_idle = false

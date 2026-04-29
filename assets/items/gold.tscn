@@ -1,24 +1,33 @@
 [gd_scene format=3 uid="uid://cxjwpa386eouw"]
 
-[ext_resource type="PackedScene" uid="uid://di4nyywsvy2di" path="res://assets/items assets/gold.glb" id="1_gmvxu"]
 [ext_resource type="Script" uid="uid://csfcmutdg7kat" path="res://scripts/items/gold.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://c54mvflbcgsfv" path="res://assets/items assets/gold1.glb" id="2_uv5uo"]
+[ext_resource type="PackedScene" uid="uid://dpioiv65rmnmf" path="res://assets/items assets/gold2.glb" id="3_e3ef2"]
+[ext_resource type="PackedScene" uid="uid://cmv0814s50wt1" path="res://assets/items assets/gold3.glb" id="4_w8eeq"]
+[ext_resource type="PackedScene" uid="uid://bbdf8h6a7iorl" path="res://assets/items assets/gold4.glb" id="5_os68f"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_uv5uo"]
-size = Vector3(2.9865265, 2.0850067, 1.5507813)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold"]
-albedo_color = Color(1, 0.8, 0.1, 1)
-metallic = 0.9
-roughness = 0.3
-emission_enabled = false
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_e3ef2"]
+height = 1.0356445
+radius = 0.7104492
 
 [node name="Gold" type="RigidBody3D" unique_id=2016877817]
 script = ExtResource("1_script")
 
-[node name="gold" parent="." unique_id=368424173 instance=ExtResource("1_gmvxu")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
-surface_material_override/0 = SubResource("StandardMaterial3D_gold")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1080298490]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48217773, 0)
+shape = SubResource("CylinderShape3D_e3ef2")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1527789933]
-transform = Transform3D(0.95996183, -0.28013062, 0, 0.28013062, 0.95996183, 0, 0, 0, 1, -0.004360631, -0.04029706, 0)
-shape = SubResource("BoxShape3D_uv5uo")
+[node name="gold1" parent="." unique_id=874958781 instance=ExtResource("2_uv5uo")]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+
+[node name="gold2" parent="." unique_id=1250451392 instance=ExtResource("3_e3ef2")]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+visible = false
+
+[node name="gold3" parent="." unique_id=2126416426 instance=ExtResource("4_w8eeq")]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+visible = false
+
+[node name="gold4" parent="." unique_id=1540720296 instance=ExtResource("5_os68f")]
+transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, 0, 0, 0)
+visible = false

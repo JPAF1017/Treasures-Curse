@@ -94,7 +94,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("2_h22ob")
 theme_override_font_sizes/font_size = 50
-text = "BRUH"
+text = "YOU DIED"
 horizontal_alignment = 1
 
 [node name="DeathSound" type="AudioStreamPlayer" parent="." unique_id=1000000002]

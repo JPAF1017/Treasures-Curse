@@ -391,6 +391,7 @@ func _apply_attack_damage(player: Node, amount: float) -> void:
 	for target: Node in targets:
 		if target.has_method("apply_damage"):
 			target.call("apply_damage", amount)
+			GameStats.record_damage(amount)
 			swing_damaged_targets[target.get_instance_id()] = true
 			dealt_damage = true
 

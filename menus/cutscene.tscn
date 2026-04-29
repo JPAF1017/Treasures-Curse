@@ -1,22 +1,22 @@
 [gd_scene format=3 uid="uid://dxba5x3v7oeoe"]
 
-[ext_resource type="Script" path="res://menus/cutscene.gd" id="0_script"]
-
+[ext_resource type="Script" uid="uid://fkg56rh7x10w" path="res://menus/cutscene.gd" id="0_script"]
 [ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="1_6ps3c"]
 [ext_resource type="Texture2D" uid="uid://dbgq7420nemg1" path="res://assets/ui/cutscene/1.png" id="2_vd4vi"]
 [ext_resource type="Texture2D" uid="uid://8alxyjnf5wec" path="res://assets/ui/cutscene/2.png" id="3_s2gdk"]
 [ext_resource type="Texture2D" uid="uid://dxg5a8ju4oes0" path="res://assets/ui/cutscene/3.png" id="4_t0cc7"]
 [ext_resource type="Texture2D" uid="uid://cr2cdywiai6ur" path="res://assets/ui/cutscene/4.png" id="5_s2gdk"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="6_t0cc7"]
+[ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="8_4f01p"]
 
 [node name="Cutscene" type="Control" unique_id=2131559063]
-script = ExtResource("0_script")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("0_script")
 
 [node name="Black" type="Sprite2D" parent="." unique_id=202645738]
 position = Vector2(640, 480.00003)
@@ -128,3 +128,31 @@ theme_override_font_sizes/font_size = 25
 text = "Find the relics. Reach the top. Find the door. And maybe, just maybe, you will finally get what you deserve."
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="Input" type="Control" parent="." unique_id=1756603676]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Left" type="Sprite2D" parent="Input" unique_id=1177102028]
+texture_filter = 1
+position = Vector2(-92, -20)
+scale = Vector2(1.75, 1.75)
+texture = ExtResource("8_4f01p")
+
+[node name="Label" type="Label" parent="Input" unique_id=1042039564]
+layout_mode = 0
+offset_left = -52.0
+offset_top = -28.0
+offset_right = 19.0
+offset_bottom = -5.0
+theme_override_fonts/font = ExtResource("6_t0cc7")
+theme_override_font_sizes/font_size = 20
+text = "skip"

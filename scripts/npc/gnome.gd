@@ -891,6 +891,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	GameStats.record_kill("gnome")
 	health = 0.0
 	is_stunned = false
 	stun_timer = 0.0

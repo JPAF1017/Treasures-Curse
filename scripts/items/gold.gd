@@ -2,8 +2,15 @@ extends RigidBody3D
 
 const GOLD_SCENE_PATH := "res://assets/items/gold.tscn"
 const GOLD_ITEM_ICON: Texture2D = preload("res://assets/ui/gold.png")
-const GOLD_MODEL_SCENE: PackedScene = preload("res://assets/items assets/gold.glb")
+const GOLD_MODEL_SCENES: Array = [
+	preload("res://assets/items assets/gold1.glb"),
+	preload("res://assets/items assets/gold2.glb"),
+	preload("res://assets/items assets/gold3.glb"),
+	preload("res://assets/items assets/gold4.glb"),
+]
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+
+static var _spawn_counter: int = 0
 
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
@@ -35,10 +42,19 @@ var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
 var viewmodel_instance: Node3D = null
 var viewmodel_bob_time: float = 0.0
+var _model_index: int = 0
 
 
 func _ready() -> void:
 	_configure_item_physics()
+	_model_index = _spawn_counter % 4
+	_spawn_counter += 1
+	# Show only the model matching this instance's index.
+	var model_names: Array[String] = ["gold1", "gold2", "gold3", "gold4"]
+	for i in model_names.size():
+		var child := get_node_or_null(model_names[i]) as Node3D
+		if child:
+			child.visible = (i == _model_index)
 
 
 static func get_pickup_max_distance() -> float:
@@ -330,7 +346,7 @@ func _show_viewmodel(player: Node) -> void:
 	if camera == null:
 		return
 
-	viewmodel_instance = GOLD_MODEL_SCENE.instantiate() as Node3D
+	viewmodel_instance = GOLD_MODEL_SCENES[_model_index].instantiate() as Node3D
 	viewmodel_instance.name = "GoldViewmodel"
 	camera.add_child(viewmodel_instance)
 

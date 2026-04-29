@@ -388,6 +388,7 @@ func _apply_attack_damage(player: Node, amount: float, knockback_strength: float
 	for target: Node in targets:
 		if target.has_method("apply_damage"):
 			target.call("apply_damage", amount)
+			GameStats.record_damage(amount)
 			_apply_npc_knockback(target, player, knockback_strength)
 			swing_damaged_targets[target.get_instance_id()] = true
 			dealt_damage = true

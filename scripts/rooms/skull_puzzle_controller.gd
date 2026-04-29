@@ -241,4 +241,5 @@ func _try_exit() -> void:
 		if _player != null and _player.has_method("show_escape_warning"):
 			_player.show_escape_warning()
 		return
+	GameStats.stop_timer()
 	get_tree().change_scene_to_file(EXIT_MENU_PATH)

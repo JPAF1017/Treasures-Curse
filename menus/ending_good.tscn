@@ -1,0 +1,157 @@
+[gd_scene format=3 uid="uid://cs2h3qnjp7vfu"]
+
+[ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="1_nu42i"]
+[ext_resource type="Texture2D" uid="uid://dvshtxtp476o0" path="res://assets/ui/cutscene/good1.png" id="3_7wq7k"]
+[ext_resource type="Texture2D" uid="uid://bemtex51uaj6m" path="res://assets/ui/cutscene/good2.png" id="4_0jxc2"]
+[ext_resource type="Texture2D" uid="uid://80637113kry2" path="res://assets/ui/cutscene/good3.png" id="5_3rwr1"]
+[ext_resource type="Texture2D" uid="uid://dy68rw57so355" path="res://assets/ui/cutscene/good4.png" id="6_gsr0o"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="6_vectj"]
+[ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="7_id1es"]
+
+[node name="EndingGood" type="Control" unique_id=2131559063]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Black" type="Sprite2D" parent="." unique_id=202645738]
+position = Vector2(640, 480.00003)
+scale = Vector2(2.4999998, 1.8750001)
+texture = ExtResource("1_nu42i")
+
+[node name="Images" type="Control" parent="." unique_id=328065538]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="1" type="Sprite2D" parent="Images" unique_id=2036094618]
+position = Vector2(19.999973, -172)
+scale = Vector2(0.6082544, 0.6082544)
+texture = ExtResource("3_7wq7k")
+
+[node name="2" type="Sprite2D" parent="Images" unique_id=235512240]
+visible = false
+position = Vector2(20.614868, -173)
+scale = Vector2(0.6081081, 0.6081081)
+texture = ExtResource("4_0jxc2")
+
+[node name="3" type="Sprite2D" parent="Images" unique_id=763038221]
+visible = false
+position = Vector2(21.493896, -173.25)
+scale = Vector2(0.6079622, 0.6079622)
+texture = ExtResource("5_3rwr1")
+
+[node name="4" type="Sprite2D" parent="Images" unique_id=1470658048]
+visible = false
+position = Vector2(19.99997, -172)
+scale = Vector2(0.60796225, 0.6079622)
+texture = ExtResource("6_gsr0o")
+
+[node name="Texts" type="Control" parent="." unique_id=1747497087]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label1" type="Label" parent="Texts" unique_id=850848567]
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_vectj")
+theme_override_font_sizes/font_size = 25
+text = "You made it. After everything, you are finally standing in front of the door, and your hands are empty. You left it all behind somewhere back in the dark, the gold, the relics, all of it, and you walked here with nothing."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label2" type="Label" parent="Texts" unique_id=661205773]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_vectj")
+theme_override_font_sizes/font_size = 25
+text = "The Warden appears and stays quiet for a long moment, longer than usual, as if it did not expect this. Then it steps aside. "
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label3" type="Label" parent="Texts" unique_id=125115407]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_vectj")
+theme_override_font_sizes/font_size = 25
+text = "The door opens, and on the other side is something you have not seen in a very long time. Light. Actual, warm, real light."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label4" type="Label" parent="Texts" unique_id=430244719]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_vectj")
+theme_override_font_sizes/font_size = 25
+text = "You step through, and for the first time since you woke up in this place, your bones feel a little less cold."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Input" type="Control" parent="." unique_id=1756603676]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Left" type="Sprite2D" parent="Input" unique_id=1177102028]
+texture_filter = 1
+position = Vector2(-92, -20)
+scale = Vector2(1.75, 1.75)
+texture = ExtResource("7_id1es")
+
+[node name="Label" type="Label" parent="Input" unique_id=1042039564]
+layout_mode = 0
+offset_left = -52.0
+offset_top = -28.0
+offset_right = 19.0
+offset_bottom = -5.0
+theme_override_fonts/font = ExtResource("6_vectj")
+theme_override_font_sizes/font_size = 20
+text = "skip"
