@@ -1,21 +1,13 @@
-res://entities/player.tscn
 res://addons/SimpleDungeons/debug_visuals/WireframeColorMat.tres
 res://assets/items/smoke_outer.gdshader
 res://assets/items/smoke_inner.gdshader
 res://entities/filter.gdshader
 res://assets/items/smoke_overlay.gdshader
+res://entities/player.tscn
+res://assets/items/Gem_key1.tscn
+res://assets/items/Gem_key2.tscn
+res://assets/items/Gem_key3.tscn
+res://assets/items/Gem_key4.tscn
 res://levels/level1.tscn
-res://assets/room assets/fire_particle.tscn
-res://scripts/player.gd
-res://scripts/npc/charger.gd
-res://scripts/npc/gnome.gd
-res://scripts/npc/knight.gd
-res://menus/cutscene.tscn
-res://menus/host_join_menu.gd
-res://menus/start_menu.gd
-res://menus/cutscene.gd
 res://scripts/items/torch.gd
-res://assets/rooms/corridor.gd
-res://entities/player2.tscn
-res://entities/player3.tscn
-res://entities/player4.tscn
+res://assets/room assets/floor_tiles.tscn

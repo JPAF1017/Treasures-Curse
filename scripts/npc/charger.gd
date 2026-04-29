@@ -969,7 +969,7 @@ func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
 		var knock_dir := (target.global_position - global_position).normalized()
 		target.call("apply_knockback", knock_dir, LUNGE_KNOCKBACK_STRENGTH)
 
-func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_player: float, delta: float) -> bool:
+func _update_cooldown_chase_movement(direction_to_player: Vector3, _distance_to_player: float, delta: float) -> bool:
 	var spacing_active := not can_lunge and not is_backing_up and not is_charging and not is_lunging and not is_decelerating
 	if not spacing_active:
 		cooldown_spacing_mode = ""

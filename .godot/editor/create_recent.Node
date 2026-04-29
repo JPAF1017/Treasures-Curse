@@ -1,9 +1,9 @@
+CollisionShape3D
+RigidBody3D
 Control
 Label
 MeshInstance3D
-CollisionShape3D
 Area3D
-RigidBody3D
 CSGBox3D
 Node3D
 MenuButton

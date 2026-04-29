@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://3bt24b70o1ki"]
+
+[ext_resource type="PackedScene" uid="uid://mlb0gm6b2e3j" path="res://assets/items assets/green_gem.glb" id="1_y1rox"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_x1bbo"]
+radius = 0.7305445
+
+[node name="GemKey1" type="RigidBody3D" unique_id=1331693529]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=349752415]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -0.20202407, 0.008880615)
+shape = SubResource("SphereShape3D_x1bbo")
+
+[node name="green_gem" parent="." unique_id=1540137385 instance=ExtResource("1_y1rox")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.1989125, 0)

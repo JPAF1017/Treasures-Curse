@@ -57,6 +57,7 @@ const TORCH_SOUND_PATH := "res://sounds/torch/torch.mp3"
 var viewmodel_bob_time: float = 0.0
 var _carried_omni: OmniLight3D = null
 var _held_sound: AudioStreamPlayer = null
+var _torch_lit_state: bool = false
 
 @onready var _fire_particle: Node3D = $fire_particle
 @onready var _dropped_light: OmniLight3D = get_node_or_null("OmniLight3D")
@@ -210,6 +211,10 @@ func pick_up_into_hotbar(player: Node, slot_index: int) -> bool:
 	player.add_child(self)
 	_set_item_physics_enabled(false)
 	_set_item_visuals_visible(false)
+	if _dropped_light:
+		_dropped_light.position.y = 0.417
+		_dropped_light.omni_range = 12.0
+		_dropped_light.visible = false
 	is_burning = false
 	return true
 
@@ -253,6 +258,10 @@ func drop_from_hotbar(player: Node) -> bool:
 		_fire_particle.visible = true
 	if _dropped_light:
 		_dropped_light.visible = true
+		# Raise the light so it illuminates the floor from above (vertex shading
+		# requires a steep downward angle to light horizontal floor surfaces).
+		_dropped_light.position.y = 1.8
+		_dropped_light.omni_range = 16.0
 	_set_item_physics_enabled(true)
 	var player_node := player as Node3D
 	var forward := Vector3.FORWARD
@@ -299,7 +308,7 @@ func _set_item_visuals_visible(visibility: bool) -> void:
 
 
 func _set_visual_layer_recursive(node: Node, layer: int) -> void:
-	if node is VisualInstance3D:
+	if node is VisualInstance3D and not node is Light3D:
 		node.layers = 1 << (layer - 1)
 	for child in node.get_children():
 		_set_visual_layer_recursive(child, layer)
@@ -437,6 +446,9 @@ func _show_viewmodel(_player: Node) -> void:
 
 
 func _apply_torch_light(player: Node, torch_on: bool) -> void:
+	if torch_on == _torch_lit_state and _carried_omni != null and is_instance_valid(_carried_omni):
+		return
+	_torch_lit_state = torch_on
 	var camera := _get_player_camera(player)
 	if camera == null:
 		return
