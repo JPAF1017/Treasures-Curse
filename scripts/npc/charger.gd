@@ -142,12 +142,6 @@ func _ready():
 	if animation_player == null:
 		push_warning("AnimationPlayer not found in Dog node")
 	else:
-		# Print available animations for debugging
-		print("Available animations in dog model:")
-		var animations = animation_player.get_animation_list()
-		for anim in animations:
-			print("  - ", anim)
-		
 		# Connect to animation finished signal to know when lunge ends
 		animation_player.animation_finished.connect(_on_animation_finished)
 	
@@ -187,29 +181,24 @@ func _on_detector_body_entered(body):
 		trail_sample_timer = 0.0
 		memorized_target_trail.clear()
 		NavigationUtils.append_trail_point(memorized_target_trail, player.global_position, TRAIL_MAX_POINTS, TRAIL_POINT_SPACING)
-		print("Player entered charger's detection range")
 
 func _on_detector_body_exited(body):
 	if body.is_in_group("player"):
 		is_player_in_range = false
 		los_state_initialized = false
 		los_lost_timer = LOS_LOSS_CHASE_TIME
-		print("Player exited charger's detection range")
 
 func _on_lunge_body_entered(body):
 	if body.is_in_group("player") and _can_detect_crouching_player(body):
 		is_player_in_lunge_range = true
-		print("Player entered lunge range!")
 
 func _on_lunge_body_exited(body):
 	if body.is_in_group("player"):
 		is_player_in_lunge_range = false
-		print("Player exited lunge range")
 
 func _on_animation_finished(anim_name: String):
 	if anim_name == "lunge":
 		_end_lunge()
-		print("Lunge animation finished")
 
 func _start_lunge_windup():
 	"""Start the windup — memorize player direction, then walk backwards"""
@@ -228,14 +217,11 @@ func _start_lunge_windup():
 	# Start backing up
 	is_backing_up = true
 	backup_timer = 0.0
-	
-	print("Windup started! Charger backing up from memorized position...")
-	
+
 	# Play walk animation in reverse
 	if animation_player:
 		if animation_player.has_animation("walk"):
 			animation_player.play_backwards("walk")
-			print("Playing walk animation in reverse")
 
 func _start_charge():
 	"""Phase 2: Run forward for a shorter time to simulate same distance at higher speed"""
@@ -248,9 +234,7 @@ func _start_charge():
 	else:
 		charge_direction = charge_direction.normalized()
 	rotation.y = _yaw_with_facing_offset(charge_direction)
-	
-	print("Charging forward toward memorized position!")
-	
+
 	# Play run animation (or fast walk) forward
 	if animation_player:
 		if animation_player.has_animation("run"):
@@ -272,7 +256,6 @@ func _end_lunge():
 	is_decelerating = true
 	decel_timer = 0.0
 	decel_velocity = Vector3(velocity.x, 0, velocity.z)
-	print("Lunge ended, decelerating...")
 
 func _execute_lunge(direction: Vector3):
 	"""Execute the actual lunge attack"""
@@ -287,18 +270,15 @@ func _execute_lunge(direction: Vector3):
 	
 	# Snap rotation to face the lunge direction immediately
 	rotation.y = _yaw_with_facing_offset(lunge_direction)
-	print("Executing lunge! Direction locked: ", lunge_direction)
-	
+
 	# Play lunge animation
 	if animation_player:
 		if animation_player.has_animation("lunge"):
 			animation_player.play("lunge")
 			animation_player.speed_scale = 1.0
-			print("Playing lunge animation")
 		elif animation_player.has_animation("walk"):
 			animation_player.play("walk")
 			animation_player.speed_scale = 2.0
-			print("No lunge animation, using walk at 2x speed")
 
 func _physics_process(delta):
 	if is_dead:
@@ -355,7 +335,6 @@ func _physics_process(delta):
 		if lunge_timer >= LUNGE_COOLDOWN:
 			can_lunge = true
 			lunge_timer = 0.0
-			print("Lunge ready!")
 	
 	# Update lunge duration and end lunge if time exceeded
 	if is_lunging:
@@ -378,7 +357,6 @@ func _physics_process(delta):
 			is_decelerating = false
 			velocity.x = 0
 			velocity.z = 0
-			print("Deceleration complete")
 	
 	# Handle backing up (Phase 1 of windup)
 	if is_backing_up:
@@ -541,7 +519,7 @@ func _physics_process(delta):
 						_try_play_walk_step_sound()
 						_try_play_idle_sound()
 					else:
-						print("WARNING: Walk animation not found!")
+						pass  # walk animation not found
 		else:
 			# Stop moving if close enough
 			velocity.x = 0
@@ -552,7 +530,6 @@ func _physics_process(delta):
 				is_backing_up = false
 				can_lunge = true
 				backup_initiate_cooldown_timer = BACKUP_INITIATE_COOLDOWN
-				print("Backup cancelled - player too close!")
 			
 			# Stop animation
 			if animation_player and animation_player.is_playing():
@@ -995,15 +972,11 @@ func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
 func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_player: float, delta: float) -> bool:
 	var spacing_active := not can_lunge and not is_backing_up and not is_charging and not is_lunging and not is_decelerating
 	if not spacing_active:
-		if cooldown_spacing_mode != "":
-			print("[ChargerCooldown] mode=NONE")
-			cooldown_spacing_mode = ""
+		cooldown_spacing_mode = ""
 		return false
 
 	if is_player_in_lunge_range:
-		if cooldown_spacing_mode != "RETREAT":
-			print("[ChargerCooldown] mode=RETREAT dist=%.2f" % [distance_to_player])
-			cooldown_spacing_mode = "RETREAT"
+		cooldown_spacing_mode = "RETREAT"
 
 		var away_dir := -direction_to_player
 		if away_dir.length_squared() <= 0.001:
@@ -1024,9 +997,7 @@ func _update_cooldown_chase_movement(direction_to_player: Vector3, distance_to_p
 			_try_play_idle_sound()
 		return true
 
-	if cooldown_spacing_mode != "APPROACH":
-		print("[ChargerCooldown] mode=APPROACH dist=%.2f" % [distance_to_player])
-		cooldown_spacing_mode = "APPROACH"
+	cooldown_spacing_mode = "APPROACH"
 
 	velocity.x = direction_to_player.x * SPEED
 	velocity.z = direction_to_player.z * SPEED

@@ -1,0 +1,127 @@
+[gd_scene format=3 uid="uid://dxba5x3v7oeoe"]
+
+[ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="1_6ps3c"]
+[ext_resource type="Texture2D" uid="uid://dbgq7420nemg1" path="res://assets/ui/cutscene/1.png" id="2_vd4vi"]
+[ext_resource type="Texture2D" uid="uid://8alxyjnf5wec" path="res://assets/ui/cutscene/2.png" id="3_s2gdk"]
+[ext_resource type="Texture2D" uid="uid://dxg5a8ju4oes0" path="res://assets/ui/cutscene/3.png" id="4_t0cc7"]
+[ext_resource type="Texture2D" uid="uid://cr2cdywiai6ur" path="res://assets/ui/cutscene/4.png" id="5_s2gdk"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="6_t0cc7"]
+
+[node name="Cutscene" type="Control" unique_id=2131559063]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Black" type="Sprite2D" parent="." unique_id=202645738]
+position = Vector2(640, 480.00003)
+scale = Vector2(2.4999998, 1.8750001)
+texture = ExtResource("1_6ps3c")
+
+[node name="Images" type="Control" parent="." unique_id=328065538]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="1" type="Sprite2D" parent="Images" unique_id=1736860988]
+position = Vector2(20.00001, -172)
+scale = Vector2(0.60883904, 0.6088391)
+texture = ExtResource("2_vd4vi")
+
+[node name="2" type="Sprite2D" parent="Images" unique_id=1579992839]
+visible = false
+position = Vector2(20.000015, -163.99998)
+scale = Vector2(0.61315787, 0.6131579)
+texture = ExtResource("3_s2gdk")
+
+[node name="3" type="Sprite2D" parent="Images" unique_id=1301418012]
+visible = false
+position = Vector2(22.188965, -170.5)
+scale = Vector2(0.62598425, 0.62598425)
+texture = ExtResource("4_t0cc7")
+
+[node name="4" type="Sprite2D" parent="Images" unique_id=1757538108]
+visible = false
+position = Vector2(22.839905, -174.5)
+scale = Vector2(0.61548555, 0.61548555)
+texture = ExtResource("5_s2gdk")
+
+[node name="Texts" type="Control" parent="." unique_id=1747497087]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label1" type="Label" parent="Texts" unique_id=850848567]
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_t0cc7")
+theme_override_font_sizes/font_size = 25
+text = "You were not a good person. Your whole life you took things that were never yours, gold, treasures, relics, anything you could get your hands on. And then one day, greed caught up to you. You died, and you woke up as nothing but bones in the middle of a dark dungeon with no way out."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label2" type="Label" parent="Texts" unique_id=1324471852]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_t0cc7")
+theme_override_font_sizes/font_size = 25
+text = "This place is your purgatory, built from every bad thing you ever did. A voice finds you in the dark. It calls itself the Warden, and it tells you the rules. Somewhere in this dungeon are gold treasures. Collect them all, bring them to the final door, and you may pass."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label3" type="Label" parent="Texts" unique_id=622101621]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_t0cc7")
+theme_override_font_sizes/font_size = 25
+text = "It sounds simple. But the dungeon shifts and changes like it is alive, and you are not alone in it. Something is hunting you in the dark, and it feels like it knows you."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Label4" type="Label" parent="Texts" unique_id=1292361508]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = -396.0
+offset_top = 124.0
+offset_right = 444.0
+offset_bottom = 355.0
+theme_override_fonts/font = ExtResource("6_t0cc7")
+theme_override_font_sizes/font_size = 25
+text = "Find the relics. Reach the top. Find the door. And maybe, just maybe, you will finally get what you deserve."
+horizontal_alignment = 1
+autowrap_mode = 3

@@ -86,6 +86,10 @@ var grab_sound_timer: float = 0.0
 var attack_sound_player: AudioStreamPlayer3D = null
 var attack_sound_played_this_swing: bool = false
 
+const GNOME_GRAB_CHECK_INTERVAL: float = 0.1
+var _gnome_grab_check_timer: float = 0.0
+var _gnome_grabbed_cache: bool = false
+
 func _ready() -> void:
 	top_level = true
 	randomize()
@@ -126,6 +130,7 @@ func _physics_process(delta: float) -> void:
 	attack_swing_cooldown_timer = max(attack_swing_cooldown_timer - delta, 0.0)
 	grab_reacquire_timer = max(grab_reacquire_timer - delta, 0.0)
 	damage_action_cooldown_timer = max(damage_action_cooldown_timer - delta, 0.0)
+	_gnome_grab_check_timer = max(_gnome_grab_check_timer - delta, 0.0)
 	_refresh_player_detection()
 	SmokeAggro.suppress_aggro_if_in_smoke(self)
 
@@ -166,8 +171,12 @@ func _physics_process(delta: float) -> void:
 		elif _has_valid_grabbed_player() and grabbed_player == attack_range_player:
 			_play_grab_animation()
 			_try_grab_damage()
-		elif _is_player_grabbed_by_another_gnome(attack_range_player):
-			_play_attack_animation()
+		else:
+			if _gnome_grab_check_timer <= 0.0:
+				_gnome_grabbed_cache = _is_player_grabbed_by_another_gnome(attack_range_player)
+				_gnome_grab_check_timer = GNOME_GRAB_CHECK_INTERVAL
+			if _gnome_grabbed_cache:
+				_play_attack_animation()
 		# else: no other gnome has grabbed yet — wait, face the player
 	elif _should_run_chase():
 		_update_pursuit_movement(delta, RUN_SPEED)

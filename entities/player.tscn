@@ -47,7 +47,16 @@ shader = ExtResource("2_hj0ki")
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 3
 script = ExtResource("1_u63mc")
-debug_attack_overlap_logs = false
+vision_distance = null
+vision_radius = null
+debug_position_logs = null
+debug_attack_overlap_logs = null
+hide_visual_from_player_camera = null
+visual_yaw_offset_degrees = null
+crouch_head_y = null
+crouch_transition_speed = null
+visual_root_path = null
+animation_player_path = null
 
 [node name="Attack" type="Area3D" parent="." unique_id=756317047]
 collision_layer = 0
@@ -84,8 +93,8 @@ shape = SubResource("CapsuleShape3D_vision")
 [node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
 light_energy = 0.0
 light_indirect_energy = 0.0
-light_bake_mode = 0
 light_volumetric_fog_energy = 0.0
+light_bake_mode = 0
 spot_range = 43.3203
 spot_attenuation = 0.5
 spot_angle = 55.0
@@ -97,14 +106,13 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]
 
 [node name="Filter" type="ColorRect" parent="CanvasLayer" unique_id=63140070]
-layout_mode = 3
+material = SubResource("ShaderMaterial_fruft")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = SubResource("ShaderMaterial_fruft")
 
 [node name="Control" type="Control" parent="CanvasLayer" unique_id=2102173205]
 layout_mode = 3

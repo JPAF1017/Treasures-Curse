@@ -51,7 +51,7 @@ var walk_before_idle_timer: float = 0.0
 var idle_timer: float = 0.0
 var is_idle: bool = false
 @export var health: int = 60
-@export var debug_attack_logs: bool = true
+@export var debug_attack_logs: bool = false
 var is_dead: bool = false
 var hit_reaction_timer: float = 0.0
 var animation_player: AnimationPlayer = null
@@ -380,8 +380,7 @@ func _on_sweetspot_body_exited(body: Node3D) -> void:
 	players_in_sweetspot.erase(body)
 
 func _is_player_in_sweetspot(player: Node3D) -> bool:
-	players_in_sweetspot = players_in_sweetspot.filter(func(p): return is_instance_valid(p))
-	return player in players_in_sweetspot
+	return is_instance_valid(player) and players_in_sweetspot.has(player)
 
 func _on_distance_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player") and body not in players_in_distance:
@@ -391,22 +390,23 @@ func _on_distance_body_exited(body: Node3D) -> void:
 	players_in_distance.erase(body)
 
 func _is_player_in_distance(player: Node3D) -> bool:
-	players_in_distance = players_in_distance.filter(func(p): return is_instance_valid(p))
-	return player in players_in_distance
+	return is_instance_valid(player) and players_in_distance.has(player)
 
 func _update_target() -> void:
-	# Remove freed players
-	players_in_detection = players_in_detection.filter(func(p): return is_instance_valid(p))
-	if players_in_detection.is_empty():
-		target_player = null
-		return
 	var closest: Node3D = null
 	var closest_dist := INF
-	for p in players_in_detection:
+	var i := players_in_detection.size() - 1
+	while i >= 0:
+		var p: Node3D = players_in_detection[i]
+		if not is_instance_valid(p):
+			players_in_detection.remove_at(i)
+			i -= 1
+			continue
 		var dist := global_position.distance_squared_to(p.global_position)
 		if dist < closest_dist:
 			closest_dist = dist
 			closest = p
+		i -= 1
 	target_player = closest
 
 func _update_retreat_state(delta: float) -> void:

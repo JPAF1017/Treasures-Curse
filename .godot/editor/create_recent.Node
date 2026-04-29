@@ -1,6 +1,6 @@
-MeshInstance3D
-Control
 Label
+Control
+MeshInstance3D
 CollisionShape3D
 Area3D
 RigidBody3D

@@ -77,7 +77,7 @@ const STEP_FRAMES: Dictionary = {
 @export_range(2.0, 80.0, 0.5) var vision_distance: float = 20.0
 @export_range(0.5, 10.0, 0.1) var vision_radius: float = 3.0
 @export var debug_position_logs: bool = false
-@export var debug_attack_overlap_logs: bool = true
+@export var debug_attack_overlap_logs: bool = false
 @export var hide_visual_from_player_camera: bool = true
 @export_range(-360.0, 360.0, 1.0) var visual_yaw_offset_degrees: float = 180.0
 @export var crouch_head_y: float = -0.111
@@ -192,6 +192,8 @@ var _item_wheel_hint_active: bool = false
 var _item_wheel_switch_count: int = 0
 const ITEM_WHEEL_HINT_SWITCH_THRESHOLD := 4
 var _throw_hint_dismissed: bool = false
+var _throw_hint_timer: float = 0.0
+const THROW_HINT_DISPLAY_TIME := 1.0
 var _use_hint_dismissed: bool = false
 var _attack_hint_dismissed: bool = false
 var _grabbed_hint_dismissed: bool = false
@@ -199,6 +201,12 @@ var _grabbed_hint_shown: bool = false
 const STATUE_SCRIPT_PATH := "res://scripts/npc/statue.gd"
 const SHY_SCRIPT_PATH := "res://scripts/npc/shy.gd"
 const CHARGER_SCRIPT_PATH := "res://scripts/npc/charger.gd"
+
+const PICKUP_VIS_INTERVAL := 0.1
+var _pickup_vis_timer: float = 0.0
+var _cached_pickup_candidate: RigidBody3D = null
+var _place_item_control: Control = null
+var _warning2_control: Control = null
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
@@ -273,6 +281,8 @@ func _ready():
 	_update_stamina_ui()
 	_update_health_ui()
 	_setup_attack_overlap_debug()
+	_place_item_control = get_node_or_null("CanvasLayer/Control/PlaceItem") as Control
+	_warning2_control = get_node_or_null("CanvasLayer/Warning2") as Control
 	for path in STEP_SOUND_PATHS:
 		_step_sounds.append(load(path))
 	for path in CHASE_SOUND_PATHS:
@@ -449,6 +459,11 @@ func _physics_process(delta):
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
+	_pickup_vis_timer = max(_pickup_vis_timer - delta, 0.0)
+	if throw_hint_control != null and throw_hint_control.visible and not _throw_hint_dismissed:
+		_throw_hint_timer -= delta
+		if _throw_hint_timer <= 0.0:
+			throw_hint_control.visible = false
 	if _camera_hint_active:
 		var cam_moved := _camera_moved_this_frame
 		_camera_moved_this_frame = false
@@ -1039,6 +1054,7 @@ func _select_hotbar_slot(slot_index: int) -> void:
 			if has_item and not kw2_active and not throw_hint_control.visible:
 				throw_hint_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				throw_hint_control.visible = true
+				_throw_hint_timer = THROW_HINT_DISPLAY_TIME
 			elif (not has_item or kw2_active) and throw_hint_control.visible:
 				throw_hint_control.visible = false
 	if not _use_hint_dismissed:
@@ -1193,6 +1209,7 @@ func _drop_selected_hotbar_item() -> void:
 		if bool(selected_item.call("drop_from_hotbar", self)):
 			_set_hotbar_item(selected_hotbar_slot_index, null, null)
 			_refresh_selected_item_state()
+			_pickup_vis_timer = 0.0
 			_update_pickup_prompt_visibility()
 			if multiplayer.has_multiplayer_peer() and not scene_path.is_empty():
 				var drop_pos := (selected_item as Node3D).global_position
@@ -1232,6 +1249,7 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 				rpc("_sync_item_removed", item_world_path)
 			_set_hotbar_item(slot_index, item_body, item_body.call("get_hotbar_icon_texture"))
 			_refresh_selected_item_state()
+			_pickup_vis_timer = 0.0
 			_update_pickup_prompt_visibility()
 			if not _key_warning_shown and _is_gold_item_model(item_body):
 				_key_warning_shown = true
@@ -1321,12 +1339,13 @@ func _update_pickup_prompt_visibility() -> void:
 		return
 
 	var throw_active := throw_hint_control != null and throw_hint_control.visible
-	var place_item_control := get_node_or_null("CanvasLayer/Control/PlaceItem") as Control
-	var place_active := place_item_control != null and place_item_control.visible
-	var warning2_control := get_node_or_null("CanvasLayer/Warning2") as Control
-	var warning2_active := warning2_control != null and warning2_control.visible
+	var place_active := _place_item_control != null and _place_item_control.visible
+	var warning2_active := _warning2_control != null and _warning2_control.visible
 	var key_warning2_active := key_warning2_control != null and key_warning2_control.visible
-	pickup_control.visible = not throw_active and not place_active and not warning2_active and not key_warning2_active and _find_first_empty_hotbar_slot() != -1 and _get_pickup_candidate() != null
+	if _pickup_vis_timer <= 0.0:
+		_cached_pickup_candidate = _get_pickup_candidate()
+		_pickup_vis_timer = PICKUP_VIS_INTERVAL
+	pickup_control.visible = not throw_active and not place_active and not warning2_active and not key_warning2_active and _find_first_empty_hotbar_slot() != -1 and _cached_pickup_candidate != null
 
 func _has_any_primary_item_in_hotbar() -> bool:
 	for item_model in hotbar_item_models:
