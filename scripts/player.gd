@@ -306,8 +306,11 @@ func _ready():
 	chase_player.finished.connect(_on_chase_sound_finished)
 	_chase_volume_db = chase_player.volume_db
 	swing_player.stream = load(SWING_SOUND_PATH)	
+	# React to PSX filter setting changes at runtime (e.g. changed from pause menu).
+	SettingsManager.psx_filter_changed.connect(_on_psx_filter_changed)
 	# Show loading screen until the player first moves.
-	filter_rect.visible = false
+	if filter_rect != null:
+		filter_rect.visible = false
 	hud_control.visible = false
 	loading_control.visible = true
 	loading_label1.visible = true
@@ -350,6 +353,9 @@ func _ready():
 		_configure_player_visual_visibility()
 	else:
 		print("WARNING: Player visual root not found!")
+
+	# Apply PSX filter (Vision Area3D) state after all nodes are fully ready.
+	_apply_psx_filter_setting(SettingsManager.psx_filter_enabled)
 
 	# Sync position and head rotation to all peers so players can see each other move.
 	# Only create if not already added by _do_spawn() (spawned player2 case).
@@ -531,7 +537,8 @@ func _physics_process(delta):
 		var jump_input := Input.is_action_just_pressed("ui_accept")
 		if not cutscene_active and (move_input != Vector2.ZERO or jump_input):
 			_game_started = true
-			filter_rect.visible = true
+			if filter_rect != null:
+				filter_rect.visible = SettingsManager.psx_filter_enabled
 			hud_control.visible = true
 			loading_control.visible = false
 			if camera_hint_control != null:
@@ -1515,7 +1522,8 @@ func start_from_cutscene() -> void:
 		return
 	cutscene_active = false
 	_game_started = true
-	filter_rect.visible = true
+	if filter_rect != null:
+		filter_rect.visible = SettingsManager.psx_filter_enabled
 	hud_control.visible = true
 	loading_control.visible = false
 	if movement_hint_control != null:
@@ -1528,6 +1536,20 @@ func start_from_cutscene() -> void:
 	music_player.play()
 	for npc in _get_all_npcs():
 		npc.process_mode = Node.PROCESS_MODE_INHERIT
+
+
+func _apply_psx_filter_setting(enabled: bool) -> void:
+	if filter_rect != null and _game_started:
+		filter_rect.visible = enabled
+	var vision: Area3D = get_node_or_null("Head/playerCamera/Vision") as Area3D
+	if vision != null:
+		vision.visible = enabled
+		vision.monitoring = enabled
+		vision.monitorable = enabled
+
+
+func _on_psx_filter_changed(enabled: bool) -> void:
+	_apply_psx_filter_setting(enabled)
 
 func _on_item_wheel_slot_switched() -> void:
 	if not _item_wheel_hint_active:

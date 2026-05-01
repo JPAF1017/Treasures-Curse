@@ -1,0 +1,197 @@
+[gd_scene format=3 uid="uid://bgn0el01ijuiq"]
+
+[ext_resource type="VideoStream" uid="uid://b4ixw8c7c4e07" path="res://assets/ui/wallpaper.ogv" id="2_7h2wy"]
+[ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="3_f368g"]
+[ext_resource type="Script" uid="uid://dej5fewt3nd11" path="res://menus/settings_menu.gd" id="4_smenu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
+bg_color = Color(0.04, 0.04, 0.1, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="SettingsMenu" type="Control" unique_id=2131559063]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_smenu")
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="." unique_id=1000000001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stream = ExtResource("2_7h2wy")
+autoplay = true
+expand = true
+
+[node name="Panel" type="Panel" parent="." unique_id=100000001]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -423.0
+offset_top = -247.0
+offset_right = 423.0
+offset_bottom = 247.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel" unique_id=100000002]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer" unique_id=100000003]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000004]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 50
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000005]
+layout_mode = 2
+
+[node name="VolumeRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000006]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VolumeLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/VolumeRow" unique_id=100000007]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "Master Volume"
+
+[node name="VolumeSlider" type="HSlider" parent="Panel/MarginContainer/VBoxContainer/VolumeRow" unique_id=100000008]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="VolumeValue" type="Label" parent="Panel/MarginContainer/VBoxContainer/VolumeRow" unique_id=100000009]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "100%"
+horizontal_alignment = 2
+
+[node name="VSyncRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000010]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VSyncLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/VSyncRow" unique_id=100000011]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "VSync"
+
+[node name="VSyncCheck" type="CheckBox" parent="Panel/MarginContainer/VBoxContainer/VSyncRow" unique_id=100000012]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+button_pressed = true
+
+[node name="PSXRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000013]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PSXLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/PSXRow" unique_id=100000014]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "PSX Filter"
+
+[node name="PSXCheck" type="CheckBox" parent="Panel/MarginContainer/VBoxContainer/PSXRow" unique_id=100000015]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+button_pressed = true
+
+[node name="FullscreenRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000021]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FullscreenLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/FullscreenRow" unique_id=100000022]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "Exclusive Fullscreen"
+
+[node name="FullscreenCheck" type="CheckBox" parent="Panel/MarginContainer/VBoxContainer/FullscreenRow" unique_id=100000023]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+
+[node name="SeedRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000018]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SeedLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/SeedRow" unique_id=100000019]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "Seed"
+
+[node name="SeedInput" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/SeedRow" unique_id=100000020]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 28
+placeholder_text = "Random"
+max_length = 19
+
+[node name="BackRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000016]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+alignment = 1
+
+[node name="Back" type="Button" parent="Panel/MarginContainer/VBoxContainer/BackRow" unique_id=100000017]
+texture_filter = 1
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 50
+text = "Back"

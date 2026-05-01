@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameStats="*res://scripts/game_stats.gd"
+SettingsManager="*res://scripts/settings_manager.gd"
 
 [display]
 

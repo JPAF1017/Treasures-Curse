@@ -116,7 +116,7 @@ func _start_game() -> void:
 		return
 	# Only the server picks the seed and broadcasts it so all peers run identical generation.
 	if not multiplayer.has_multiplayer_peer() or multiplayer.is_server():
-		var seed_int := randi()
+		var seed_int := SettingsManager.generation_seed if SettingsManager.generation_seed != 0 else randi()
 		# Wait one physics frame to ensure clients have added the scene before the RPC arrives.
 		await get_tree().physics_frame
 		if is_instance_valid(_map_instance):

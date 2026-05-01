@@ -720,6 +720,11 @@ func _apply_pixel_shading(node: Node) -> void:
 					sm.shader = _PIXEL_SHADER
 					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
 					mi.set_surface_override_material(i, sm)
+				else:
+					var override := std.duplicate() as StandardMaterial3D
+					override.metallic = 0.0
+					override.roughness = 1.0
+					mi.set_surface_override_material(i, override)
 	for child in node.get_children():
 		_apply_pixel_shading(child)
 

@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
-[ext_resource type="Shader" uid="uid://bmag55qj360ls" path="res://entities/filter.gdshader" id="2_hj0ki"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
 [ext_resource type="Texture2D" uid="uid://cw51qjjc1tdv6" path="res://assets/ui/dungeon-437.png" id="5_qsoyl"]
@@ -23,6 +22,7 @@
 [ext_resource type="Texture2D" uid="uid://d2vrunaturtcu" path="res://assets/ui/5.png" id="13_hj0ki"]
 [ext_resource type="Texture2D" uid="uid://c0mfmyjjj7gie" path="res://assets/ui/SHIFTBIGGER.png" id="22_cicqb"]
 [ext_resource type="Texture2D" uid="uid://bnoee380ow3yv" path="res://assets/ui/CTRL.png" id="22_hj0ki"]
+[ext_resource type="Shader" uid="uid://bmag55qj360ls" path="res://entities/filter.gdshader" id="23_filter"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
 height = 4.002136
@@ -40,8 +40,8 @@ height = 1.1181335
 radius = 2.0
 height = 12.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_fruft"]
-shader = ExtResource("2_hj0ki")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_filter"]
+shader = ExtResource("23_filter")
 
 [node name="player" type="CharacterBody3D" unique_id=1588251422 groups=["player"]]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
@@ -99,7 +99,7 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]
 
 [node name="Filter" type="ColorRect" parent="CanvasLayer" unique_id=63140070]
-material = SubResource("ShaderMaterial_fruft")
+material = SubResource("ShaderMaterial_filter")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -1241,7 +1241,7 @@ offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "This feels too important..."
+text = "I can use this to open a door..."
 horizontal_alignment = 1
 vertical_alignment = 1
 

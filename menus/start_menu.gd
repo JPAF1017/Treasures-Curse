@@ -2,24 +2,20 @@ extends Control
 
 const TEST_MAP_PATH := "res://levels/level1.tscn"
 
-@onready var video_player: VideoStreamPlayer = $VideoStreamPlayer
 @onready var play_button: Button = $Button/MenuButton
 @onready var quit_button: Button = $Button/Quit
 @onready var multiplayer_button: Button = $Button/Multiplayer
+@onready var settings_button: Button = $Button/Settings
 @onready var button_container: Control = $Button
 
 var _map_instance: Node = null
 
 
 func _ready() -> void:
-	video_player.finished.connect(_on_video_finished)
 	play_button.pressed.connect(_on_play_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	multiplayer_button.pressed.connect(_on_multiplayer_pressed)
-
-
-func _on_video_finished() -> void:
-	video_player.play()
+	settings_button.pressed.connect(_on_settings_pressed)
 
 
 func _on_quit_pressed() -> void:
@@ -28,6 +24,11 @@ func _on_quit_pressed() -> void:
 
 func _on_multiplayer_pressed() -> void:
 	get_tree().change_scene_to_file("res://menus/host_join_menu.tscn")
+
+
+func _on_settings_pressed() -> void:
+	var settings: PackedScene = load("res://menus/settings_menu.tscn")
+	add_child(settings.instantiate())
 
 
 func _on_play_pressed() -> void:
@@ -42,9 +43,14 @@ func _on_play_pressed() -> void:
 	if generator:
 		generator.generate_threaded = true
 		generator.done_generating.connect(_on_map_ready)
+		if SettingsManager.generation_seed != 0:
+			generator.generate_on_ready = false
 	get_tree().root.add_child(_map_instance)
 	if not generator:
 		_on_map_ready()
+		return
+	if SettingsManager.generation_seed != 0:
+		generator.call("generate", SettingsManager.generation_seed)
 
 
 func _find_dungeon_generator(node: Node) -> Node:

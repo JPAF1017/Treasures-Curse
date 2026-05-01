@@ -6,9 +6,10 @@
 [ext_resource type="PackedScene" uid="uid://o7in1t7fk86v" path="res://assets/room assets/door_frame_01.tscn" id="4_i6vi6"]
 [ext_resource type="PackedScene" uid="uid://bh6l5evgdyhpq" path="res://assets/room assets/door_03.tscn" id="5_3dpfm"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="6_rla4v"]
-[ext_resource type="PackedScene" uid="uid://cav1pu1wp4wqo" path="res://entities/shambler.tscn" id="7_y0rlh"]
+[ext_resource type="PackedScene" uid="uid://cxjwpa386eouw" path="res://assets/items/gold.tscn" id="7_y0rlh"]
 
 [node name="SpawnShambler" type="Node3D" unique_id=1056765254]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0077342987, 0, 0.20881069)
 script = ExtResource("1_y0rlh")
 metadata/_custom_type_script = "uid://c801ki3oghumx"
 
@@ -57,4 +58,17 @@ transform = Transform3D(2.9802322e-08, 0, 0.49999994, 0, 0.5, 0, -0.49999994, 0,
 [node name="Block" parent="Ceiling" unique_id=2080627732 instance=ExtResource("6_rla4v")]
 transform = Transform3D(0.5, 0, 0, 0, -0.01, 7.54979e-08, 0, -1.5099579e-09, -0.5, 0, 5, 0)
 
-[node name="Shambler" parent="." unique_id=856872376 instance=ExtResource("7_y0rlh")]
+[node name="Gold" parent="." unique_id=2016877817 instance=ExtResource("7_y0rlh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62643194, 0, -2.1886444)
+
+[node name="Gold2" parent="." unique_id=996668114 instance=ExtResource("7_y0rlh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6318157, 0, -0.54136074)
+
+[node name="Gold3" parent="." unique_id=1331624743 instance=ExtResource("7_y0rlh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16240835, 0, 0.8739108)
+
+[node name="Gold4" parent="." unique_id=2124005951 instance=ExtResource("7_y0rlh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7323546, 0, 0.20107684)
+
+[node name="Gold5" parent="." unique_id=315029034 instance=ExtResource("7_y0rlh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6395497, 0, -1.5854136)
