@@ -19,7 +19,6 @@ const GNOME_GROUPS   := 3  # each group spawns 2 or 3 gnomes in the same room
 const STATUE_FLOORS  := [1, 3]
 const SHY_FLOORS     := [1, 3]
 # Knights: one on the 2nd floor (index 1) and one on the 3rd floor (index 2)
-const KNIGHT_FLOORS  := [1, 2]
 
 # ---------- Item spawning configuration ----------
 # Scene paths must match the paths used by big_room.gd
@@ -252,7 +251,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# (server only — MultiplayerSpawner replicates to clients)
 	var gen_origin_y: float = (generator as Node3D).global_position.y
 	var voxel_y: float = generator.get("voxel_scale").y
-	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS], [KNIGHT_SCENE, KNIGHT_FLOORS]]:
+	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS]]:
 		var scene: PackedScene = floor_data[0]
 		var floors: Array = floor_data[1]
 		for floor_idx: int in floors:

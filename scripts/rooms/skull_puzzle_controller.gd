@@ -246,7 +246,7 @@ func _count_items_for_player(player: Node) -> int:
 
 
 func _try_exit() -> void:
-	if multiplayer.has_multiplayer_peer():
+	if not (multiplayer.get_multiplayer_peer() is OfflineMultiplayerPeer):
 		_handle_multiplayer_exit()
 	else:
 		_handle_solo_exit()

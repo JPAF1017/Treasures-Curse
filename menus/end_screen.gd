@@ -5,13 +5,13 @@ const START_MENU_PATH := "res://menus/start_menu.tscn"
 @onready var quit_button: Button = $Button/Quit
 @onready var main_menu_button: Button = $Button/"Main Menu"
 
-@onready var stat_charger: Label = $Stats/Charger
-@onready var stat_gnome: Label = $Stats/Gnome
-@onready var stat_fly: Label = $Stats/Fly
-@onready var stat_shambler: Label = $Stats/Shambler
-@onready var stat_knight: Label = $Stats/Knight
-@onready var stat_damage: Label = $Stats/Damage
-@onready var stat_time: Label = $Stats/Time
+@onready var stat_charger: Label = get_node_or_null("Stats/Charger")
+@onready var stat_gnome: Label = get_node_or_null("Stats/Gnome")
+@onready var stat_fly: Label = get_node_or_null("Stats/Fly")
+@onready var stat_shambler: Label = get_node_or_null("Stats/Shambler")
+@onready var stat_knight: Label = get_node_or_null("Stats/Knight")
+@onready var stat_damage: Label = get_node_or_null("Stats/Damage")
+@onready var stat_time: Label = get_node_or_null("Stats/Time")
 
 
 func _ready() -> void:

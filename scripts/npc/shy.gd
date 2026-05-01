@@ -73,8 +73,11 @@ var previous_has_line_of_sight: bool = false
 var last_run_frame: int = -1
 var triggered_step_frames: Array[int] = []
 
+const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+
 func _ready() -> void:
 	top_level = true
+	_apply_pixel_shading(self)
 	randomize()
 	floor_snap_length = 0.7
 	animation_player = _find_animation_player(self)
@@ -540,6 +543,21 @@ func _is_target_in_attack_range() -> bool:
 		return true
 
 	return is_player_in_attack_range and attack_range_area.overlaps_body(target_player)
+
+func _apply_pixel_shading(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in mi.get_surface_override_material_count():
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std := mat as StandardMaterial3D
+				if std.albedo_texture != null:
+					var sm := ShaderMaterial.new()
+					sm.shader = _PIXEL_SHADER
+					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					mi.set_surface_override_material(i, sm)
+	for child in node.get_children():
+		_apply_pixel_shading(child)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:

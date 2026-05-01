@@ -20,7 +20,7 @@ radius = 1.0
 [node name="BigRoom" type="Node3D" unique_id=1370706762]
 script = ExtResource("99_bigroom")
 size_in_voxels = Vector3i(3, 2, 3)
-max_count = 3
+max_count = 2
 metadata/_custom_type_script = "uid://c801ki3oghumx"
 
 [node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=249430898]

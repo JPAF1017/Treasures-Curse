@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://b8q4qe4edx5wo"]
 
+[ext_resource type="Script" uid="uid://dv4p9k2n8xqb3" path="res://menus/ending_bad.gd" id="0_script"]
 [ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="2_2phy6"]
 [ext_resource type="Texture2D" uid="uid://dbgq7420nemg1" path="res://assets/ui/cutscene/1.png" id="3_pp87p"]
 [ext_resource type="Texture2D" uid="uid://62pmvshc74xf" path="res://assets/ui/cutscene/bad3.png" id="4_5bclw"]
@@ -9,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="8_6qrnl"]
 
 [node name="EndingBad" type="Control" unique_id=2131559063]
+script = ExtResource("0_script")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

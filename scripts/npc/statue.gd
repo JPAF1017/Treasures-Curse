@@ -56,8 +56,11 @@ var sound_triggered_frame1: bool = false
 var sound_triggered_frame51: bool = false
 var prev_anim_position: float = 0.0
 
+const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+
 func _ready():
 	top_level = true
+	_apply_pixel_shading(self)
 	_setup_bone_sounds()
 	call_deferred("_setup_player_reference")
 	call_deferred("_setup_animation_player")
@@ -69,6 +72,21 @@ func _ready():
 	floor_max_angle = deg_to_rad(46)  # Allow steeper slopes
 	floor_snap_length = 0.7  # Better slope adhesion
 	wall_min_slide_angle = deg_to_rad(15)  # Slide along walls more easily
+
+func _apply_pixel_shading(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in mi.get_surface_override_material_count():
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std := mat as StandardMaterial3D
+				if std.albedo_texture != null:
+					var sm := ShaderMaterial.new()
+					sm.shader = _PIXEL_SHADER
+					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					mi.set_surface_override_material(i, sm)
+	for child in node.get_children():
+		_apply_pixel_shading(child)
 
 func _setup_player_reference():
 	# Wait for the first physics frame

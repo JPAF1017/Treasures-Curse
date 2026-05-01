@@ -15,6 +15,9 @@
 [ext_resource type="PackedScene" uid="uid://djgwx2fo8gck3" path="res://assets/rooms/l_shape_room.tscn" id="9_w7ck5"]
 [ext_resource type="PackedScene" uid="uid://scxkscsgrow5" path="res://assets/rooms/narrow.tscn" id="10_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="13_ou4v7"]
+[ext_resource type="PackedScene" uid="uid://bdgqymx6x75hn" path="res://entities/knight.tscn" id="16_l7nqg"]
+[ext_resource type="PackedScene" uid="uid://b84dvtkhuaktk" path="res://entities/shy.tscn" id="20_2nn5w"]
+[ext_resource type="PackedScene" uid="uid://b3gcdu8ssg3lu" path="res://entities/statue.tscn" id="21_ou4v7"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 [ext_resource type="Script" uid="uid://pnceodedcutd" path="res://scripts/multiplayer/player_spawner.gd" id="100_playerspawner"]
@@ -71,22 +74,34 @@ transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, 80, 
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 25.000002, -10, 50)
 
 [node name="SkullPuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1594414824 instance=ExtResource("6_bekh1")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -75, 10, 30.000004)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, -10, -15)
 
 [node name="SkullRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1148952945 instance=ExtResource("5_yydhl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -80, 10, -19.999996)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 80, -10, -20)
 
 [node name="SkullRoom2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1662865710 instance=ExtResource("5_yydhl")]
-transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, -80, 10, 80)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20, -10, -20)
 
 [node name="TreasureRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=731915099 instance=ExtResource("13_ou4v7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.999996, 5, -60.000004)
+visible = false
 
 [node name="TreasureRoom2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=57142322 instance=ExtResource("13_ou4v7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.000004, 5, 59.999996)
+visible = false
 
 [node name="TreasureRoom3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1625933742 instance=ExtResource("13_ou4v7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 5, 9.1793913e-07)
+visible = false
+
+[node name="Corridor" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=338039733 instance=ExtResource("3_omn1t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.000002, -10, -50)
+
+[node name="Corridor2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1524019937 instance=ExtResource("3_omn1t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -10, 4.371139e-07)
+
+[node name="Corridor3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1967319274 instance=ExtResource("3_omn1t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.999998, -10, 50)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)
@@ -103,7 +118,7 @@ environment = SubResource("Environment_yplof")
 script = ExtResource("98_optimizer")
 
 [node name="player" parent="." unique_id=1588251422 instance=ExtResource("7_8bcou")]
-transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -35, -9, 64)
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, -50, -9, 79)
 
 [node name="PlayerSpawner" type="Node" parent="." unique_id=2000000001]
 script = ExtResource("100_playerspawner")
@@ -113,3 +128,12 @@ spawn_path = NodePath("..")
 
 [node name="ItemSpawner" type="MultiplayerSpawner" parent="." unique_id=2000000003]
 spawn_path = NodePath("..")
+
+[node name="Knight" parent="." unique_id=1412719762 instance=ExtResource("16_l7nqg")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -50, -11, -10)
+
+[node name="Shy" parent="." unique_id=109265478 instance=ExtResource("20_2nn5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -10, -10)
+
+[node name="Statue" parent="." unique_id=419128831 instance=ExtResource("21_ou4v7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, -10, -10)

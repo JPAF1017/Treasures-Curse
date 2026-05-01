@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://cs2h3qnjp7vfu"]
 
+[ext_resource type="Script" uid="uid://cw3x8r7p2mna1" path="res://menus/ending_good.gd" id="0_script"]
 [ext_resource type="Texture2D" uid="uid://28xwk4m1kie1" path="res://assets/ui/cutscene/Black.png" id="1_nu42i"]
 [ext_resource type="Texture2D" uid="uid://dvshtxtp476o0" path="res://assets/ui/cutscene/good1.png" id="3_7wq7k"]
 [ext_resource type="Texture2D" uid="uid://bemtex51uaj6m" path="res://assets/ui/cutscene/good2.png" id="4_0jxc2"]
@@ -9,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="7_id1es"]
 
 [node name="EndingGood" type="Control" unique_id=2131559063]
+script = ExtResource("0_script")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

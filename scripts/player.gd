@@ -1627,13 +1627,13 @@ func _update_chase_sound(delta: float) -> void:
 		if music_player.playing:
 			_music_resume_position = music_player.get_playback_position()
 			music_player.stop()
-		# Play chase3 for shy, random chase1/2 for others.
-		if _chased_by_shy and _shy_chase_sound != null:
-			chase_player.stream = _shy_chase_sound
-			chase_player.play()
-		elif not _chase_sounds.is_empty():
-			chase_player.stream = _chase_sounds[randi() % _chase_sounds.size()]
-			chase_player.play()
+		# Chase music disabled.
+		#if _chased_by_shy and _shy_chase_sound != null:
+		#	chase_player.stream = _shy_chase_sound
+		#	chase_player.play()
+		#elif not _chase_sounds.is_empty():
+		#	chase_player.stream = _chase_sounds[randi() % _chase_sounds.size()]
+		#	chase_player.play()
 	elif not chased and _is_being_chased:
 		_is_being_chased = false
 		# Fade the chase music out, then resume the background music.
@@ -1644,15 +1644,7 @@ func _update_chase_sound(delta: float) -> void:
 		_chase_fade_tween.tween_callback(_on_chase_fade_finished)
 
 func _on_chase_sound_finished() -> void:
-	# Loop chase music while still being chased.
-	if not _is_being_chased:
-		return
-	if _chased_by_shy and _shy_chase_sound != null:
-		chase_player.stream = _shy_chase_sound
-		chase_player.play()
-	elif not _chase_sounds.is_empty():
-		chase_player.stream = _chase_sounds[randi() % _chase_sounds.size()]
-		chase_player.play()
+	pass # Chase music disabled.
 
 func _on_chase_fade_finished() -> void:
 	chase_player.stop()

@@ -157,8 +157,11 @@ var smash_sound_player: AudioStreamPlayer3D = null
 var smash_sounds: Array = []
 var smash_sound_played_this_attack: bool = false
 
+const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+
 func _ready() -> void:
 	top_level = true
+	_apply_pixel_shading(self)
 	randomize()
 	space_state = get_world_3d().direct_space_state
 	animation_player = _find_animation_player(self)
@@ -704,6 +707,21 @@ func _play_slide_attack_animation() -> void:
 		if animation_player.current_animation != "walk" or not animation_player.is_playing():
 			animation_player.speed_scale = 2.5
 			animation_player.play("walk")
+
+func _apply_pixel_shading(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in mi.get_surface_override_material_count():
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std := mat as StandardMaterial3D
+				if std.albedo_texture != null:
+					var sm := ShaderMaterial.new()
+					sm.shader = _PIXEL_SHADER
+					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					mi.set_surface_override_material(i, sm)
+	for child in node.get_children():
+		_apply_pixel_shading(child)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:

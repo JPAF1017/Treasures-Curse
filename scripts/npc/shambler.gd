@@ -90,9 +90,11 @@ var attack_sounds: Array[AudioStreamPlayer3D] = []
 var attack_sound_triggered: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 
+const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+
 func _ready() -> void:
 	top_level = true
-	_fix_glb_metallic(self)
+	_apply_pixel_shading(self)
 	randomize()
 	floor_stop_on_slope = true
 	floor_snap_length = 0.7
@@ -112,20 +114,20 @@ func _ready() -> void:
 	_play_walk_animation()
 
 
-func _fix_glb_metallic(node: Node) -> void:
+func _apply_pixel_shading(node: Node) -> void:
 	if node is MeshInstance3D:
-		var mesh_inst := node as MeshInstance3D
-		for i in mesh_inst.get_surface_override_material_count():
-			var mat: Material = mesh_inst.get_active_material(i)
+		var mi := node as MeshInstance3D
+		for i in mi.get_surface_override_material_count():
+			var mat := mi.get_active_material(i)
 			if mat is StandardMaterial3D:
-				var std_mat := mat as StandardMaterial3D
-				if std_mat.metallic > 0.0:
-					var fixed := std_mat.duplicate() as StandardMaterial3D
-					fixed.metallic = 0.0
-					fixed.metallic_specular = 0.5
-					mesh_inst.set_surface_override_material(i, fixed)
+				var std := mat as StandardMaterial3D
+				if std.albedo_texture != null:
+					var sm := ShaderMaterial.new()
+					sm.shader = _PIXEL_SHADER
+					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					mi.set_surface_override_material(i, sm)
 	for child in node.get_children():
-		_fix_glb_metallic(child)
+		_apply_pixel_shading(child)
 
 
 func _physics_process(delta: float) -> void:
