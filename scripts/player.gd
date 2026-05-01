@@ -43,6 +43,7 @@ const HOTBAR_SLOT_COUNT = 5
 const HOTBAR_SELECTED_SCALE = 1.18
 const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
+const VOICE_CHAT_SCRIPT: Script = preload("res://scripts/multiplayer/voice_chat.gd")
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
 const SMOKE_ITEM_SCRIPT: Script = preload("res://scripts/items/smoke.gd")
@@ -231,6 +232,13 @@ var hotbar_font: FontFile = null
 
 #function on startup
 func _ready():
+	# Attach proximity voice chat to every player instance in multiplayer sessions.
+	# VoiceChat handles authority vs. remote logic internally.
+	if multiplayer.has_multiplayer_peer():
+		var vc: Node = VOICE_CHAT_SCRIPT.new()
+		vc.name = "VoiceChat"
+		add_child(vc)
+
 	# In multiplayer, only the authority (local) player gets full HUD/camera/audio setup.
 	if not is_multiplayer_authority():
 		if camera != null:
