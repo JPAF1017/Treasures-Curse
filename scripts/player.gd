@@ -137,6 +137,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var chase_player: AudioStreamPlayer = $ChasePlayer
 @onready var swing_player: AudioStreamPlayer = $SwingPlayer
 @onready var hud_control: Control = $CanvasLayer/Control
+@onready var charge_ring: Control = $CanvasLayer/Control/Crosshair/ChargeRing
 @onready var loading_control: Control = $CanvasLayer/Loading
 @onready var loading_label1: Label = $CanvasLayer/Loading/Label
 @onready var loading_label2: Label = $CanvasLayer/Loading/Label2
@@ -635,6 +636,7 @@ func _physics_process(delta):
 	_update_pickup_prompt_visibility()
 	_refresh_selected_item_state()
 	_update_hotbar_windup_indicator()
+	_update_charge_ring()
 	_update_stamina_ui()
 #------------------------------------------------------
 #wasd direction input and other physics
@@ -1083,6 +1085,7 @@ func _select_hotbar_slot(slot_index: int) -> void:
 
 	_refresh_selected_item_state()
 	_update_hotbar_windup_indicator()
+	_update_charge_ring()
 	if not _throw_hint_dismissed:
 		var item := hotbar_item_models[selected_hotbar_slot_index] if selected_hotbar_slot_index < hotbar_item_models.size() else null
 		var has_item := item != null and is_instance_valid(item)
@@ -1733,6 +1736,16 @@ func _setup_health_palette_colors() -> void:
 		return
 
 	health_color_normal = _get_palette_color(palette_image, HEALTH_COLOR_NORMAL_INDEX, health_color_normal)
+
+func _update_charge_ring() -> void:
+	if charge_ring == null:
+		return
+	var selected_item := _get_selected_primary_item()
+	if selected_item != null and selected_item.has_method("is_swing_windup_active") and bool(selected_item.call("is_swing_windup_active")):
+		charge_ring.set("value", float(selected_item.call("get_swing_windup_percent")))
+	else:
+		charge_ring.set("value", 0.0)
+
 
 func _update_hotbar_windup_indicator() -> void:
 	for i in hotbar_item_icons.size():

@@ -18,10 +18,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Black" type="Sprite2D" parent="." unique_id=202645738]
-position = Vector2(640, 480.00003)
-scale = Vector2(2.4999998, 1.8750001)
+[node name="Black" type="TextureRect" parent="." unique_id=202645738]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("1_nu42i")
+expand_mode = 1
 
 [node name="Images" type="Control" parent="." unique_id=328065538]
 layout_mode = 1

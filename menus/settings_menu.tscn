@@ -124,26 +124,6 @@ theme_override_fonts/font = ExtResource("3_f368g")
 theme_override_font_sizes/font_size = 32
 button_pressed = true
 
-[node name="PSXRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000013]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="PSXLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/PSXRow" unique_id=100000014]
-custom_minimum_size = Vector2(210, 0)
-layout_mode = 2
-theme_override_fonts/font = ExtResource("3_f368g")
-theme_override_font_sizes/font_size = 32
-text = "PSX Filter"
-
-[node name="PSXCheck" type="CheckBox" parent="Panel/MarginContainer/VBoxContainer/PSXRow" unique_id=100000015]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_fonts/font = ExtResource("3_f368g")
-theme_override_font_sizes/font_size = 32
-button_pressed = true
-
 [node name="FullscreenRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000021]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
@@ -162,6 +142,36 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_fonts/font = ExtResource("3_f368g")
 theme_override_font_sizes/font_size = 32
+
+[node name="AspectRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000024]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AspectLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/AspectRow" unique_id=100000025]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "Aspect Ratio"
+
+[node name="AspectOption" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/AspectRow" unique_id=100000026]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 28
+item_count = 5
+popup/item_0/text = "Auto"
+popup/item_0/id = 0
+popup/item_1/text = "16:9"
+popup/item_1/id = 1
+popup/item_2/text = "16:10"
+popup/item_2/id = 2
+popup/item_3/text = "4:3"
+popup/item_3/id = 3
+popup/item_4/text = "21:9"
+popup/item_4/id = 4
 
 [node name="SeedRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000018]
 custom_minimum_size = Vector2(0, 50)

@@ -13,12 +13,18 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_startmenu")
 
-[node name="Background" type="Sprite2D" parent="." unique_id=1961021051]
+[node name="Background" type="TextureRect" parent="." unique_id=1961021051]
 modulate = Color(0.4506483, 0.4506483, 0.45064825, 1)
 texture_filter = 1
-position = Vector2(642.8571, 480)
-scale = Vector2(0.53571427, 0.53571427)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("2_w3tic")
+expand_mode = 1
 
 [node name="Button" type="Control" parent="." unique_id=182493112]
 texture_filter = 1

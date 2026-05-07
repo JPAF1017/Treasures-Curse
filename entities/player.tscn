@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ds38umkop3txm"]
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
+[ext_resource type="Script" path="res://scripts/ui/charge_ring.gd" id="99_crng"]
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
@@ -447,6 +448,16 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("6_qsoyl")
 region_rect = Rect2(24, 24, 16, 16)
+
+[node name="ChargeRing" type="Control" parent="CanvasLayer/Control/Crosshair" unique_id=999990001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("99_crng")
 
 [node name="Pickup" type="Control" parent="CanvasLayer/Control" unique_id=20051029]
 visible = false
