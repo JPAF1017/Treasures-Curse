@@ -23,7 +23,8 @@ tonemap_mode = 2
 sdfgi_enabled = true
 glow_enabled = true
 volumetric_fog_enabled = true
-volumetric_fog_albedo = Color(0, 0, 0, 1)
+volumetric_fog_density = 0.02
+volumetric_fog_albedo = Color(0.05, 0.04, 0.03, 1)
 
 [node name="test map" type="Node3D" unique_id=1262865494]
 

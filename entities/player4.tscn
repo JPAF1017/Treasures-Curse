@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dp6l8ou3r1an4"]
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_seuas"]
-[ext_resource type="Shader" uid="uid://bmag55qj360ls" path="res://entities/filter.gdshader" id="2_uykod"]
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="3_utv4u"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="4_ata78"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="5_j1ckg"]
@@ -40,14 +39,10 @@ height = 1.1181335
 radius = 2.0
 height = 12.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_fruft"]
-shader = ExtResource("2_uykod")
-
 [node name="player" type="CharacterBody3D" unique_id=1588251422 groups=["player"]]
 transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 3
 script = ExtResource("1_seuas")
-debug_attack_overlap_logs = false
 
 [node name="Attack" type="Area3D" parent="." unique_id=756317047]
 collision_layer = 0
@@ -81,30 +76,20 @@ collision_mask = 2
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Head/playerCamera/Vision" unique_id=1577182091]
 shape = SubResource("CapsuleShape3D_vision")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=2050392962]
-light_energy = 0.0
-light_indirect_energy = 0.0
+[node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=943709165]
+light_energy = 8.0
 light_bake_mode = 0
-light_volumetric_fog_energy = 0.0
+light_cull_mask = 4294967293
+light_volumetric_fog_energy = 3.0
 spot_range = 43.3203
 spot_attenuation = 0.5
-spot_angle = 55.0
+spot_angle = 24.685345
 spot_angle_attenuation = 0.8
 
 [node name="player" parent="." unique_id=1414178216 instance=ExtResource("3_utv4u")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2099344318]
-
-[node name="Filter" type="ColorRect" parent="CanvasLayer" unique_id=63140070]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-material = SubResource("ShaderMaterial_fruft")
 
 [node name="Control" type="Control" parent="CanvasLayer" unique_id=2102173205]
 layout_mode = 3

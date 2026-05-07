@@ -97,7 +97,7 @@ offset_right = 444.0
 offset_bottom = 355.0
 theme_override_fonts/font = ExtResource("6_t0cc7")
 theme_override_font_sizes/font_size = 25
-text = "This place is your purgatory, built from every bad thing you ever did. A voice finds you in the dark. It calls itself the Warden, and it tells you the rules. Somewhere in this dungeon are gold treasures. Collect them all, bring them to the final door, and you may pass."
+text = "This place was made from you, shaped by every sin you never answered for. Then a voice rises from the dark. It calls itself the Warden, and it tells you what must be done. There is a gate here, a way through to whatever waits beyond. And there are treasures, more wealth than you ever managed to steal in your life, glittering and patient, as though they have been waiting specifically for you."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -125,7 +125,7 @@ offset_right = 444.0
 offset_bottom = 355.0
 theme_override_fonts/font = ExtResource("6_t0cc7")
 theme_override_font_sizes/font_size = 25
-text = "Find the relics. Reach the top. Find the door. And maybe, just maybe, you will finally get what you deserve."
+text = "Reach the top. Find the door. Whatever you do along the way is your own choice. And maybe, just maybe, you will finally get what you deserve."
 horizontal_alignment = 1
 autowrap_mode = 3
 

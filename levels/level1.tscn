@@ -17,7 +17,6 @@
 [ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="13_ou4v7"]
 [ext_resource type="PackedScene" uid="uid://bdgqymx6x75hn" path="res://entities/knight.tscn" id="16_l7nqg"]
 [ext_resource type="PackedScene" uid="uid://dmh06o2y4u65n" path="res://assets/rooms/spawn_shambler.tscn" id="16_ou4v7"]
-[ext_resource type="PackedScene" uid="uid://b84dvtkhuaktk" path="res://entities/shy.tscn" id="20_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://b3gcdu8ssg3lu" path="res://entities/statue.tscn" id="21_ou4v7"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
@@ -44,9 +43,10 @@ glow_enabled = true
 fog_enabled = true
 fog_light_color = Color(0.04, 0.03, 0.02, 1)
 fog_density = 0.07
-volumetric_fog_density = 0.01
-volumetric_fog_albedo = Color(0.34781712, 0.3478169, 0.34781685, 1)
-volumetric_fog_emission = Color(0.24477637, 0.24477643, 0.24477634, 1)
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.02
+volumetric_fog_albedo = Color(0.05, 0.04, 0.03, 1)
+volumetric_fog_emission = Color(0.0, 0.0, 0.0, 1)
 
 [node name="test map" type="Node3D" unique_id=1262865494]
 script = ExtResource("99_spawner")
@@ -135,9 +135,6 @@ spawn_path = NodePath("..")
 
 [node name="Knight" parent="." unique_id=1412719762 instance=ExtResource("16_l7nqg")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -50, -11, -10)
-
-[node name="Shy" parent="." unique_id=109265478 instance=ExtResource("20_2nn5w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -10, -10)
 
 [node name="Statue" parent="." unique_id=419128831 instance=ExtResource("21_ou4v7")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, -10, -10)
