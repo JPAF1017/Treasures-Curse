@@ -1,7 +1,7 @@
 extends RigidBody3D
 
 const gem_key3_SCENE_PATH := "res://assets/items/Gem_key3.tscn"
-const gem_key3_ITEM_ICON: Texture2D = preload("res://assets/ui/gem.png")
+const gem_key3_ITEM_ICON: Texture2D = preload("res://assets/ui/gem3.png")
 const gem_key3_MODEL_SCENE: PackedScene = preload("res://assets/items assets/yellow_gem.glb")
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 

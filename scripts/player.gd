@@ -155,6 +155,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var use_hint_control: Control = $CanvasLayer/Control/Use
 @onready var attack_hint_control: Control = $CanvasLayer/Control/Attack
 @onready var grabbed_hint_control: Control = $CanvasLayer/Control/Grabbed
+@onready var dark_adapt_light: OmniLight3D = $Head/DarkAdaptLight
 
 var _game_started: bool = false
 var cutscene_active: bool = false
@@ -217,6 +218,17 @@ var _pickup_vis_timer: float = 0.0
 var _cached_pickup_candidate: RigidBody3D = null
 var _place_item_control: Control = null
 var _warning2_control: Control = null
+
+const DARK_ADAPT_MAX_ENERGY := 1.0
+const DARK_ADAPT_IN_SPEED := 0.07
+const DARK_ADAPT_OUT_SPEED := 2.5
+const DARK_ADAPT_BRIGHT_DIST := 10.0
+const DARK_ADAPT_SCAN_INTERVAL := 0.5
+var _dark_adapt_energy: float = 0.0
+var _dark_adapt_near_light: bool = false
+var _dark_adapt_scan_timer: float = 0.0
+
+var _grab_escape_immune_timer: float = 0.0
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
@@ -490,6 +502,7 @@ func _physics_process(delta):
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
 	stun_timer = max(stun_timer - delta, 0.0)
+	_grab_escape_immune_timer = max(_grab_escape_immune_timer - delta, 0.0)
 	_pickup_vis_timer = max(_pickup_vis_timer - delta, 0.0)
 	if movement_hint_control != null and movement_hint_control.visible:
 		_movement_hint_timer -= delta
@@ -760,6 +773,7 @@ func _physics_process(delta):
 	_try_auto_equip_item()
 	_log_player_position()
 	_log_attack_overlap_snapshot()
+	_update_dark_adapt(delta)
 	_update_footsteps()
 	_update_chase_sound(delta)
 
@@ -837,6 +851,12 @@ func _log_attack_overlap_snapshot() -> void:
 		overlapping_bodies.size(),
 		str(knight_hurtbox_overlap),
 	])
+
+func set_grab_escape_immune(duration: float) -> void:
+	_grab_escape_immune_timer = max(_grab_escape_immune_timer, duration)
+
+func is_grab_escape_immune() -> bool:
+	return _grab_escape_immune_timer > 0.0
 
 func set_movement_locked_by(locker: Node, locked: bool) -> void:
 	if locker == null:
@@ -1586,6 +1606,27 @@ func _on_item_wheel_slot_switched() -> void:
 		_item_wheel_hint_active = false
 		if item_wheel_control != null:
 			item_wheel_control.visible = false
+
+func _update_dark_adapt(delta: float) -> void:
+	if dark_adapt_light == null:
+		return
+	_dark_adapt_scan_timer -= delta
+	if _dark_adapt_scan_timer <= 0.0:
+		_dark_adapt_scan_timer = DARK_ADAPT_SCAN_INTERVAL
+		_dark_adapt_near_light = _check_near_light()
+	var target := 0.0 if _dark_adapt_near_light else DARK_ADAPT_MAX_ENERGY
+	var speed := DARK_ADAPT_OUT_SPEED if _dark_adapt_near_light else DARK_ADAPT_IN_SPEED
+	_dark_adapt_energy = move_toward(_dark_adapt_energy, target, speed * delta)
+	dark_adapt_light.light_energy = _dark_adapt_energy
+
+func _check_near_light() -> bool:
+	var player_pos := global_position
+	for light: OmniLight3D in get_tree().root.find_children("*", "OmniLight3D", true, false):
+		if light == dark_adapt_light:
+			continue
+		if light.light_energy > 0.1 and light.global_position.distance_to(player_pos) < DARK_ADAPT_BRIGHT_DIST:
+			return true
+	return false
 
 func _update_footsteps() -> void:
 	if animation_player == null or not is_on_floor():

@@ -425,6 +425,8 @@ func _update_attack_range_state(delta: float) -> void:
 	if _has_valid_grabbed_player() and Input.is_action_just_pressed("ui_accept"):
 		grab_escape_jump_count += 1
 		if grab_escape_jump_count >= GRAB_ESCAPE_REQUIRED_JUMPS:
+			if grabbed_player.has_method("set_grab_escape_immune"):
+				grabbed_player.call("set_grab_escape_immune", 2.0)
 			_interrupt_grab()
 
 	if grabbed_player == null and grab_reacquire_timer <= 0.0 and _has_valid_attack_range_player() and _can_grab_player_on_ground(attack_range_player) and _can_lock_player(attack_range_player):
@@ -756,6 +758,8 @@ func _lock_grabbed_player(locked: bool) -> void:
 
 func _can_lock_player(player: CharacterBody3D) -> bool:
 	if player == null:
+		return false
+	if player.has_method("is_grab_escape_immune") and bool(player.call("is_grab_escape_immune")):
 		return false
 	if not player.has_method("is_movement_locked_by_other"):
 		return true

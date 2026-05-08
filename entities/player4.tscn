@@ -87,6 +87,13 @@ spot_attenuation = 0.5
 spot_angle = 24.685345
 spot_angle_attenuation = 0.8
 
+[node name="DarkAdaptLight" type="OmniLight3D" parent="Head" unique_id=999700004]
+light_color = Color(0.78, 0.68, 0.5, 1)
+light_energy = 0.0
+light_bake_mode = 0
+omni_range = 3.5
+omni_attenuation = 2.0
+
 [node name="player" parent="." unique_id=1414178216 instance=ExtResource("3_utv4u")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, -1.697, 0)
 

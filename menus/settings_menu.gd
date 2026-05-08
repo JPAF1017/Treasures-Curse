@@ -1,5 +1,7 @@
 extends Control
 
+const CORRIDOR_SCENE_PATH := "res://assets/rooms/corridor.tscn"
+
 var seed_locked: bool = false
 
 @onready var volume_slider: HSlider = $Panel/MarginContainer/VBoxContainer/VolumeRow/VolumeSlider
@@ -9,6 +11,8 @@ var seed_locked: bool = false
 @onready var aspect_option: OptionButton = $Panel/MarginContainer/VBoxContainer/AspectRow/AspectOption
 @onready var seed_input: LineEdit = $Panel/MarginContainer/VBoxContainer/SeedRow/SeedInput
 @onready var back_button: Button = $Panel/MarginContainer/VBoxContainer/BackRow/Back
+@onready var unstuck_row: HBoxContainer = $Panel/MarginContainer/VBoxContainer/UnstuckRow
+@onready var unstuck_button: Button = $Panel/MarginContainer/VBoxContainer/UnstuckRow/Unstuck
 
 
 func _ready() -> void:
@@ -22,6 +26,7 @@ func _ready() -> void:
 	if seed_locked:
 		seed_input.editable = false
 		seed_input.placeholder_text = "Locked in-game"
+		unstuck_row.visible = true
 
 	volume_slider.value_changed.connect(_on_volume_changed)
 	vsync_check.toggled.connect(_on_vsync_toggled)
@@ -29,6 +34,7 @@ func _ready() -> void:
 	aspect_option.item_selected.connect(_on_aspect_selected)
 	seed_input.text_changed.connect(_on_seed_changed)
 	back_button.pressed.connect(_on_back_pressed)
+	unstuck_button.pressed.connect(_on_unstuck_pressed)
 
 
 func _on_volume_changed(value: float) -> void:
@@ -57,3 +63,56 @@ func _on_seed_changed(new_text: String) -> void:
 
 func _on_back_pressed() -> void:
 	queue_free()
+
+
+func _on_unstuck_pressed() -> void:
+	var player := _find_local_player()
+	if player == null:
+		return
+
+	var nearest := _find_nearest_corridor(player.global_position)
+	if nearest != null:
+		player.global_position = nearest.global_position + Vector3(0, 1.5, 0)
+		if player.has_method("_is_movement_locked"):
+			for src in player.movement_lock_sources.duplicate():
+				if src != null and is_instance_valid(src) and src.has_method("_interrupt_grab"):
+					src.call("_interrupt_grab", false)
+		player.velocity = Vector3.ZERO
+
+	var pause_menu := get_parent()
+	get_tree().paused = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if is_instance_valid(pause_menu):
+		pause_menu.queue_free()
+	else:
+		queue_free()
+
+
+func _find_local_player() -> CharacterBody3D:
+	for p in get_tree().get_nodes_in_group("player"):
+		if p is CharacterBody3D:
+			if not multiplayer.has_multiplayer_peer() or p.is_multiplayer_authority():
+				return p as CharacterBody3D
+	return null
+
+
+func _find_nearest_corridor(from_pos: Vector3) -> Node3D:
+	var corridors: Array[Node3D] = []
+	_collect_corridors(get_tree().root, corridors)
+	if corridors.is_empty():
+		return null
+	var nearest: Node3D = corridors[0]
+	var nearest_dist := from_pos.distance_squared_to(nearest.global_position)
+	for c in corridors:
+		var d := from_pos.distance_squared_to(c.global_position)
+		if d < nearest_dist:
+			nearest_dist = d
+			nearest = c
+	return nearest
+
+
+func _collect_corridors(node: Node, result: Array[Node3D]) -> void:
+	if node is Node3D and (node as Node3D).scene_file_path == CORRIDOR_SCENE_PATH:
+		result.append(node as Node3D)
+	for child in node.get_children():
+		_collect_corridors(child, result)
