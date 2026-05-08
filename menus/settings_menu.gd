@@ -13,6 +13,7 @@ var seed_locked: bool = false
 @onready var back_button: Button = $Panel/MarginContainer/VBoxContainer/BackRow/Back
 @onready var unstuck_row: HBoxContainer = $Panel/MarginContainer/VBoxContainer/UnstuckRow
 @onready var unstuck_button: Button = $Panel/MarginContainer/VBoxContainer/UnstuckRow/Unstuck
+@onready var panel: Panel = $Panel
 
 
 func _ready() -> void:
@@ -27,6 +28,8 @@ func _ready() -> void:
 		seed_input.editable = false
 		seed_input.placeholder_text = "Locked in-game"
 		unstuck_row.visible = true
+		panel.offset_top -= 40.0
+		panel.offset_bottom += 40.0
 
 	volume_slider.value_changed.connect(_on_volume_changed)
 	vsync_check.toggled.connect(_on_vsync_toggled)
@@ -72,7 +75,7 @@ func _on_unstuck_pressed() -> void:
 
 	var nearest := _find_nearest_corridor(player.global_position)
 	if nearest != null:
-		player.global_position = nearest.global_position + Vector3(0, 1.5, 0)
+		player.global_position = Vector3(nearest.global_position.x, player.global_position.y, nearest.global_position.z)
 		if player.has_method("_is_movement_locked"):
 			for src in player.movement_lock_sources.duplicate():
 				if src != null and is_instance_valid(src) and src.has_method("_interrupt_grab"):
@@ -102,9 +105,10 @@ func _find_nearest_corridor(from_pos: Vector3) -> Node3D:
 	if corridors.is_empty():
 		return null
 	var nearest: Node3D = corridors[0]
-	var nearest_dist := from_pos.distance_squared_to(nearest.global_position)
+	var from_xz := Vector2(from_pos.x, from_pos.z)
+	var nearest_dist := from_xz.distance_squared_to(Vector2(nearest.global_position.x, nearest.global_position.z))
 	for c in corridors:
-		var d := from_pos.distance_squared_to(c.global_position)
+		var d := from_xz.distance_squared_to(Vector2(c.global_position.x, c.global_position.z))
 		if d < nearest_dist:
 			nearest_dist = d
 			nearest = c

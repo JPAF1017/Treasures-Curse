@@ -1,6 +1,7 @@
 extends Node
 
 signal psx_filter_changed(enabled: bool)
+signal aspect_ratio_changed(index: int)
 
 const SETTINGS_PATH := "user://settings.cfg"
 
@@ -52,6 +53,7 @@ func set_generation_seed(value: int) -> void:
 func set_aspect_ratio(index: int) -> void:
 	aspect_ratio = index
 	_apply_aspect_ratio()
+	aspect_ratio_changed.emit(index)
 	_save()
 
 

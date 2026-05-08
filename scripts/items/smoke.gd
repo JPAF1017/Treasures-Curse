@@ -12,6 +12,9 @@ const ITEM_DROP_FORWARD_SPEED := 2.0
 const ITEM_DROP_UPWARD_SPEED := 0.5
 const THROW_FORWARD_SPEED := 9.0
 const THROW_UPWARD_SPEED := 5.0
+const GLASS_SOUND: AudioStream = preload("res://sounds/smoke/glass.mp3")
+const SMOKE_SOUND: AudioStream = preload("res://sounds/smoke/smoke.mp3")
+
 const SMOKE_PHYSICS_COLLISION_LAYER := 3
 const SMOKE_PHYSICS_COLLISION_MASK := 3
 const SMOKE_PHYSICS_MASS := 0.1
@@ -149,8 +152,26 @@ func _on_smoke_hit_body(body: Node3D) -> void:
 	_is_thrown = false
 	if body_entered.is_connected(_on_smoke_hit_body):
 		body_entered.disconnect(_on_smoke_hit_body)
+	_play_sound_at_position(GLASS_SOUND, global_position)
 	_spawn_smoke_effect()
 	queue_free()
+
+
+func _play_sound_at_position(stream: AudioStream, pos: Vector3) -> void:
+	var world_root: Node = null
+	var tree := get_tree()
+	if tree:
+		world_root = tree.current_scene
+	if world_root == null:
+		world_root = get_parent()
+	if world_root == null:
+		return
+	var player := AudioStreamPlayer3D.new()
+	world_root.add_child(player)
+	player.stream = stream
+	player.global_position = pos
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 func _spawn_smoke_effect() -> void:

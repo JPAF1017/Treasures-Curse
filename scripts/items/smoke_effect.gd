@@ -1,5 +1,7 @@
 extends Node3D
 
+const SMOKE_SOUND: AudioStream = preload("res://sounds/smoke/smoke.mp3")
+
 ## Dissolve range: -1.0 = fully hidden, 1.0 = fully visible
 const DISSOLVE_IN_SPEED := 1
 const DISSOLVE_OUT_SPEED := 1.2
@@ -55,6 +57,11 @@ func activate() -> void:
 	_state = 1
 	if not active_effects.has(self):
 		active_effects.append(self)
+	var audio := AudioStreamPlayer3D.new()
+	add_child(audio)
+	audio.stream = SMOKE_SOUND
+	audio.finished.connect(audio.queue_free)
+	audio.play()
 
 
 func _notification(what: int) -> void:

@@ -7,6 +7,9 @@ const TEST_MAP_PATH := "res://levels/level1.tscn"
 @onready var multiplayer_button: Button = $Button/Multiplayer
 @onready var settings_button: Button = $Button/Settings
 @onready var button_container: Control = $Button
+@onready var bg_default: TextureRect = $Background
+@onready var bg_common: TextureRect = $CommonBackground
+@onready var bg_wide: TextureRect = $WideBackground
 
 var _map_instance: Node = null
 
@@ -16,6 +19,15 @@ func _ready() -> void:
 	quit_button.pressed.connect(_on_quit_pressed)
 	multiplayer_button.pressed.connect(_on_multiplayer_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
+	SettingsManager.aspect_ratio_changed.connect(_apply_background)
+	_apply_background(SettingsManager.aspect_ratio)
+
+
+func _apply_background(index: int) -> void:
+	# 3 = 4:3 → dedicated background; 4 = 21:9 → wide; everything else → common
+	bg_default.visible = index == 3
+	bg_wide.visible = index == 4
+	bg_common.visible = index != 3 and index != 4
 
 
 func _on_quit_pressed() -> void:

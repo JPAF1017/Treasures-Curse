@@ -195,17 +195,17 @@ placeholder_text = "Random"
 max_length = 19
 
 [node name="UnstuckRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000030]
+visible = false
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 alignment = 1
-visible = false
 
 [node name="Unstuck" type="Button" parent="Panel/MarginContainer/VBoxContainer/UnstuckRow" unique_id=100000031]
 texture_filter = 1
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_f368g")
 theme_override_font_sizes/font_size = 40
-theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
 text = "Unstuck (teleport to corridor)"
 
 [node name="BackRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000016]

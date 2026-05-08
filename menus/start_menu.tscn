@@ -37,6 +37,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_hys1b")
+expand_mode = 1
+stretch_mode = 4
 
 [node name="WideBackground" type="TextureRect" parent="." unique_id=943339778]
 visible = false
@@ -47,6 +49,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("4_b72g3")
+expand_mode = 1
+stretch_mode = 4
 
 [node name="Button" type="Control" parent="." unique_id=182493112]
 texture_filter = 1
