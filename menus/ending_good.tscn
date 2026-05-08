@@ -10,13 +10,13 @@
 [ext_resource type="Texture2D" uid="uid://uxt61q0hojbi" path="res://assets/ui/left.png" id="7_id1es"]
 
 [node name="EndingGood" type="Control" unique_id=2131559063]
-script = ExtResource("0_script")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("0_script")
 
 [node name="Black" type="TextureRect" parent="." unique_id=202645738]
 layout_mode = 1

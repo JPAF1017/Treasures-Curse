@@ -169,9 +169,11 @@ func get_hotbar_icon_texture() -> Texture2D:
 
 
 func get_hotbar_icon_modulate(alpha: float) -> Color:
-	var durability_percent := clampf(usable_time_left / MAX_USABLE_TIME, 0.0, 1.0)
-	var dur_color := item_durability_color_start.lerp(item_durability_color_end, durability_percent)
-	return Color(dur_color.r, dur_color.g, dur_color.b, alpha)
+	return Color(1.0, 1.0, 1.0, alpha)
+
+
+func get_hotbar_durability_percent() -> float:
+	return clampf(usable_time_left / MAX_USABLE_TIME, 0.0, 1.0)
 
 
 func can_start_primary_action() -> bool:

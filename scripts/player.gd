@@ -227,6 +227,7 @@ var smoke_overlay: TextureRect = null
 var hotbar_slots: Array[NinePatchRect] = []
 var hotbar_slot_base_scales: Array[Vector2] = []
 var hotbar_item_icons: Array[TextureRect] = []
+var hotbar_durability_bars: Array[ColorRect] = []
 var hotbar_item_models: Array[Node3D] = []
 var selected_hotbar_slot_index: int = 0
 var hotbar_font: FontFile = null
@@ -1047,12 +1048,27 @@ func _setup_hotbar_ui() -> void:
 	]
 	hotbar_slot_base_scales.clear()
 	hotbar_item_icons.clear()
+	hotbar_durability_bars.clear()
 	hotbar_item_models = []
 
 	for slot in hotbar_slots:
 		slot.pivot_offset = slot.size * 0.5
 		hotbar_slot_base_scales.append(slot.scale)
 		hotbar_item_models.append(null)
+		# Durability bar — behind the item icon, sized manually each frame
+		var dur_bar := slot.get_node_or_null("DurabilityBar") as ColorRect
+		if dur_bar == null:
+			dur_bar = ColorRect.new()
+			dur_bar.name = "DurabilityBar"
+			dur_bar.color = Color(1.0, 1.0, 1.0, 0.45)
+			dur_bar.set_anchor(SIDE_LEFT, 0.0)
+			dur_bar.set_anchor(SIDE_TOP, 0.0)
+			dur_bar.set_anchor(SIDE_RIGHT, 0.0)
+			dur_bar.set_anchor(SIDE_BOTTOM, 0.0)
+			dur_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(dur_bar)
+		dur_bar.visible = false
+		hotbar_durability_bars.append(dur_bar)
 		var item_icon := slot.get_node_or_null("ItemIcon") as TextureRect
 		if item_icon == null:
 			item_icon = TextureRect.new()
@@ -1754,14 +1770,23 @@ func _update_hotbar_windup_indicator() -> void:
 			continue
 
 		var alpha := 1.0 if i == selected_hotbar_slot_index else 0.85
-		var icon_color := Color(1.0, 1.0, 1.0, alpha)
+		item_icon.modulate = Color(1.0, 1.0, 1.0, alpha)
 
-		if i == selected_hotbar_slot_index:
-			var selected_item := _get_selected_primary_item()
-			if selected_item != null:
-				icon_color = selected_item.call("get_hotbar_icon_modulate", alpha)
-
-		item_icon.modulate = icon_color
+		# Durability bar — fill from bottom, shrink from top
+		var dur_bar: ColorRect = hotbar_durability_bars[i] if i < hotbar_durability_bars.size() else null
+		if dur_bar == null:
+			continue
+		var item_model := hotbar_item_models[i] if i < hotbar_item_models.size() else null
+		if item_model != null and is_instance_valid(item_model) and item_model.has_method("get_hotbar_durability_percent"):
+			var pct := clampf(item_model.call("get_hotbar_durability_percent"), 0.0, 1.0)
+			var slot := hotbar_slots[i]
+			var slot_size := slot.size
+			var bar_h := slot_size.y * pct
+			dur_bar.position = Vector2(0.0, slot_size.y - bar_h)
+			dur_bar.size = Vector2(slot_size.x, bar_h)
+			dur_bar.visible = pct > 0.0
+		else:
+			dur_bar.visible = false
 
 func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Color) -> Color:
 	if one_based_index <= 0:

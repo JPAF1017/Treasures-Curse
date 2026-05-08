@@ -2,7 +2,9 @@
 
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="2_1t8nw"]
 [ext_resource type="Texture2D" uid="uid://bq5eqbi6tkd73" path="res://assets/ui/background.png" id="2_w3tic"]
+[ext_resource type="Texture2D" uid="uid://bhled6vbsbluh" path="res://assets/ui/common.png" id="3_hys1b"]
 [ext_resource type="Script" uid="uid://kbb03ylb3yud" path="res://menus/start_menu.gd" id="3_startmenu"]
+[ext_resource type="Texture2D" uid="uid://dhpkyqbjew0qq" path="res://assets/ui/wide.png" id="4_b72g3"]
 
 [node name="StartMenu" type="Control" unique_id=2131559063]
 layout_mode = 3
@@ -25,6 +27,26 @@ grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("2_w3tic")
 expand_mode = 1
+
+[node name="CommonBackground" type="TextureRect" parent="." unique_id=1301572040]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_hys1b")
+
+[node name="WideBackground" type="TextureRect" parent="." unique_id=943339778]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_b72g3")
 
 [node name="Button" type="Control" parent="." unique_id=182493112]
 texture_filter = 1

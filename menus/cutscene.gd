@@ -1,7 +1,12 @@
 extends Control
 
+const SOUND_PATHS: Array[String] = [
+	"res://sounds/cutscene/cutscene1.mp3",
+	"res://sounds/cutscene/cutscene2.mp3",
+	"res://sounds/cutscene/cutscene3.mp3",
+	"res://sounds/cutscene/cutscene4.mp3",
+]
 const MUSIC_PATH := "res://sounds/menu/cutscene.mp3"
-const SLIDE_DURATIONS: Array[float] = [18.0, 18.0, 15.0, 15.0]
 const FADE_DURATION := 1.5
 
 @onready var _image1: Sprite2D = $"Images/1"
@@ -13,9 +18,9 @@ const FADE_DURATION := 1.5
 @onready var _label3: Label = $Texts/Label3
 @onready var _label4: Label = $Texts/Label4
 
+var _audio_player: AudioStreamPlayer = null
 var _music_player: AudioStreamPlayer = null
 var _current_slide: int = 0
-var _slide_timer: float = 0.0
 var _fading_in: bool = false
 var _fading_out: bool = false
 var _fade_timer: float = 0.0
@@ -45,15 +50,25 @@ func _ready() -> void:
 	_label1.modulate.a = 0.0
 	_fading_in = true
 	_fade_timer = 0.0
-	_slide_timer = SLIDE_DURATIONS[0]
 
-	# Start music — must also run while paused
+	# Start background music — loops for the whole cutscene
 	_music_player = AudioStreamPlayer.new()
 	_music_player.process_mode = PROCESS_MODE_ALWAYS
-	_music_player.stream = load(MUSIC_PATH)
-	_music_player.volume_db = -5.0
+	var music_stream := load(MUSIC_PATH) as AudioStream
+	if music_stream is AudioStreamMP3:
+		(music_stream as AudioStreamMP3).loop = true
+	_music_player.stream = music_stream
+	_music_player.volume_db = -10.0
 	add_child(_music_player)
 	_music_player.play()
+
+	# Start per-slide audio — must also run while paused
+	_audio_player = AudioStreamPlayer.new()
+	_audio_player.process_mode = PROCESS_MODE_ALWAYS
+	_audio_player.volume_db = -5.0
+	add_child(_audio_player)
+	_audio_player.finished.connect(_on_audio_finished)
+	_play_slide_audio(0)
 
 	# Hide player loading screen so it doesn't show through the cutscene
 	for p in get_tree().get_nodes_in_group("player"):
@@ -85,7 +100,7 @@ func _process(delta: float) -> void:
 		if t >= 1.0:
 			_fading_in = false
 			_fade_timer = 0.0
-		return  # pause slide countdown while fading in
+		return
 
 	if _fading_out:
 		_fade_timer += delta
@@ -95,11 +110,16 @@ func _process(delta: float) -> void:
 		if t <= 0.0:
 			_fading_out = false
 			_finish()
-		return  # pause slide countdown while fading out
+		return
 
-	_slide_timer -= delta
-	if _slide_timer <= 0.0:
-		_advance_slide()
+
+func _play_slide_audio(index: int) -> void:
+	_audio_player.stream = load(SOUND_PATHS[index])
+	_audio_player.play()
+
+
+func _on_audio_finished() -> void:
+	_advance_slide()
 
 
 func _advance_slide() -> void:
@@ -118,7 +138,7 @@ func _show_slide(index: int) -> void:
 		_images[i].modulate.a = 1.0
 		_labels[i].modulate.a = 1.0
 	_current_slide = index
-	_slide_timer = SLIDE_DURATIONS[index]
+	_play_slide_audio(index)
 
 
 func _input(event: InputEvent) -> void:
@@ -145,6 +165,7 @@ func _input(event: InputEvent) -> void:
 		_fading_out = false
 		_finish()
 	else:
+		_audio_player.stop()
 		_advance_slide()
 
 
@@ -154,6 +175,8 @@ func _finish() -> void:
 	_done = true
 	if is_instance_valid(_music_player):
 		_music_player.stop()
+	if is_instance_valid(_audio_player):
+		_audio_player.stop()
 	# Restore all audio streams that were paused at cutscene start
 	for node in _paused_streams_3d:
 		if is_instance_valid(node):

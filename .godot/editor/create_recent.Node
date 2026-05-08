@@ -1,3 +1,4 @@
+TextureRect
 SpotLight3D
 CollisionShape3D
 Label
@@ -11,5 +12,3 @@ Node3D
 MenuButton
 NinePatchRect
 VideoStreamPlayer
-DungeonRoom3D
-CollisionPolygon3D
