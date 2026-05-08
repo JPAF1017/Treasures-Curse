@@ -42,10 +42,14 @@ var _door_opened: bool = false
 # Player / UI references (found at runtime)
 var _player: Node = null
 var _place_item_control: Control = null
+var _place_item_label: Label = null
 var _warning2_control: Control = null
+var _warning2_label: Label = null
 
 # Interaction state
 var _hovered_hold_index: int = -1
+var _door_hovered: bool = false
+var _door_area: Area3D = null
 var _warning2_timer: float = 0.0
 
 
@@ -66,6 +70,7 @@ func _find_hold_areas() -> void:
 		var area := hold_node.get_node_or_null("Area3D") as Area3D
 		if area != null:
 			_hold_areas.append(area)
+	_door_area = find_child("DoorArea", true, false) as Area3D
 
 
 func _process(delta: float) -> void:
@@ -84,7 +89,12 @@ func _process(delta: float) -> void:
 	_update_place_prompt()
 
 	if _hovered_hold_index >= 0 and Input.is_action_just_pressed("e"):
-		_try_place_item(_hovered_hold_index)
+		if _get_selected_item() == null:
+			_show_warning2("I could place something here but what?")
+		else:
+			_try_place_item(_hovered_hold_index)
+	elif _door_hovered and Input.is_action_just_pressed("e"):
+		_show_warning2("I think I need to place something on the slabs to open this")
 
 	# Detect if the player picked up a placed item from the table (only before door opens)
 	if not _door_opened:
@@ -112,7 +122,9 @@ func _find_player_if_needed() -> void:
 		return
 	_player = players[0]
 	_place_item_control = _player.get_node_or_null("CanvasLayer/Control/PlaceItem") as Control
+	_place_item_label = _player.get_node_or_null("CanvasLayer/Control/PlaceItem/Label") as Label
 	_warning2_control = _player.get_node_or_null("CanvasLayer/Warning2") as Control
+	_warning2_label = _player.get_node_or_null("CanvasLayer/Warning2/Label") as Label
 
 
 func _get_player_camera() -> Camera3D:
@@ -137,13 +149,14 @@ func _get_selected_item() -> Node:
 
 
 func _update_place_prompt() -> void:
+	_door_hovered = false
 	if _hold_areas.is_empty() or _door_opened:
 		_set_place_item_visible(false)
 		_hovered_hold_index = -1
 		return
 
 	var camera := _get_player_camera()
-	if camera == null or _get_selected_item() == null:
+	if camera == null:
 		_set_place_item_visible(false)
 		_hovered_hold_index = -1
 		return
@@ -163,13 +176,27 @@ func _update_place_prompt() -> void:
 			if collider == _hold_areas[i] and not _slot_occupied[i]:
 				found_idx = i
 				break
+		if found_idx < 0 and collider == _door_area:
+			_door_hovered = true
 
 	_hovered_hold_index = found_idx
-	# Show PlaceItem only when aimed at a free slot and Warning2 is not active
-	if found_idx >= 0 and _warning2_timer <= 0.0:
+	var has_item := _get_selected_item() != null
+	if found_idx >= 0 and has_item and _warning2_timer <= 0.0:
+		_set_place_item_label("place item")
+		_set_place_item_visible(true)
+	elif found_idx >= 0 and not has_item:
+		_set_place_item_label("interact")
+		_set_place_item_visible(true)
+	elif _door_hovered:
+		_set_place_item_label("interact")
 		_set_place_item_visible(true)
 	else:
 		_set_place_item_visible(false)
+
+
+func _set_place_item_label(txt: String) -> void:
+	if _place_item_label != null and is_instance_valid(_place_item_label):
+		_place_item_label.text = txt
 
 
 func _set_place_item_visible(visible_state: bool) -> void:
@@ -184,6 +211,13 @@ func _set_warning2_visible(visible_state: bool) -> void:
 		_warning2_control.visible = visible_state
 
 
+func _show_warning2(msg: String) -> void:
+	if _warning2_label != null and is_instance_valid(_warning2_label):
+		_warning2_label.text = msg
+	_set_warning2_visible(true)
+	_warning2_timer = WARNING2_DISPLAY_TIME
+
+
 func _try_place_item(hold_index: int) -> void:
 	var item := _get_selected_item()
 	if item == null:
@@ -192,8 +226,7 @@ func _try_place_item(hold_index: int) -> void:
 	# Non-puzzle item: reject with Warning2
 	if not item.get_meta("puzzle_item", false):
 		_set_place_item_visible(false)
-		_set_warning2_visible(true)
-		_warning2_timer = WARNING2_DISPLAY_TIME
+		_show_warning2("I can't place this here...")
 		return
 
 	# Use drop_from_hotbar so every item type handles its own viewmodel/hand cleanup.
@@ -248,6 +281,8 @@ func _check_slot_correct(hold_index: int, item: Node) -> void:
 	if item_script != null and item_script.resource_path == expected_script:
 		_slot_correct[hold_index] = true
 		on_item_hold_satisfied()
+	else:
+		_show_warning2("The candles could show me how to solve this")
 
 
 func on_item_hold_satisfied() -> void:

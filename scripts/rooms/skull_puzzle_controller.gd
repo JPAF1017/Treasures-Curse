@@ -25,27 +25,46 @@ var _key_2_body_count: int = 0
 
 var _door_opened: bool = false
 var _player: Node = null
-var _interact_control: Control = null
+var _place_item_control: Control = null
+var _place_item_label: Label = null
+var _warning2_control: Control = null
+var _warning2_label: Label = null
+var _door_area: Area3D = null
 var _hovered_area: Area3D = null
+var _door_hovered: bool = false
+var _warning2_timer: float = 0.0
 
 
 func _ready() -> void:
+	find_child.call_deferred("_find_door_area")
 	key_area_1.body_entered.connect(_on_key_1_body_entered)
 	key_area_1.body_exited.connect(_on_key_1_body_exited)
 	key_area_2.body_entered.connect(_on_key_2_body_entered)
 	key_area_2.body_exited.connect(_on_key_2_body_exited)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_find_player_if_needed()
 	if _player == null:
 		return
+
+	if _warning2_timer > 0.0:
+		_warning2_timer -= delta
+		if _warning2_timer <= 0.0:
+			_set_warning2_visible(false)
+
 	_update_interact_prompt()
-	if _hovered_area != null and Input.is_action_just_pressed("e"):
+
+	if Input.is_action_just_pressed("e"):
 		if _hovered_area == exit_area:
 			_try_exit()
-		else:
-			_try_place_skull(_hovered_area)
+		elif _hovered_area != null:
+			if _get_selected_skull_key() != null:
+				_try_place_skull(_hovered_area)
+			else:
+				_show_warning2("I could place something here but what?")
+		elif _door_hovered:
+			_show_warning2("I think I need to place something on the slabs to open this")
 
 
 func _find_player_if_needed() -> void:
@@ -55,7 +74,10 @@ func _find_player_if_needed() -> void:
 	if players.is_empty():
 		return
 	_player = players[0]
-	_interact_control = _player.get_node_or_null("CanvasLayer/Control/Interact") as Control
+	_place_item_control = _player.get_node_or_null("CanvasLayer/Control/PlaceItem") as Control
+	_place_item_label = _player.get_node_or_null("CanvasLayer/Control/PlaceItem/Label") as Label
+	_warning2_control = _player.get_node_or_null("CanvasLayer/Warning2") as Control
+	_warning2_label = _player.get_node_or_null("CanvasLayer/Warning2/Label") as Label
 
 
 func _get_player_camera() -> Camera3D:
@@ -82,9 +104,10 @@ func _get_selected_skull_key() -> Node:
 
 
 func _update_interact_prompt() -> void:
+	_door_hovered = false
 	var camera := _get_player_camera()
 	if camera == null:
-		_set_interact_visible(false)
+		_set_place_item_visible(false)
 		_hovered_area = null
 		return
 
@@ -105,24 +128,54 @@ func _update_interact_prompt() -> void:
 			aimed = key_area_2
 		elif collider == exit_area:
 			aimed = exit_area
+		elif not _door_opened and collider == _door_area:
+			_door_hovered = true
 
-	# Only show interact for skull placement when holding a skull key.
-	# Always show interact for exit area.
+	var has_skull := _get_selected_skull_key() != null
+
 	if aimed == exit_area:
 		_hovered_area = aimed
-		_set_interact_visible(true)
+		_set_place_item_label("interact")
+		_set_place_item_visible(true)
+	elif aimed != null and has_skull:
+		_hovered_area = aimed
+		_set_place_item_label("place item")
+		_set_place_item_visible(true)
+	elif aimed != null and not has_skull:
+		_hovered_area = aimed
+		_set_place_item_label("interact")
+		_set_place_item_visible(true)
+	elif _door_hovered:
+		_hovered_area = null
+		_set_place_item_label("interact")
+		_set_place_item_visible(true)
 	else:
-		if aimed != null and _get_selected_skull_key() != null:
-			_hovered_area = aimed
-			_set_interact_visible(true)
-		else:
-			_hovered_area = null
-			_set_interact_visible(false)
+		_hovered_area = null
+		_set_place_item_visible(false)
 
 
-func _set_interact_visible(visible_state: bool) -> void:
-	if _interact_control and is_instance_valid(_interact_control):
-		_interact_control.visible = visible_state
+func _set_place_item_label(txt: String) -> void:
+	if _place_item_label != null and is_instance_valid(_place_item_label):
+		_place_item_label.text = txt
+
+
+func _set_place_item_visible(visible_state: bool) -> void:
+	if _place_item_control != null and is_instance_valid(_place_item_control):
+		_place_item_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_place_item_control.visible = visible_state
+
+
+func _set_warning2_visible(visible_state: bool) -> void:
+	if _warning2_control != null and is_instance_valid(_warning2_control):
+		_warning2_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_warning2_control.visible = visible_state
+
+
+func _show_warning2(msg: String) -> void:
+	if _warning2_label != null and is_instance_valid(_warning2_label):
+		_warning2_label.text = msg
+	_set_warning2_visible(true)
+	_warning2_timer = 3.0
 
 
 func _try_place_skull(area: Area3D) -> void:
@@ -175,7 +228,7 @@ func _try_place_skull(area: Area3D) -> void:
 	else:
 		_key_2_placed = true
 
-	_set_interact_visible(false)
+	_set_place_item_visible(false)
 	_hovered_area = null
 	_check_puzzle()
 

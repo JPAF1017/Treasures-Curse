@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://c54mvflbcgsfv" path="res://assets/items assets/gold1.glb" id="2_uv5uo"]
 [ext_resource type="PackedScene" uid="uid://dpioiv65rmnmf" path="res://assets/items assets/gold2.glb" id="3_e3ef2"]
 [ext_resource type="PackedScene" uid="uid://cmv0814s50wt1" path="res://assets/items assets/gold3.glb" id="4_w8eeq"]
-[ext_resource type="PackedScene" uid="uid://bbdf8h6a7iorl" path="res://assets/items assets/gold4.glb" id="5_os68f"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_e3ef2"]
 height = 1.0356445
@@ -26,8 +25,4 @@ visible = false
 
 [node name="gold3" parent="." unique_id=2126416426 instance=ExtResource("4_w8eeq")]
 transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
-visible = false
-
-[node name="gold4" parent="." unique_id=1540720296 instance=ExtResource("5_os68f")]
-transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, 0, 0, 0)
 visible = false

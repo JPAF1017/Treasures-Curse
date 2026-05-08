@@ -24,6 +24,9 @@ size = Vector3(5, 3, 3.406128)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_tn782"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_door3d"]
+size = Vector3(10, 15, 3)
+
 [node name="CandlePuzzle" type="Node3D" unique_id=1505842369]
 script = ExtResource("1_1dfcl")
 size_in_voxels = Vector3i(3, 1, 4)
@@ -106,6 +109,12 @@ transform = Transform3D(-2.1855694e-08, 0, -0.15, 0, 0.5, 0, 0.5, 0, -6.5567085e
 
 [node name="Door_01" parent="Models/WallsLR" unique_id=1318810859 instance=ExtResource("5_0ralf")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 2.5, -10, -20.25)
+
+[node name="DoorArea" type="Area3D" parent="Models/WallsLR/Door_01" unique_id=999900001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 7.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Models/WallsLR/Door_01/DoorArea" unique_id=999900002]
+shape = SubResource("BoxShape3D_door3d")
 
 [node name="Wall_09" parent="Models/WallsLR" unique_id=1114540266 instance=ExtResource("4_utn58")]
 transform = Transform3D(-2.1855694e-08, 0, -0.15, 0, 0.5, 0, 0.5, 0, -6.5567085e-09, -4.5, -10, -25)
