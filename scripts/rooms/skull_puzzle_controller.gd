@@ -1,3 +1,4 @@
+class_name SkullPuzzleController
 extends Node3D
 
 const SKULL_KEY_SCENE_PATH := "res://puzzles/skull_key.tscn"
@@ -8,6 +9,9 @@ const DOOR_OPEN_Y_DEGREES := 60.0
 const DOOR_OPEN_DURATION := 1.5
 const RAYCAST_DISTANCE := 5.0
 const SKULL_PLACE_Y_OFFSET := 1.3
+
+static var player_entered_room: bool = false
+static var door_opened_static: bool = false
 
 @onready var key_area_1: Area3D = $Key
 @onready var key_area_2: Area3D = $Key2
@@ -47,6 +51,9 @@ func _process(delta: float) -> void:
 	_find_player_if_needed()
 	if _player == null:
 		return
+	if not SkullPuzzleController.player_entered_room:
+		if global_position.distance_to(_player.global_position) <= 30.0:
+			SkullPuzzleController.player_entered_room = true
 
 	if _warning2_timer > 0.0:
 		_warning2_timer -= delta
@@ -271,6 +278,7 @@ func _check_puzzle() -> void:
 
 
 func _open_door() -> void:
+	SkullPuzzleController.door_opened_static = true
 	var tween := create_tween()
 	tween.tween_property(door, "rotation:y", deg_to_rad(DOOR_OPEN_Y_DEGREES), DOOR_OPEN_DURATION) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

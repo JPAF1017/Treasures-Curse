@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://ds38umkop3txm"]
 
 [ext_resource type="Script" uid="uid://dj8t3bynv2pc1" path="res://scripts/player.gd" id="1_u63mc"]
-[ext_resource type="Script" path="res://scripts/ui/charge_ring.gd" id="99_crng"]
 [ext_resource type="PackedScene" uid="uid://dd12bwwoi2560" path="res://assets/entities/player.glb" id="2_b0kkn"]
 [ext_resource type="FontFile" uid="uid://b1sww20xebp3q" path="res://assets/ui/dungeon-mode.ttf" id="4_rfe5m"]
 [ext_resource type="Texture2D" uid="uid://l5r1a33n2v2b" path="res://assets/ui/dungeon-mode.png" id="5_qly61"]
@@ -23,6 +22,7 @@
 [ext_resource type="Texture2D" uid="uid://d2vrunaturtcu" path="res://assets/ui/5.png" id="13_hj0ki"]
 [ext_resource type="Texture2D" uid="uid://c0mfmyjjj7gie" path="res://assets/ui/SHIFTBIGGER.png" id="22_cicqb"]
 [ext_resource type="Texture2D" uid="uid://bnoee380ow3yv" path="res://assets/ui/CTRL.png" id="22_hj0ki"]
+[ext_resource type="Script" uid="uid://dkf6bqm88tc86" path="res://scripts/ui/charge_ring.gd" id="99_crng"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_6nm46"]
 height = 4.002136
@@ -79,16 +79,6 @@ collision_mask = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Head/playerCamera/Vision" unique_id=1577182091]
 shape = SubResource("CapsuleShape3D_vision")
-
-[node name="SpotLight3D" type="SpotLight3D" parent="Head/playerCamera" unique_id=762914756]
-light_energy = 8.0
-light_bake_mode = 0
-light_cull_mask = 4294967293
-light_volumetric_fog_energy = 3.0
-spot_range = 43.3203
-spot_attenuation = 0.5
-spot_angle = 24.685345
-spot_angle_attenuation = 0.8
 
 [node name="DarkAdaptLight" type="OmniLight3D" parent="Head" unique_id=999700001]
 light_color = Color(0.78, 0.68, 0.5, 1)

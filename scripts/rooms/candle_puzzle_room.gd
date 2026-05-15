@@ -25,11 +25,13 @@ const _SCENE_TO_SCRIPT: Dictionary = {
 static var _shared_pool: Array[String] = []
 static var _pool_idx: int = 0
 static var puzzle_door_opened: bool = false
+static var player_entered_room: bool = false
 
 static func reset_for_generation() -> void:
 	_shared_pool.clear()
 	_pool_idx = 0
 	puzzle_door_opened = false
+	player_entered_room = false
 
 # Runtime placement state
 var _hold_areas: Array[Area3D] = []        # index 0–3 → ItemHold1–4 Area3D
@@ -79,6 +81,9 @@ func _process(delta: float) -> void:
 	_find_player_if_needed()
 	if _player == null:
 		return
+	if not CandlePuzzleRoom.player_entered_room:
+		if global_position.distance_to(_player.global_position) <= 25.0:
+			CandlePuzzleRoom.player_entered_room = true
 
 	# Countdown Warning2 timer
 	if _warning2_timer > 0.0:

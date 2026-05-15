@@ -230,6 +230,19 @@ var _dark_adapt_scan_timer: float = 0.0
 
 var _grab_escape_immune_timer: float = 0.0
 
+# Progression tracking
+var _prog_stage: int = 1  # advances forward only (1=weapon … 7=GET OUT)
+var _prog_weapon_picked: bool = false
+var _prog_damaged: bool = false
+var _prog_health_used: bool = false
+var _prog_upper_floor: bool = false
+var _initial_floor_y: float = 0.0
+var _initial_floor_y_captured: bool = false
+var _prog_fade_timer: float = 0.0   # counts up after game starts
+var _prog_faded_in: bool = false
+var _progression_panel: Control = null
+var _progression_label: Label = null
+
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
@@ -244,14 +257,21 @@ var hotbar_item_models: Array[Node3D] = []
 var selected_hotbar_slot_index: int = 0
 var hotbar_font: FontFile = null
 
+func _setup_voice_chat() -> void:
+	if not is_inside_tree():
+		return
+	var vc: Node = VOICE_CHAT_SCRIPT.new()
+	vc.name = "VoiceChat"
+	add_child(vc)
+	vc.set_multiplayer_authority(get_multiplayer_authority())
+
 #function on startup
 func _ready():
 	# Attach proximity voice chat to every player instance in multiplayer sessions.
-	# VoiceChat handles authority vs. remote logic internally.
+	# Deferred so VoiceChat setup runs after the MultiplayerSpawner spawn callback
+	# completes — avoids "ready not emitted" errors from audio nodes added mid-spawn.
 	if multiplayer.has_multiplayer_peer():
-		var vc: Node = VOICE_CHAT_SCRIPT.new()
-		vc.name = "VoiceChat"
-		add_child(vc)
+		call_deferred("_setup_voice_chat")
 
 	# In multiplayer, only the authority (local) player gets full HUD/camera/audio setup.
 	if not is_multiplayer_authority():
@@ -298,6 +318,7 @@ func _ready():
 	_setup_damage_overlay()
 	_setup_smoke_overlay()
 	_setup_hotbar_ui()
+	_setup_progression_ui()
 	_select_hotbar_slot(0)
 	# Give player a torch in hotbar slot 1 on startup
 	var _torch_scene := preload("res://assets/items/torch.tscn")
@@ -439,6 +460,9 @@ func _unhandled_input(event):
 					return
 				if selected_item == null or not bool(selected_item.call("begin_primary_action", self)):
 					return
+				# Progression: detect health potion used
+				if not _prog_health_used and _is_health_item_model(selected_item):
+					_prog_health_used = true
 				if not _use_hint_dismissed and not selected_item.get_meta("puzzle_item", false) and (_is_health_item_model(selected_item) or _is_smoke_item_model(selected_item)):
 					_use_hint_dismissed = true
 					if use_hint_control != null:
@@ -776,6 +800,7 @@ func _physics_process(delta):
 	_update_dark_adapt(delta)
 	_update_footsteps()
 	_update_chase_sound(delta)
+	_update_progression_ui(delta)
 
 func _setup_attack_overlap_debug() -> void:
 	if attack_area == null:
@@ -1333,6 +1358,9 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 			_refresh_selected_item_state()
 			_pickup_vis_timer = 0.0
 			_update_pickup_prompt_visibility()
+			# Progression: detect weapon pickup
+			if not _prog_weapon_picked and (item_body is Sword or item_body is Bat or _is_shovel_item_model(item_body)):
+				_prog_weapon_picked = true
 			if not _key_warning_shown and _is_gold_item_model(item_body):
 				_key_warning_shown = true
 				if key_warning_control != null:
@@ -1507,6 +1535,7 @@ func apply_damage(amount: float) -> void:
 	if amount <= 0.0:
 		return
 	health = maxf(health - amount, 0.0)
+	_prog_damaged = true
 	_update_health_ui()
 	_apply_damage_camera_tilt()
 	if health <= 0.0:
@@ -2049,3 +2078,131 @@ func _update_jump_animation_phase(delta: float) -> bool:
 		return false
 
 	return true
+func _setup_progression_ui() -> void:
+	if hud_control == null:
+		return
+	var panel := HBoxContainer.new()
+	panel.name = "Progression"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_constant_override("separation", 10)
+	# Top-left anchors
+	panel.set_anchor(SIDE_LEFT, 0.0)
+	panel.set_anchor(SIDE_TOP, 0.0)
+	panel.set_anchor(SIDE_RIGHT, 0.0)
+	panel.set_anchor(SIDE_BOTTOM, 0.0)
+	panel.set_offset(SIDE_LEFT, 14.0)
+	panel.set_offset(SIDE_TOP, 14.0)
+	panel.set_offset(SIDE_RIGHT, 520.0)
+	panel.set_offset(SIDE_BOTTOM, 63.0)
+	panel.grow_horizontal = Control.GROW_DIRECTION_END
+	panel.modulate.a = 0.0  # start invisible for fade-in
+	hud_control.add_child(panel)
+
+	var icon := TextureRect.new()
+	icon.name = "ProgressIcon"
+	var prog_tex := load("res://assets/ui/progress.png") as Texture2D
+	if prog_tex:
+		icon.texture = prog_tex
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(38, 38)  # 32 * 1.2
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(icon)
+
+	var label := Label.new()
+	label.name = "ProgressLabel"
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var prog_font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
+	if prog_font:
+		label.add_theme_font_override("font", prog_font)
+	label.add_theme_font_size_override("font_size", 18)  # 15 * 1.2
+	panel.add_child(label)
+
+	_progression_panel = panel
+	_progression_label = label
+
+func _update_progression_ui(delta: float) -> void:
+	if _progression_panel == null or _progression_label == null:
+		return
+	if not _game_started:
+		return
+
+	# Fade in after 5 seconds of gameplay
+	if not _prog_faded_in:
+		_prog_fade_timer += delta
+		if _prog_fade_timer >= 5.0:
+			var t := clampf((_prog_fade_timer - 5.0) / 1.0, 0.0, 1.0)
+			_progression_panel.modulate.a = t
+			if t >= 1.0:
+				_prog_faded_in = true
+		return  # don't show any text until fade-in starts
+
+	# Capture initial floor Y on first game frame
+	if not _initial_floor_y_captured:
+		_initial_floor_y = global_position.y
+		_initial_floor_y_captured = true
+
+	# Detect floor ascent
+	if not _prog_upper_floor and _initial_floor_y_captured:
+		if global_position.y > _initial_floor_y + 7.0:
+			_prog_upper_floor = true
+
+	# Advance stage forward only — never go back
+	var advanced := true
+	while advanced:
+		advanced = false
+		match _prog_stage:
+			1:
+				if _prog_weapon_picked:
+					_prog_stage = 2
+					advanced = true
+			2:
+				# Leave health-hint stage when health used, candle room entered, or ascended
+				if _prog_health_used or CandlePuzzleRoom.player_entered_room or _prog_upper_floor:
+					_prog_stage = 3
+					advanced = true
+			3:
+				# Leave candle stage when door opened or ascended
+				if CandlePuzzleRoom.puzzle_door_opened or _prog_upper_floor:
+					_prog_stage = 4
+					advanced = true
+			4:
+				if _prog_upper_floor:
+					_prog_stage = 5
+					advanced = true
+			5:
+				if SkullPuzzleController.player_entered_room:
+					_prog_stage = 6
+					advanced = true
+			6:
+				if SkullPuzzleController.door_opened_static:
+					_prog_stage = 7
+					advanced = true
+
+	# Display the text for the current stage
+	var text := ""
+	match _prog_stage:
+		1:
+			text = "find a weapon to defend yourself"
+		2:
+			if _prog_damaged:
+				text = "find a health potion to heal up"
+		3:
+			if CandlePuzzleRoom.player_entered_room:
+				text = "collect the gem stones to open the door"
+		4:
+			text = "find the stairs to ascend"
+		5:
+			text = "fight your way to the top and reach the gate"
+		6:
+			text = "collect the skulls to exit the dungeon"
+		7:
+			text = "GET OUT"
+
+	if text.is_empty():
+		_progression_panel.visible = false
+	else:
+		_progression_label.text = text
+		_progression_panel.visible = true
