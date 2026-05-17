@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1778858405
+::res://::1778987269
 export_presets.cfg::TextFile::-1::1778214090::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1777213248::1777213249::1::::<><><>0<>0<>cae14fdf34577903ea8282ebd52773bb<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
@@ -431,7 +431,7 @@ table_item_spawn.gd::GDScript::8351178420905279132::1777228408::0::1::::TableIte
 dungeon_optimizer.gd::GDScript::9157797051449046666::1776966194::0::1::::<>Node<><>0<>0<><>::
 game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0<><>::
 level1_spawner.gd::GDScript::3714450241364899252::1777491213::0::1::::<>Node3D<><>0<>0<><>::
-player.gd::GDScript::7860289825015925474::1778825116::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1778858772::0::1::::<>CharacterBody3D<><>0<>0<><>::
 settings_manager.gd::GDScript::8170435877026185281::1778209836::0::1::::<>Node<><>0<>0<><>::
 ::res://scripts/items/::1778167332
 axe.gd::GDScript::5823683269390956943::1777306723::0::1::::Axe<>RigidBody3D<><>0<>0<><>::

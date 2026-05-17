@@ -71,7 +71,7 @@ transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 0.868999
 [node name="playerCamera" type="Camera3D" parent="Head" unique_id=25879993]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0222359, 0.00750554)
 fov = 85.0
-far = 100.0
+far = 40.0
 
 [node name="Vision" type="Area3D" parent="Head/playerCamera" unique_id=442017822 groups=["player_vision"]]
 collision_layer = 8

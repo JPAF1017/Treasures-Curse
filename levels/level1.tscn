@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" uid="uid://ds38umkop3txm" path="res://entities/player.tscn" id="7_8bcou"]
 [ext_resource type="PackedScene" uid="uid://djgwx2fo8gck3" path="res://assets/rooms/l_shape_room.tscn" id="9_w7ck5"]
 [ext_resource type="PackedScene" uid="uid://scxkscsgrow5" path="res://assets/rooms/narrow.tscn" id="10_2nn5w"]
+[ext_resource type="PackedScene" uid="uid://cfoq1560fj5jf" path="res://assets/rooms/treasure_room.tscn" id="10_8bcou"]
+[ext_resource type="PackedScene" uid="uid://dy4bd3w4fvfmb" path="res://assets/rooms/intro_arena.tscn" id="11_f7u7y"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 [ext_resource type="Script" uid="uid://pnceodedcutd" path="res://scripts/multiplayer/player_spawner.gd" id="100_playerspawner"]
@@ -24,17 +26,18 @@ ground_horizon_color = Color(0.2, 0.168627, 0.133333, 1)
 sky_material = SubResource("ProceduralSkyMaterial_27e7b")
 
 [sub_resource type="Environment" id="Environment_yplof"]
-background_mode = 2
-sky = SubResource("Sky_rasb4")
+background_mode = 1
+background_color = Color(0, 0, 0, 1)
 tonemap_mode = 2
 sdfgi_enabled = true
 glow_enabled = true
 fog_enabled = true
-fog_light_color = Color(0.04, 0.03, 0.02, 1)
-fog_density = 0.07
+fog_light_color = Color(0, 0, 0, 1)
+fog_density = 0.06
+fog_aerial_perspective = 0.0
 volumetric_fog_enabled = true
 volumetric_fog_density = 0.02
-volumetric_fog_albedo = Color(0.05, 0.04, 0.03, 1)
+volumetric_fog_albedo = Color(0, 0, 0, 1)
 
 [node name="test map" type="Node3D" unique_id=1262865494]
 script = ExtResource("99_spawner")
@@ -53,12 +56,22 @@ metadata/_custom_type_script = "uid://bqeu73gvoygbb"
 [node name="StartRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2057079214 instance=ExtResource("4_lf3p4")]
 transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 80, -20, 3.177861e-07)
 
+[node name="TreasureRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=731915099 instance=ExtResource("10_8bcou")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, -15, 1.3113416e-06)
+
+[node name="Stair" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=253396480 instance=ExtResource("2_045es")]
+transform = Transform3D(-1, 0, 8.742277e-08, 0, 1, 0, -8.742277e-08, 0, -1, -65, -15, 2.8412403e-06)
+
+[node name="Bridge" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=150509401 instance=ExtResource("10_2nn5w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, -20, 0)
+
+[node name="IntroArena" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=917700208 instance=ExtResource("11_f7u7y")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20, -15, -8.742278e-07)
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)
-light_color = Color(0.3328807, 0.33288068, 0.33288068, 1)
-light_energy = 0.05
-light_indirect_energy = 0.0
-light_bake_mode = 1
+visible = false
+light_color = Color(0, 0, 0, 1)
 shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1057100096]

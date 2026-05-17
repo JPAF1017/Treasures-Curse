@@ -6,8 +6,8 @@ global uniform float color_depth;
 uniform sampler2D screen_texture: hint_screen_texture, filter_nearest;
 
 void fragment() {
-	vec2 uv = floor(SCREEN_UV * resolution) / resolution;
-	COLOR = texture(screen_texture, uv);
+	// disabled
+	COLOR = texture(screen_texture, SCREEN_UV);
 }
 
 //void light() {

@@ -130,7 +130,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var health_bar_fill: NinePatchRect = $CanvasLayer/Control/Health/HealthBarContainer
 @onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
 @onready var player_canvas_layer: CanvasLayer = $CanvasLayer
-@onready var filter_rect: ColorRect = $CanvasLayer/Filter
+@onready var filter_rect: ColorRect = get_node_or_null("CanvasLayer/Filter")
 @onready var pickup_control: Control = $CanvasLayer/Control/Pickup
 @onready var footstep_player: AudioStreamPlayer = $FootstepPlayer
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
@@ -240,6 +240,8 @@ var _initial_floor_y: float = 0.0
 var _initial_floor_y_captured: bool = false
 var _prog_fade_timer: float = 0.0   # counts up after game starts
 var _prog_faded_in: bool = false
+var _prog_last_text: String = ""
+var _prog_anim_tween: Tween = null
 var _progression_panel: Control = null
 var _progression_label: Label = null
 
@@ -2150,6 +2152,7 @@ func _update_progression_ui(delta: float) -> void:
 			_prog_upper_floor = true
 
 	# Advance stage forward only — never go back
+	# Stages: 1=weapon, 2=stairs(+health hint), 3=fight to top, 4=collect skulls, 5=GET OUT
 	var advanced := true
 	while advanced:
 		advanced = false
@@ -2159,26 +2162,16 @@ func _update_progression_ui(delta: float) -> void:
 					_prog_stage = 2
 					advanced = true
 			2:
-				# Leave health-hint stage when health used, candle room entered, or ascended
-				if _prog_health_used or CandlePuzzleRoom.player_entered_room or _prog_upper_floor:
+				if _prog_upper_floor:
 					_prog_stage = 3
 					advanced = true
 			3:
-				# Leave candle stage when door opened or ascended
-				if CandlePuzzleRoom.puzzle_door_opened or _prog_upper_floor:
+				if SkullPuzzleController.player_entered_room:
 					_prog_stage = 4
 					advanced = true
 			4:
-				if _prog_upper_floor:
-					_prog_stage = 5
-					advanced = true
-			5:
-				if SkullPuzzleController.player_entered_room:
-					_prog_stage = 6
-					advanced = true
-			6:
 				if SkullPuzzleController.door_opened_static:
-					_prog_stage = 7
+					_prog_stage = 5
 					advanced = true
 
 	# Display the text for the current stage
@@ -2187,22 +2180,44 @@ func _update_progression_ui(delta: float) -> void:
 		1:
 			text = "find a weapon to defend yourself"
 		2:
-			if _prog_damaged:
+			# Health potion replaces stairs hint while player is damaged and hasn't used one
+			if _prog_damaged and not _prog_health_used:
 				text = "find a health potion to heal up"
+			else:
+				text = "find the stairs to ascend"
 		3:
-			if CandlePuzzleRoom.player_entered_room:
-				text = "collect the gem stones to open the door"
-		4:
-			text = "find the stairs to ascend"
-		5:
 			text = "fight your way to the top and reach the gate"
-		6:
+		4:
 			text = "collect the skulls to exit the dungeon"
-		7:
+		5:
 			text = "GET OUT"
 
 	if text.is_empty():
 		_progression_panel.visible = false
 	else:
-		_progression_label.text = text
+		if text != _prog_last_text:
+			_progression_label.text = text
+			_progression_panel.visible = true
+			_play_progression_attention_effect()
+			_prog_last_text = text
 		_progression_panel.visible = true
+
+func _play_progression_attention_effect() -> void:
+	if _progression_panel == null:
+		return
+	if _prog_anim_tween != null and _prog_anim_tween.is_valid():
+		_prog_anim_tween.kill()
+	# Reset scale and pivot to centre before animating
+	_progression_panel.pivot_offset = _progression_panel.size * 0.5
+	_progression_panel.scale = Vector2.ONE
+	# Scale pop: grow then spring back
+	_prog_anim_tween = create_tween().set_parallel(true)
+	_prog_anim_tween.tween_property(_progression_panel, "scale",
+			Vector2(1.18, 1.18), 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_prog_anim_tween.chain().tween_property(_progression_panel, "scale",
+			Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Colour flash: bright gold burst then fade back to white
+	_prog_anim_tween.tween_property(_progression_panel, "modulate",
+			Color(1.6, 1.4, 0.6, 1.0), 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_prog_anim_tween.chain().tween_property(_progression_panel, "modulate",
+			Color.WHITE, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)

@@ -169,8 +169,27 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# Voxel scale for converting grid distance to world units (default 10 units per voxel)
 	var voxel_xz: float = generator.get("voxel_scale").x
+	var voxel_y: float = generator.get("voxel_scale").y
 	const MIN_ROOM_DIST_VOXELS := 4
 	var min_horiz_dist: float = MIN_ROOM_DIST_VOXELS * voxel_xz
+
+	# Remove all procedurally placed non-corridor rooms on the bottom floor.
+	# Pre-placed rooms and corridors are kept; only random filler rooms are removed.
+	const PREPLACED_NAMES := ["StartRoom", "IntroArena", "TreasureRoom", "Stair", "Bridge"]
+	for child in generator.get_children():
+		if not (child is DungeonRoom3D):
+			continue
+		var rp := (child as Node3D).global_position
+		if abs(rp.y - start_pos.y) < voxel_y:
+			if child.name in PREPLACED_NAMES:
+				continue
+			# Keep corridors so rooms stay connected
+			if child.name.begins_with("Corridor"):
+				continue
+			child.queue_free()
+
+	# Refresh all_rooms after removals.
+	all_rooms = generator.find_children("*", "DungeonRoom3D", true, false)
 
 	# Sort rooms by a deterministic key so find_children order doesn't affect placement.
 	all_rooms.sort_custom(func(a: Node, b: Node) -> bool:
@@ -181,14 +200,17 @@ func _on_dungeon_ready(generator: Node) -> void:
 		return pa.z < pb.z
 	)
 
-	# Eligible rooms: at least 4 voxels away horizontally, OR directly above/below start (same XZ).
-	# Candle puzzle rooms are excluded so NPCs never spawn in them.
+	# Eligible rooms: above the bottom floor, at least 4 voxels away horizontally from start
+	# (or directly above/below it). Candle puzzle rooms are always excluded.
 	var rooms: Array = all_rooms.filter(func(r: Node) -> bool:
-		if r.name == "StartRoom":
+		if r.name == "StartRoom" or r.name == "IntroArena":
 			return false
 		if r is CandlePuzzleRoom:
 			return false
 		var rp := (r as Node3D).global_position
+		# Exclude rooms on the bottom floor (same Y level as the start room)
+		if abs(rp.y - start_pos.y) < voxel_y:
+			return false
 		var rp_xz := Vector2(rp.x, rp.z)
 		var horiz_dist := rp_xz.distance_to(start_pos_xz)
 		# Allow rooms directly above/below start (within one voxel horizontally)
@@ -213,9 +235,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# Build a list of spawn tasks: [scene, count]
 	# count > 1 means a group spawning close together in the same room
+	# NOTE: chargers are spawned exclusively in IntroArena below, not here.
 	var tasks: Array = []
-	for i in CHARGER_COUNT:
-		tasks.append([CHARGER_SCENE, 1])
 	for i in FLY_COUNT:
 		tasks.append([FLY_SCENE, 1])
 	for i in SHAMBLER_COUNT:
@@ -250,7 +271,6 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# Spawn statues and shy on specific dungeon floors
 	# (server only — MultiplayerSpawner replicates to clients)
 	var gen_origin_y: float = (generator as Node3D).global_position.y
-	var voxel_y: float = generator.get("voxel_scale").y
 	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS]]:
 		var scene: PackedScene = floor_data[0]
 		var floors: Array = floor_data[1]
@@ -290,6 +310,11 @@ func _on_dungeon_ready(generator: Node) -> void:
 		_br_scene_to_key[ITEM_SCENES[key]] = key
 	for room: Node in all_rooms:
 		if not (room is BigRoom):
+			continue
+		# Skip big rooms on the bottom floor or in the IntroArena
+		if (room as Node3D).name == "IntroArena":
+			continue
+		if abs((room as Node3D).global_position.y - start_pos.y) < voxel_y:
 			continue
 		for spawn_name: String in ["Spawn/SpawnItem", "Spawn/SpawnItem2"]:
 			var spawn_area := room.get_node_or_null(spawn_name) as Node3D
@@ -344,10 +369,37 @@ func _on_dungeon_ready(generator: Node) -> void:
 	)
 	_spawn_map_items(generator, item_rooms, rng, big_room_counts)
 
+	# Spawn 1 charger and 1 sword inside the IntroArena.
+	# The charger cannot be baked into intro_arena.tscn because charger._ready() sets
+	# top_level = true, which would leave it at world origin after SimpleDungeons moves the room.
+	var intro_arena := generator.find_child("IntroArena", true, false) as Node3D
+	if intro_arena:
+		var arena_pos := intro_arena.global_position
+		if _npc_spawner:
+			_npc_spawner.spawn({"scene": CHARGER_SCENE.resource_path, "pos": arena_pos + Vector3(0, 1.0, 0)})
+		else:
+			var charger: Node3D = CHARGER_SCENE.instantiate()
+			add_child(charger)
+			charger.global_position = arena_pos + Vector3(0, 1.0, 0)
+		var sword_pos := arena_pos + Vector3(0, 0.5, 0)
+		if _item_spawner:
+			_item_spawner.spawn({"scene": ITEM_SCENES["sword"], "pos": sword_pos})
+		else:
+			var sword: Node3D = load(ITEM_SCENES["sword"]).instantiate()
+			add_child(sword)
+			sword.global_position = sword_pos
+
 	# Notify the multiplayer player spawner so it places a character for each client.
 	var player_spawner := get_node_or_null("PlayerSpawner")
 	if player_spawner and player_spawner.has_method("activate"):
 		player_spawner.call("activate", start_pos + Vector3(0, 1.0, 0))
+
+	# Move the host's embedded player to the start room.
+	# (PlayerSpawner only handles extra multiplayer clients; the host player
+	# is a static node in the scene and always needs to be relocated here.)
+	var host_player := get_node_or_null("player") as Node3D
+	if host_player:
+		host_player.global_position = start_pos + Vector3(0, 1.0, 0)
 
 
 ## Fills in the ITEM_TARGET_COUNTS quota beyond what was already placed in big rooms.

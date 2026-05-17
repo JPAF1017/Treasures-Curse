@@ -77,7 +77,10 @@ func _update() -> void:
 	# Max NPCs that can actively target the player at once
 	const MAX_TARGETING_NPCS := 4
 
-	var space_state := _player.get_world_3d().direct_space_state
+	var _world := _player.get_world_3d()
+	if _world == null:
+		return
+	var space_state := _world.direct_space_state
 	var player_eye := pp + Vector3(0, 0.8, 0)
 
 	# Count NPCs already targeting

@@ -1,8 +1,5 @@
-// Per-pixel lit floor shader.
-// Bypasses the global force_vertex_shading project setting so that
-// dynamic point lights (held/dropped torch) correctly illuminate the floor.
+// Per-pixel lit floor shader — disabled, falls back to project default shading.
 shader_type spatial;
-render_mode diffuse_lambert;
 
 uniform sampler2D albedo_texture : source_color, filter_nearest;
 
