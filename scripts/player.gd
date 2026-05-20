@@ -1278,7 +1278,7 @@ func _get_selected_primary_item() -> Node:
 
 func _is_swing_in_progress() -> bool:
 	var item := _get_selected_primary_item()
-	return item != null and bool(item.get("swing_in_progress"))
+	return item != null and item.get("swing_in_progress") == true
 
 func _has_item_in_hotbar(item: Node) -> bool:
 	if item == null:

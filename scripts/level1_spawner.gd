@@ -15,8 +15,7 @@ const CHARGER_COUNT  := 5
 const FLY_COUNT      := 5
 const SHAMBLER_COUNT := 3
 const GNOME_GROUPS   := 3  # each group spawns 2 or 3 gnomes in the same room
-# Floors (0-based index) where statues and shy spawn (one per floor)
-const STATUE_FLOORS  := [1, 3]
+# Floors (0-based index) where shy spawns (one per floor)
 const SHY_FLOORS     := [1, 3]
 # Knights: one on the 2nd floor (index 1) and one on the 3rd floor (index 2)
 
@@ -58,6 +57,27 @@ var _item_spawner: MultiplayerSpawner = null
 # Cached after dungeon generation so late joiners can receive the registry via
 # request_map_seed (they miss the initial broadcast).
 var _table_registry: Dictionary = {}
+
+# ---- Statue deferred-spawn state (server only) ----
+const STATUE_COUNTDOWN_DURATION  := 180.0  # 3 minutes before each spawn
+const STATUE_SEEN_DESPAWN_TIME   := 60.0   # 1 minute after first sighting before despawn
+const STATUE_SPAWN_MIN_DIST      := 15.0   # minimum spawn distance from target player
+const STATUE_SPAWN_MAX_DIST      := 22.0   # maximum spawn distance (within detection range)
+const STATUE_SPAWN_ATTEMPTS      := 36     # angular samples to find a hidden spot
+const STATUE_SPAWN_RETRY_SEC     := 1.0    # seconds between hidden-spot retries
+const STATUE_DESPAWN_CHECK_SEC   := 0.25   # poll interval while waiting for a no-look window
+const STATUE_VIEW_CONE_DEG       := 65.0   # slightly wider than the statue's 60° view cone
+
+var _second_floor_y: float = INF           # Y threshold set after dungeon generation
+var _top_floor_y: float = INF              # top floor Y — statue must not spawn here
+var _voxel_y: float = 0.0                  # floor step height
+var _statue_timer_active: bool = false
+var _statue_countdown: float = 0.0
+var _spawn_retry_timer: float = 0.0
+var _statue_node: Node3D = null            # live statue reference (null = not spawned)
+var _statue_seen: bool = false             # has any player spotted the statue?
+var _statue_seen_timer: float = 0.0        # 1-min countdown after first sighting
+var _despawn_check_timer: float = 0.0      # poll interval while waiting for no-look moment
 
 
 func _ready() -> void:
@@ -173,6 +193,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 	const MIN_ROOM_DIST_VOXELS := 4
 	var min_horiz_dist: float = MIN_ROOM_DIST_VOXELS * voxel_xz
 
+	# Store floor geometry for the deferred statue spawn (available on all peers).
+	_second_floor_y = start_pos.y + voxel_y * 0.5
+	_voxel_y = voxel_y
+
 	# Remove all procedurally placed non-corridor rooms on the bottom floor.
 	# Pre-placed rooms and corridors are kept; only random filler rooms are removed.
 	const PREPLACED_NAMES := ["StartRoom", "IntroArena", "TreasureRoom", "Stair", "Bridge"]
@@ -202,6 +226,14 @@ func _on_dungeon_ready(generator: Node) -> void:
 		if pa.y != pb.y: return pa.y < pb.y
 		return pa.z < pb.z
 	)
+
+	# Compute top floor Y — statue will never be allowed to spawn at this level.
+	var _max_room_y := -INF
+	for _rr in all_rooms:
+		var _ry := (_rr as Node3D).global_position.y
+		if _ry > _max_room_y:
+			_max_room_y = _ry
+	_top_floor_y = _max_room_y
 
 	# Eligible rooms: above the bottom floor, at least 4 voxels away horizontally from start
 	# (or directly above/below it). Candle puzzle rooms are always excluded.
@@ -274,7 +306,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# Spawn statues and shy on specific dungeon floors
 	# (server only — MultiplayerSpawner replicates to clients)
 	var gen_origin_y: float = (generator as Node3D).global_position.y
-	for floor_data: Array in [[STATUE_SCENE, STATUE_FLOORS], [SHY_SCENE, SHY_FLOORS]]:
+	for floor_data: Array in [[SHY_SCENE, SHY_FLOORS]]:
 		var scene: PackedScene = floor_data[0]
 		var floors: Array = floor_data[1]
 		for floor_idx: int in floors:
@@ -527,3 +559,178 @@ func _do_spawn_item(data: Dictionary) -> Node:
 	# Mark so player.gd knows the MultiplayerSpawner will auto-despawn it on reparent.
 	node.set_meta("spawner_managed", true)
 	return node
+
+
+# ---------------------------------------------------------------------------
+# Deferred statue spawn — triggered when any player reaches the 2nd floor.
+# Server-only logic; MultiplayerSpawner replicates the statue to all clients.
+# ---------------------------------------------------------------------------
+
+func _process(delta: float) -> void:
+	if _second_floor_y == INF:
+		return
+	var is_server := not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
+	if not is_server:
+		return
+
+	# --- Active-statue lifecycle: sighting detection → 1-min → despawn ---
+	if _statue_node != null and is_instance_valid(_statue_node):
+		if not _statue_seen:
+			if _is_statue_seen_by_any_player():
+				_statue_seen = true
+				_statue_seen_timer = STATUE_SEEN_DESPAWN_TIME
+				print("[StatueSpawn] Statue spotted — 1-min despawn countdown started.")
+		else:
+			_statue_seen_timer -= delta
+			if _statue_seen_timer <= 0.0:
+				_despawn_check_timer -= delta
+				if _despawn_check_timer <= 0.0:
+					_despawn_check_timer = STATUE_DESPAWN_CHECK_SEC
+					if not _is_statue_seen_by_any_player():
+						_despawn_statue()
+		return
+
+	# --- No active statue: wait for a player on the 2nd floor, then countdown ---
+	if not _statue_timer_active:
+		for p in get_tree().get_nodes_in_group("player"):
+			if is_instance_valid(p) and (p as Node3D).global_position.y > _second_floor_y:
+				_statue_timer_active = true
+				_statue_countdown = STATUE_COUNTDOWN_DURATION
+				print("[StatueSpawn] Player reached 2nd floor — 3-min countdown started.")
+				break
+	else:
+		_statue_countdown -= delta
+		if _statue_countdown <= 0.0:
+			_spawn_retry_timer -= delta
+			if _spawn_retry_timer <= 0.0:
+				_spawn_retry_timer = STATUE_SPAWN_RETRY_SEC
+				_try_spawn_statue()
+
+
+## Picks a target player and attempts to spawn the statue in a spot hidden from all players.
+func _try_spawn_statue() -> void:
+	var players: Array = get_tree().get_nodes_in_group("player").filter(
+		func(p: Node) -> bool: return is_instance_valid(p)
+	)
+	if players.is_empty():
+		return
+
+	# Singleplayer: only one player. Multiplayer: pick a random target.
+	var target: Node3D = players[randi() % players.size()]
+	var spawn_pos := _find_hidden_spawn_near(target.global_position)
+	if spawn_pos == Vector3.ZERO:
+		return  # every angle is visible — retry on next interval
+
+	_statue_seen = false
+	_statue_seen_timer = 0.0
+	_despawn_check_timer = 0.0
+	print("[StatueSpawn] Spawning statue at ", spawn_pos)
+	if _npc_spawner:
+		_statue_node = _npc_spawner.spawn({"scene": STATUE_SCENE.resource_path, "pos": spawn_pos})
+	else:
+		_statue_node = STATUE_SCENE.instantiate()
+		add_child(_statue_node)
+		_statue_node.global_position = spawn_pos
+
+
+## Returns a world position near `center` that is not visible to any player and not on the top floor.
+## Returns Vector3.ZERO when no hidden spot is found in this call.
+func _find_hidden_spawn_near(center: Vector3) -> Vector3:
+	var space_state := get_world_3d().direct_space_state
+	var players: Array = get_tree().get_nodes_in_group("player")
+	var top_threshold := _top_floor_y - _voxel_y * 0.4
+	for i in STATUE_SPAWN_ATTEMPTS:
+		var angle := float(i) / float(STATUE_SPAWN_ATTEMPTS) * TAU
+		var dist := randf_range(STATUE_SPAWN_MIN_DIST, STATUE_SPAWN_MAX_DIST)
+		var candidate := center + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		# Reject positions at the top floor level.
+		if _top_floor_y != INF and candidate.y >= top_threshold:
+			continue
+		if not _is_position_visible_to_any_player(candidate, players, space_state):
+			return candidate
+	return Vector3.ZERO
+
+
+## Despawns the active statue and resets the spawn cycle to its 3-min countdown.
+func _despawn_statue() -> void:
+	print("[StatueSpawn] Despawning statue — respawning in 3 minutes.")
+	_statue_node.queue_free()
+	_statue_node = null
+	_statue_seen = false
+	_statue_seen_timer = 0.0
+	_despawn_check_timer = 0.0
+	# Begin the next 3-min countdown immediately.
+	_statue_timer_active = true
+	_statue_countdown = STATUE_COUNTDOWN_DURATION
+	_spawn_retry_timer = 0.0
+
+
+## Returns true if any player currently has unobstructed line of sight to the statue.
+func _is_statue_seen_by_any_player() -> bool:
+	if _statue_node == null or not is_instance_valid(_statue_node):
+		return false
+	# Check at chest height so partial occlusion by the floor doesn't give false negatives.
+	var check_pos := _statue_node.global_position + Vector3(0, 1.2, 0)
+	var space_state := get_world_3d().direct_space_state
+	for player in get_tree().get_nodes_in_group("player"):
+		if not is_instance_valid(player):
+			continue
+		var cam := (player as Node3D).get_node_or_null("Head/playerCamera") as Camera3D
+		var view_origin: Vector3
+		var view_forward: Vector3
+		if cam != null:
+			view_origin = cam.global_position
+			view_forward = -cam.global_transform.basis.z.normalized()
+		else:
+			var head := (player as Node3D).get_node_or_null("Head") as Node3D
+			if head != null:
+				view_origin = head.global_position
+				view_forward = -head.global_transform.basis.z.normalized()
+			else:
+				view_origin = (player as Node3D).global_position + Vector3(0, 1.7, 0)
+				view_forward = -(player as Node3D).global_transform.basis.z.normalized()
+		var dir_to_statue := (check_pos - view_origin).normalized()
+		var dot := view_forward.dot(dir_to_statue)
+		var angle := rad_to_deg(acos(clampf(dot, -1.0, 1.0)))
+		if angle <= STATUE_VIEW_CONE_DEG:
+			var query := PhysicsRayQueryParameters3D.create(view_origin, check_pos)
+			query.exclude = [player, _statue_node]
+			var result := space_state.intersect_ray(query)
+			if result.is_empty():
+				return true
+	return false
+
+
+## Returns true if `pos` is within the view cone AND line of sight of any player.
+func _is_position_visible_to_any_player(
+	pos: Vector3, players: Array, space_state: PhysicsDirectSpaceState3D
+) -> bool:
+	for player in players:
+		if not is_instance_valid(player):
+			continue
+		# Prefer the actual camera node; fall back to head, then player body.
+		var cam := (player as Node3D).get_node_or_null("Head/playerCamera") as Camera3D
+		var view_origin: Vector3
+		var view_forward: Vector3
+		if cam != null:
+			view_origin = cam.global_position
+			view_forward = -cam.global_transform.basis.z.normalized()
+		else:
+			var head := (player as Node3D).get_node_or_null("Head") as Node3D
+			if head != null:
+				view_origin = head.global_position
+				view_forward = -head.global_transform.basis.z.normalized()
+			else:
+				view_origin = (player as Node3D).global_position + Vector3(0, 1.7, 0)
+				view_forward = -(player as Node3D).global_transform.basis.z.normalized()
+		var dir_to_pos := (pos - view_origin).normalized()
+		var dot := view_forward.dot(dir_to_pos)
+		var angle := rad_to_deg(acos(clampf(dot, -1.0, 1.0)))
+		if angle <= STATUE_VIEW_CONE_DEG:
+			# Within view cone — check for an unobstructed line of sight.
+			var query := PhysicsRayQueryParameters3D.create(view_origin, pos)
+			query.exclude = [player]
+			var result := space_state.intersect_ray(query)
+			if result.is_empty():
+				return true  # player has clear line of sight to this position
+	return false

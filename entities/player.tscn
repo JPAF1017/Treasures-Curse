@@ -1019,6 +1019,7 @@ text = "crouch"
 horizontal_alignment = 1
 
 [node name="Loading" type="Control" parent="CanvasLayer" unique_id=1907607165]
+visible = false
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -1046,6 +1047,7 @@ offset_right = 66.0
 offset_bottom = 323.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_colors/font_color = Color(0.6176539, 0, 0.054066494, 1)
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Generating Map ."
 
@@ -1064,6 +1066,7 @@ offset_right = 66.0
 offset_bottom = 323.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_colors/font_color = Color(0.61960787, 0, 0.05490196, 1)
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Generating Map .."
 
@@ -1082,6 +1085,7 @@ offset_right = 66.0
 offset_bottom = 323.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_colors/font_color = Color(0.61960787, 0, 0.05490196, 1)
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Generating Map ..."
 
@@ -1100,6 +1104,7 @@ offset_right = 66.0
 offset_bottom = 323.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_colors/font_color = Color(0.61960787, 0, 0.05490196, 1)
 theme_override_fonts/font = ExtResource("4_rfe5m")
 text = "Done
 NOW MOVE UP TO ESCAPE!"
