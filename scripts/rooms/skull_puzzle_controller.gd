@@ -9,6 +9,7 @@ const DOOR_OPEN_Y_DEGREES := 60.0
 const DOOR_OPEN_DURATION := 1.5
 const RAYCAST_DISTANCE := 5.0
 const SKULL_PLACE_Y_OFFSET := 1.3
+const INTERACT_RANGE := 35.0
 
 static var player_entered_room: bool = false
 static var door_opened_static: bool = false
@@ -54,6 +55,14 @@ func _process(delta: float) -> void:
 	if not SkullPuzzleController.player_entered_room:
 		if global_position.distance_to(_player.global_position) <= 30.0:
 			SkullPuzzleController.player_entered_room = true
+
+	# Only manage PlaceItem when the player is near this room.
+	if global_position.distance_to(_player.global_position) > INTERACT_RANGE:
+		if _hovered_area != null or _door_hovered:
+			_set_place_item_visible(false)
+			_hovered_area = null
+			_door_hovered = false
+		return
 
 	if _warning2_timer > 0.0:
 		_warning2_timer -= delta

@@ -219,14 +219,20 @@ var _cached_pickup_candidate: RigidBody3D = null
 var _place_item_control: Control = null
 var _warning2_control: Control = null
 
-const DARK_ADAPT_MAX_ENERGY := 1.0
+const DARK_ADAPT_MAX_ENERGY := 1.8
 const DARK_ADAPT_IN_SPEED := 0.07
 const DARK_ADAPT_OUT_SPEED := 2.5
 const DARK_ADAPT_BRIGHT_DIST := 10.0
 const DARK_ADAPT_SCAN_INTERVAL := 0.5
 var _dark_adapt_energy: float = 0.0
-var _dark_adapt_near_light: bool = false
+var _dark_adapt_has_torch: bool = false
 var _dark_adapt_scan_timer: float = 0.0
+
+const TORCH_ARROW_SCAN_INTERVAL := 0.5
+const TORCH_ARROW_EDGE_MARGIN := 80.0
+var _torch_arrow_label: Label = null
+var _torch_arrow_target: Node3D = null
+var _torch_arrow_scan_timer: float = 0.0
 
 var _grab_escape_immune_timer: float = 0.0
 
@@ -244,6 +250,12 @@ var _prog_last_text: String = ""
 var _prog_anim_tween: Tween = null
 var _progression_panel: Control = null
 var _progression_label: Label = null
+var _sub_prog_panel: Control = null
+var _sub_prog_label: Label = null
+var _sub_prog_last_text: String = ""
+var _gold_counter_panel: HBoxContainer = null
+var _gold_counter_label: Label = null
+var _gold_counter_time: float = 0.0
 
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
@@ -321,6 +333,8 @@ func _ready():
 	_setup_smoke_overlay()
 	_setup_hotbar_ui()
 	_setup_progression_ui()
+	_setup_gold_counter_ui()
+	_create_torch_arrow()
 	_select_hotbar_slot(0)
 	# Give player a torch in hotbar slot 1 on startup
 	var _torch_scene := preload("res://assets/items/torch.tscn")
@@ -800,9 +814,11 @@ func _physics_process(delta):
 	_log_player_position()
 	_log_attack_overlap_snapshot()
 	_update_dark_adapt(delta)
+	_update_torch_arrow(delta)
 	_update_footsteps()
 	_update_chase_sound(delta)
 	_update_progression_ui(delta)
+	_update_gold_counter_ui(delta)
 
 func _setup_attack_overlap_debug() -> void:
 	if attack_area == null:
@@ -1644,11 +1660,94 @@ func _update_dark_adapt(delta: float) -> void:
 	_dark_adapt_scan_timer -= delta
 	if _dark_adapt_scan_timer <= 0.0:
 		_dark_adapt_scan_timer = DARK_ADAPT_SCAN_INTERVAL
-		_dark_adapt_near_light = _check_near_light()
-	var target := 0.0 if _dark_adapt_near_light else DARK_ADAPT_MAX_ENERGY
-	var speed := DARK_ADAPT_OUT_SPEED if _dark_adapt_near_light else DARK_ADAPT_IN_SPEED
+		_dark_adapt_has_torch = _has_torch_in_hotbar()
+	var target := 0.0 if _dark_adapt_has_torch else DARK_ADAPT_MAX_ENERGY
+	var speed := DARK_ADAPT_OUT_SPEED if _dark_adapt_has_torch else DARK_ADAPT_IN_SPEED
 	_dark_adapt_energy = move_toward(_dark_adapt_energy, target, speed * delta)
 	dark_adapt_light.light_energy = _dark_adapt_energy
+
+func _has_torch_in_hotbar() -> bool:
+	for item_model in hotbar_item_models:
+		if _is_torch_item_model(item_model):
+			return true
+	return false
+
+func _create_torch_arrow() -> void:
+	if hud_control == null:
+		return
+	_torch_arrow_label = Label.new()
+	_torch_arrow_label.name = "TorchArrowLabel"
+	_torch_arrow_label.text = "▲"
+	_torch_arrow_label.add_theme_font_size_override("font_size", 52)
+	_torch_arrow_label.modulate = Color(1.0, 0.55, 0.05, 0.9)
+	_torch_arrow_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_torch_arrow_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_torch_arrow_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_torch_arrow_label.custom_minimum_size = Vector2(60, 60)
+	_torch_arrow_label.visible = false
+	hud_control.add_child(_torch_arrow_label)
+
+func _update_torch_arrow(delta: float) -> void:
+	if _torch_arrow_label == null:
+		return
+	if _has_torch_in_hotbar():
+		_torch_arrow_label.visible = false
+		_torch_arrow_target = null
+		return
+	_torch_arrow_scan_timer -= delta
+	if _torch_arrow_scan_timer <= 0.0:
+		_torch_arrow_scan_timer = TORCH_ARROW_SCAN_INTERVAL
+		_torch_arrow_target = _find_nearest_dropped_torch()
+	if _torch_arrow_target == null or not is_instance_valid(_torch_arrow_target):
+		_torch_arrow_label.visible = false
+		return
+	var cam := camera as Camera3D
+	if cam == null:
+		_torch_arrow_label.visible = false
+		return
+	_torch_arrow_label.visible = true
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var screen_center: Vector2 = viewport_size * 0.5
+	var torch_screen_pos: Vector2 = cam.unproject_position(_torch_arrow_target.global_position)
+	var is_behind: bool = not cam.is_position_in_frustum(_torch_arrow_target.global_position)
+	var label_size: Vector2 = _torch_arrow_label.size
+	var on_screen: bool = not is_behind and Rect2(Vector2.ZERO, viewport_size).has_point(torch_screen_pos)
+	if on_screen:
+		# Hover above the torch with the arrow pointing down at it (▼).
+		_torch_arrow_label.position = torch_screen_pos - Vector2(label_size.x * 0.5, label_size.y + 10.0)
+		_torch_arrow_label.pivot_offset = label_size * 0.5
+		_torch_arrow_label.rotation = PI
+	else:
+		# Torch is off-screen — pin arrow to the screen edge pointing toward it.
+		if is_behind:
+			torch_screen_pos = screen_center * 2.0 - torch_screen_pos
+		var dir: Vector2 = torch_screen_pos - screen_center
+		if dir.length_squared() < 1.0:
+			dir = Vector2(0.0, -1.0)
+		dir = dir.normalized()
+		var half_w: float = screen_center.x - TORCH_ARROW_EDGE_MARGIN
+		var half_h: float = screen_center.y - TORCH_ARROW_EDGE_MARGIN
+		var t: float = minf(half_w / maxf(absf(dir.x), 0.001), half_h / maxf(absf(dir.y), 0.001))
+		var arrow_pos: Vector2 = screen_center + dir * t
+		_torch_arrow_label.position = arrow_pos - label_size * 0.5
+		_torch_arrow_label.pivot_offset = label_size * 0.5
+		_torch_arrow_label.rotation = atan2(dir.x, -dir.y)
+
+func _find_nearest_dropped_torch() -> Node3D:
+	var nearest: Node3D = null
+	var nearest_dist := INF
+	var player_pos := global_position
+	for node: Node in get_tree().root.find_children("*", "RigidBody3D", true, false):
+		if node.get_script() != TORCH_ITEM_SCRIPT:
+			continue
+		var slot_val = node.get("inventory_slot_index")
+		if slot_val == null or int(slot_val) != -1:
+			continue
+		var d := (node as Node3D).global_position.distance_to(player_pos)
+		if d < nearest_dist:
+			nearest_dist = d
+			nearest = node as Node3D
+	return nearest
 
 func _check_near_light() -> bool:
 	var player_pos := global_position
@@ -2125,6 +2224,48 @@ func _setup_progression_ui() -> void:
 	_progression_panel = panel
 	_progression_label = label
 
+	# Sub-progression panel (below main, uses warning.png icon)
+	var sub_panel := HBoxContainer.new()
+	sub_panel.name = "SubProgression"
+	sub_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sub_panel.add_theme_constant_override("separation", 10)
+	sub_panel.set_anchor(SIDE_LEFT, 0.0)
+	sub_panel.set_anchor(SIDE_TOP, 0.0)
+	sub_panel.set_anchor(SIDE_RIGHT, 0.0)
+	sub_panel.set_anchor(SIDE_BOTTOM, 0.0)
+	sub_panel.set_offset(SIDE_LEFT, 14.0)
+	sub_panel.set_offset(SIDE_TOP, 68.0)
+	sub_panel.set_offset(SIDE_RIGHT, 520.0)
+	sub_panel.set_offset(SIDE_BOTTOM, 112.0)
+	sub_panel.grow_horizontal = Control.GROW_DIRECTION_END
+	sub_panel.modulate.a = 0.0
+	sub_panel.visible = false
+	hud_control.add_child(sub_panel)
+
+	var warn_icon := TextureRect.new()
+	warn_icon.name = "WarnIcon"
+	var warn_tex := load("res://assets/ui/warning.png") as Texture2D
+	if warn_tex:
+		warn_icon.texture = warn_tex
+	warn_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	warn_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	warn_icon.custom_minimum_size = Vector2(38, 38)
+	warn_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sub_panel.add_child(warn_icon)
+
+	var sub_label := Label.new()
+	sub_label.name = "SubProgLabel"
+	sub_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sub_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sub_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	if prog_font:
+		sub_label.add_theme_font_override("font", prog_font)
+	sub_label.add_theme_font_size_override("font_size", 16)
+	sub_panel.add_child(sub_label)
+
+	_sub_prog_panel = sub_panel
+	_sub_prog_label = sub_label
+
 func _update_progression_ui(delta: float) -> void:
 	if _progression_panel == null or _progression_label == null:
 		return
@@ -2201,6 +2342,99 @@ func _update_progression_ui(delta: float) -> void:
 			_play_progression_attention_effect()
 			_prog_last_text = text
 		_progression_panel.visible = true
+
+	# Sub-progression: "add gem stones to the slabs" — shown after door interaction, hidden once solved
+	_update_sub_progression_ui()
+
+func _setup_gold_counter_ui() -> void:
+	if hud_control == null:
+		return
+	var panel := HBoxContainer.new()
+	panel.name = "GoldCounter"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_constant_override("separation", 8)
+	panel.set_anchor(SIDE_LEFT, 1.0)
+	panel.set_anchor(SIDE_TOP, 0.0)
+	panel.set_anchor(SIDE_RIGHT, 1.0)
+	panel.set_anchor(SIDE_BOTTOM, 0.0)
+	panel.set_offset(SIDE_LEFT, -160.0)
+	panel.set_offset(SIDE_TOP, 14.0)
+	panel.set_offset(SIDE_RIGHT, -14.0)
+	panel.set_offset(SIDE_BOTTOM, 63.0)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	hud_control.add_child(panel)
+
+	var icon := TextureRect.new()
+	icon.name = "EyeIcon"
+	var eye_tex := load("res://assets/ui/eye.png") as Texture2D
+	if eye_tex:
+		icon.texture = eye_tex
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(38, 38)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(icon)
+
+	var label := Label.new()
+	label.name = "GoldLabel"
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
+	if font:
+		label.add_theme_font_override("font", font)
+	label.add_theme_font_size_override("font_size", 18)
+	panel.add_child(label)
+
+	_gold_counter_panel = panel
+	_gold_counter_label = label
+
+
+func _count_hotbar_gold() -> int:
+	var count := 0
+	for item in hotbar_item_models:
+		if _is_gold_item_model(item):
+			count += 1
+	return mini(count, 4)
+
+
+func _update_gold_counter_ui(delta: float) -> void:
+	if _gold_counter_panel == null or _gold_counter_label == null:
+		return
+	_gold_counter_time += delta
+	var gold := _count_hotbar_gold()
+	_gold_counter_label.text = "%d/4" % gold
+	# Color: red at 0, green at 4 (via HSV hue sweep)
+	var t := float(gold) / 4.0
+	var color := Color.from_hsv(t * 0.333, 1.0, 1.0)
+	_gold_counter_panel.modulate = color
+	# Shake: amplitude and speed intensify with gold count
+	var shake_amp := float(gold) * 1.5
+	var shake_speed := 12.0 + float(gold) * 3.0
+	var sx := sin(_gold_counter_time * shake_speed) * shake_amp
+	var sy := cos(_gold_counter_time * shake_speed * 1.3 + 0.7) * shake_amp * 0.5
+	_gold_counter_panel.set_offset(SIDE_LEFT, -160.0 + sx)
+	_gold_counter_panel.set_offset(SIDE_TOP, 14.0 + sy)
+	_gold_counter_panel.set_offset(SIDE_RIGHT, -14.0 + sx)
+	_gold_counter_panel.set_offset(SIDE_BOTTOM, 63.0 + sy)
+
+
+func _update_sub_progression_ui() -> void:
+	if _sub_prog_panel == null or _sub_prog_label == null:
+		return
+	var sub_text := ""
+	if CandlePuzzleRoom.door_interaction_triggered and not CandlePuzzleRoom.puzzle_door_opened:
+		sub_text = "place gem stones on the slabs"
+	if sub_text.is_empty():
+		_sub_prog_panel.visible = false
+	else:
+		if sub_text != _sub_prog_last_text:
+			_sub_prog_label.text = sub_text
+			_sub_prog_panel.modulate.a = 1.0
+			_sub_prog_panel.visible = true
+			_sub_prog_last_text = sub_text
+		_sub_prog_panel.visible = true
+
 
 func _play_progression_attention_effect() -> void:
 	if _progression_panel == null:

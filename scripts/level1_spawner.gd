@@ -186,6 +186,9 @@ func _on_dungeon_ready(generator: Node) -> void:
 			# Keep corridors so rooms stay connected
 			if child.name.begins_with("Corridor"):
 				continue
+			# Keep pre-placed dead end rooms
+			if child.name.begins_with("DeadEnd"):
+				continue
 			child.queue_free()
 
 	# Refresh all_rooms after removals.
@@ -363,11 +366,20 @@ func _on_dungeon_ready(generator: Node) -> void:
 		_apply_table_registry(table_reg)
 
 	# ---------- Spawn items across the map (server only) ----------
-	var item_rooms: Array = rooms.filter(func(r: Node) -> bool:
+	# Pool includes upper-floor rooms AND corridors for wider distribution.
+	# Stair rooms and puzzle rooms are excluded; bottom floor already filtered above.
+	var spawn_pool: Array = all_rooms.filter(func(r: Node) -> bool:
+		var rp := (r as Node3D).global_position
+		if abs(rp.y - start_pos.y) < voxel_y:
+			return false
+		if r is CandlePuzzleRoom:
+			return false
 		var n := r.name.to_lower()
-		return not (n.begins_with("corridor") or n.begins_with("stair"))
+		if n.begins_with("stair"):
+			return false
+		return true
 	)
-	_spawn_map_items(generator, item_rooms, rng, big_room_counts)
+	_spawn_map_items(generator, spawn_pool, rng, big_room_counts)
 
 	# Spawn 1 charger and 1 sword inside the IntroArena.
 	# The charger cannot be baked into intro_arena.tscn because charger._ready() sets
@@ -375,12 +387,35 @@ func _on_dungeon_ready(generator: Node) -> void:
 	var intro_arena := generator.find_child("IntroArena", true, false) as Node3D
 	if intro_arena:
 		var arena_pos := intro_arena.global_position
+		var charger_ref: Node3D = null
 		if _npc_spawner:
-			_npc_spawner.spawn({"scene": CHARGER_SCENE.resource_path, "pos": arena_pos + Vector3(0, 1.0, 0)})
+			charger_ref = _npc_spawner.spawn({"scene": CHARGER_SCENE.resource_path, "pos": arena_pos + Vector3(0, 1.0, 0)})
 		else:
-			var charger: Node3D = CHARGER_SCENE.instantiate()
-			add_child(charger)
-			charger.global_position = arena_pos + Vector3(0, 1.0, 0)
+			charger_ref = CHARGER_SCENE.instantiate()
+			add_child(charger_ref)
+			charger_ref.global_position = arena_pos + Vector3(0, 1.0, 0)
+		# When the charger dies, rotate Door_02 by 60° on Y to open the exit.
+		# Also spawn a health potion at the arena center if any player took damage.
+		if charger_ref and charger_ref.has_signal("died"):
+			var door := intro_arena.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
+			if door:
+				charger_ref.died.connect(func() -> void:
+					var tw := door.create_tween()
+					tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
+						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+					var players := get_tree().get_nodes_in_group("player")
+					var someone_hurt := players.any(func(p: Node) -> bool:
+						return p.get(&"health") != null and (p.get(&"health") as float) < 100.0
+					)
+					if someone_hurt:
+						var potion_pos := arena_pos + Vector3(0, 0.5, 0)
+						if _item_spawner:
+							_item_spawner.spawn({"scene": ITEM_SCENES["health"], "pos": potion_pos})
+						else:
+							var potion: Node3D = load(ITEM_SCENES["health"]).instantiate()
+							add_child(potion)
+							potion.global_position = potion_pos
+				)
 		var sword_pos := arena_pos + Vector3(0, 0.5, 0)
 		if _item_spawner:
 			_item_spawner.spawn({"scene": ITEM_SCENES["sword"], "pos": sword_pos})
@@ -438,10 +473,13 @@ func _spawn_map_items(
 		)
 		var room: Node3D = candidates[rng.randi() % candidates.size()]
 
+		# Corridors are narrow (1 voxel wide) so use a tighter spread.
+		var is_corridor := room.name.to_lower().begins_with("corridor")
+		var max_spread: float = 1.5 if is_corridor else 3.5
 		var spread := Vector3(
-			rng.randf_range(-3.0, 3.0),
-			2.0,
-			rng.randf_range(-3.0, 3.0)
+			rng.randf_range(-max_spread, max_spread),
+			0.5,
+			rng.randf_range(-max_spread, max_spread)
 		)
 		var target_pos := room.global_position + spread
 		if _item_spawner:

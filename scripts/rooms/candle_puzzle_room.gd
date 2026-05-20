@@ -12,6 +12,7 @@ const _PUZZLE_TABLE_PATHS: Array[String] = [
 const RAYCAST_DISTANCE := 5.0
 const ITEM_PLACE_Y_OFFSET := 1.5
 const WARNING2_DISPLAY_TIME := 3.0
+const INTERACT_RANGE := 35.0
 
 # Maps table item scene path → expected item script path (mirrors item_hold_check.gd)
 const _SCENE_TO_SCRIPT: Dictionary = {
@@ -26,12 +27,14 @@ static var _shared_pool: Array[String] = []
 static var _pool_idx: int = 0
 static var puzzle_door_opened: bool = false
 static var player_entered_room: bool = false
+static var door_interaction_triggered: bool = false
 
 static func reset_for_generation() -> void:
 	_shared_pool.clear()
 	_pool_idx = 0
 	puzzle_door_opened = false
 	player_entered_room = false
+	door_interaction_triggered = false
 
 # Runtime placement state
 var _hold_areas: Array[Area3D] = []        # index 0–3 → ItemHold1–4 Area3D
@@ -60,7 +63,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	_randomize_tables()
-	_find_hold_areas.call_deferred()
+	_find_hold_areas()
 
 
 func _find_hold_areas() -> void:
@@ -85,6 +88,14 @@ func _process(delta: float) -> void:
 		if global_position.distance_to(_player.global_position) <= 25.0:
 			CandlePuzzleRoom.player_entered_room = true
 
+	# Only manage PlaceItem when the player is near this room.
+	if global_position.distance_to(_player.global_position) > INTERACT_RANGE:
+		if _hovered_hold_index >= 0 or _door_hovered:
+			_set_place_item_visible(false)
+			_hovered_hold_index = -1
+			_door_hovered = false
+		return
+
 	# Countdown Warning2 timer
 	if _warning2_timer > 0.0:
 		_warning2_timer -= delta
@@ -99,6 +110,7 @@ func _process(delta: float) -> void:
 		else:
 			_try_place_item(_hovered_hold_index)
 	elif _door_hovered and Input.is_action_just_pressed("e"):
+		CandlePuzzleRoom.door_interaction_triggered = true
 		_show_warning2("I think I need to place something on the slabs to open this")
 
 	# Detect if the player picked up a placed item from the table (only before door opens)
@@ -155,7 +167,7 @@ func _get_selected_item() -> Node:
 
 func _update_place_prompt() -> void:
 	_door_hovered = false
-	if _hold_areas.is_empty() or _door_opened:
+	if _door_opened:
 		_set_place_item_visible(false)
 		_hovered_hold_index = -1
 		return

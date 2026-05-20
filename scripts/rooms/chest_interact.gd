@@ -12,6 +12,7 @@ const GOLD_POP_SPEED := 3.0
 
 var _player: Node = null
 var _interact_control: Control = null
+var _interact_label: Label = null
 var _is_opened: bool = false
 var _is_hovered: bool = false
 
@@ -19,6 +20,12 @@ var _is_hovered: bool = false
 func _process(_delta: float) -> void:
 	_find_player_if_needed()
 	if _player == null:
+		return
+	# Only manage PlaceItem when the player is near this chest.
+	if global_position.distance_to(_player.global_position) > RAYCAST_DISTANCE * 6.0:
+		if _is_hovered:
+			_set_interact_visible(false)
+			_is_hovered = false
 		return
 	_update_interact_prompt()
 	if _is_hovered and not _is_opened \
@@ -34,8 +41,11 @@ func _find_player_if_needed() -> void:
 		return
 	_player = players[0]
 	_interact_control = _player.get_node_or_null(
-		"CanvasLayer/Control/Interact"
+		"CanvasLayer/Control/PlaceItem"
 	) as Control
+	_interact_label = _player.get_node_or_null(
+		"CanvasLayer/Control/PlaceItem/Label"
+	) as Label
 
 
 func _get_player_camera() -> Camera3D:
@@ -46,14 +56,16 @@ func _get_player_camera() -> Camera3D:
 
 func _update_interact_prompt() -> void:
 	if _is_opened:
-		_set_interact_visible(false)
-		_is_hovered = false
+		if _is_hovered:
+			_set_interact_visible(false)
+			_is_hovered = false
 		return
 
 	var cam := _get_player_camera()
 	if cam == null:
-		_set_interact_visible(false)
-		_is_hovered = false
+		if _is_hovered:
+			_set_interact_visible(false)
+			_is_hovered = false
 		return
 
 	var origin := cam.global_position
@@ -62,7 +74,7 @@ func _update_interact_prompt() -> void:
 		origin, origin + forward * RAYCAST_DISTANCE
 	)
 	query.collide_with_areas = true
-	query.collide_with_bodies = true
+	query.collide_with_bodies = false
 	query.exclude = [_player]
 	var result := get_world_3d().direct_space_state.intersect_ray(
 		query
@@ -74,12 +86,18 @@ func _update_interact_prompt() -> void:
 		if collider == chest_area:
 			aimed = true
 
+	var was_hovered := _is_hovered
 	_is_hovered = aimed
-	_set_interact_visible(aimed)
+	if aimed:
+		_set_interact_visible(true)
+	elif was_hovered:
+		_set_interact_visible(false)
 
 
 func _set_interact_visible(visible_state: bool) -> void:
 	if _interact_control and is_instance_valid(_interact_control):
+		if visible_state and _interact_label and is_instance_valid(_interact_label):
+			_interact_label.text = "open chest"
 		_interact_control.visible = visible_state
 
 

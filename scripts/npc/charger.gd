@@ -46,6 +46,8 @@ const STUN_WALK_ANIMATION_SPEED_SCALE = 0.45
 @export var debug_navigation_logs: bool = false
 @export var facing_offset_degrees: float = 0
 
+signal died
+
 var health: float = HEALTH_MAX
 var player: CharacterBody3D = null
 var is_player_in_range: bool = false
@@ -794,6 +796,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	died.emit()
 	GameStats.record_kill("charger")
 	health = 0.0
 	hit_reaction_timer = 0.0

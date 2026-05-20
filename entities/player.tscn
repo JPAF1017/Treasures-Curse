@@ -84,7 +84,6 @@ shape = SubResource("CapsuleShape3D_vision")
 light_color = Color(0.78, 0.68, 0.5, 1)
 light_energy = 0.0
 light_bake_mode = 0
-omni_range = 3.5
 omni_attenuation = 2.0
 
 [node name="player" parent="." unique_id=1414178216 instance=ExtResource("2_b0kkn")]

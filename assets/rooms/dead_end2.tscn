@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://bgjdvolv4vgn3"]
+
+[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_sherp"]
+[ext_resource type="Script" uid="uid://deadendroom01" path="res://assets/rooms/dead_end.gd" id="6_dead2"]
+[ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_onsbg"]
+[ext_resource type="PackedScene" uid="uid://c5tachymoo3s2" path="res://assets/room assets/wall_01.tscn" id="3_0dbuj"]
+[ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="4_706ny"]
+[ext_resource type="PackedScene" uid="uid://d1e1ffdtkokq8" path="res://assets/room assets/torch.tscn" id="5_ugclv"]
+
+[node name="DeadEnd1" type="Node3D" unique_id=194753619]
+script = ExtResource("6_dead2")
+metadata/_custom_type_script = "uid://c801ki3oghumx"
+
+[node name="Models" type="Node3D" parent="." unique_id=862004509]
+
+[node name="Floor" type="Node3D" parent="Models" unique_id=1296148809]
+
+[node name="Floor_Tiles" parent="Models/Floor" unique_id=157708764 instance=ExtResource("2_onsbg")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -5, 0)
+
+[node name="Walls" type="Node3D" parent="Models" unique_id=1911773406]
+
+[node name="Wall_02" parent="Models/Walls" unique_id=1802334225 instance=ExtResource("3_0dbuj")]
+transform = Transform3D(-2.1855694e-08, 0, 0.15, 0, 0.5, 0, -0.5, 0, -6.5567085e-09, 4.6, -5, 0)
+
+[node name="Wall_03" parent="Models/Walls" unique_id=2029126007 instance=ExtResource("3_0dbuj")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.15, 0, -5, 4.6)
+
+[node name="Ceiling" type="Node3D" parent="Models" unique_id=1840443603]
+
+[node name="Block" parent="Models/Ceiling" unique_id=389826107 instance=ExtResource("4_706ny")]
+transform = Transform3D(0.5, 0, 0, 0, -0.025, 7.54979e-08, 0, -3.774895e-09, -0.5, 0, 5, 0)
+
+[node name="Props" type="Node3D" parent="Models" unique_id=1797657533]
+
+[node name="Torch" parent="Models/Props" unique_id=1963492331 instance=ExtResource("5_ugclv")]
+transform = Transform3D(0.5, 0, 0, 0, 0.47088513, 0.16812855, 0, -0.16812855, 0.47088513, 0, 0, 4)
+
+[node name="Torch2" parent="Models/Props" unique_id=1268954641 instance=ExtResource("5_ugclv")]
+transform = Transform3D(-2.1855694e-08, -0.16812854, 0.47088513, 0, 0.4708851, 0.16812852, -0.49999997, 7.3491315e-09, -2.0583041e-08, 4, 0, 0)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=344119434]
+visible = false
+use_collision = true
+size = Vector3(10, 10, 10)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="CSGBox3D" unique_id=326456436]
+operation = 2
+size = Vector3(9.5, 9.5, 9.5)
+
+[node name="DOOR_F" type="CSGBox3D" parent="CSGBox3D" unique_id=1062944599]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+operation = 2
+size = Vector3(9.5, 9.5, 0.5)
+
+[node name="DOOR_L" type="CSGBox3D" parent="CSGBox3D" unique_id=1973232618]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -5, 0, -0.25)
+operation = 2
+size = Vector3(10, 9.5, 0.5)
