@@ -492,6 +492,8 @@ func _unhandled_input(event):
 				if selected_item:
 					selected_item.call("release_primary_action", self)
 		elif event.pressed:
+			if _is_swing_in_progress():
+				return
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				_select_hotbar_slot((selected_hotbar_slot_index - 1 + HOTBAR_SLOT_COUNT) % HOTBAR_SLOT_COUNT)
 				_on_item_wheel_slot_switched()
@@ -509,7 +511,7 @@ func _unhandled_input(event):
 			return
 
 		var slot_index := _hotbar_index_from_keycode(event.keycode)
-		if slot_index != -1:
+		if slot_index != -1 and not _is_swing_in_progress():
 			_select_hotbar_slot(slot_index)
 			_on_item_wheel_slot_switched()
 
@@ -1273,6 +1275,10 @@ func _get_selected_primary_item() -> Node:
 	if _is_primary_item_model(selected_item):
 		return selected_item
 	return null
+
+func _is_swing_in_progress() -> bool:
+	var item := _get_selected_primary_item()
+	return item != null and bool(item.get("swing_in_progress"))
 
 func _has_item_in_hotbar(item: Node) -> bool:
 	if item == null:
@@ -2357,10 +2363,10 @@ func _setup_gold_counter_ui() -> void:
 	panel.set_anchor(SIDE_TOP, 0.0)
 	panel.set_anchor(SIDE_RIGHT, 1.0)
 	panel.set_anchor(SIDE_BOTTOM, 0.0)
-	panel.set_offset(SIDE_LEFT, -160.0)
+	panel.set_offset(SIDE_LEFT, -300.0)
 	panel.set_offset(SIDE_TOP, 14.0)
 	panel.set_offset(SIDE_RIGHT, -14.0)
-	panel.set_offset(SIDE_BOTTOM, 63.0)
+	panel.set_offset(SIDE_BOTTOM, 128.0)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	hud_control.add_child(panel)
 
@@ -2371,7 +2377,7 @@ func _setup_gold_counter_ui() -> void:
 		icon.texture = eye_tex
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(38, 38)
+	icon.custom_minimum_size = Vector2(114, 114)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(icon)
 
@@ -2383,7 +2389,7 @@ func _setup_gold_counter_ui() -> void:
 	var font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
 	if font:
 		label.add_theme_font_override("font", font)
-	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_font_size_override("font_size", 54)
 	panel.add_child(label)
 
 	_gold_counter_panel = panel
@@ -2413,10 +2419,10 @@ func _update_gold_counter_ui(delta: float) -> void:
 	var shake_speed := 12.0 + float(gold) * 3.0
 	var sx := sin(_gold_counter_time * shake_speed) * shake_amp
 	var sy := cos(_gold_counter_time * shake_speed * 1.3 + 0.7) * shake_amp * 0.5
-	_gold_counter_panel.set_offset(SIDE_LEFT, -160.0 + sx)
+	_gold_counter_panel.set_offset(SIDE_LEFT, -300.0 + sx)
 	_gold_counter_panel.set_offset(SIDE_TOP, 14.0 + sy)
 	_gold_counter_panel.set_offset(SIDE_RIGHT, -14.0 + sx)
-	_gold_counter_panel.set_offset(SIDE_BOTTOM, 63.0 + sy)
+	_gold_counter_panel.set_offset(SIDE_BOTTOM, 128.0 + sy)
 
 
 func _update_sub_progression_ui() -> void:

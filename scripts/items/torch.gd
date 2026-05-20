@@ -98,11 +98,19 @@ func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Co
 	var pixel_y := int(float(linear_index) / float(width))
 	return palette_image.get_pixel(pixel_x, pixel_y)
 
+const DROPPED_LIGHT_HEIGHT_OFFSET := 1.2
+
 func _process(delta: float) -> void:
 	if is_burning:
 		usable_time_left -= delta
 		if usable_time_left <= 0.0:
 			_delete_torch()
+
+func _physics_process(_delta: float) -> void:
+	# Keep the dropped light at a fixed world-space height above the torch
+	# so it illuminates the floor regardless of how the torch tumbled.
+	if _dropped_light and _dropped_light.visible and _dropped_light.top_level:
+		_dropped_light.global_position = global_position + Vector3(0.0, DROPPED_LIGHT_HEIGHT_OFFSET, 0.0)
 
 func _delete_torch() -> void:
 	if inventory_slot_index >= 0:
@@ -216,7 +224,8 @@ func pick_up_into_hotbar(player: Node, slot_index: int) -> bool:
 	_set_item_physics_enabled(false)
 	_set_item_visuals_visible(false)
 	if _dropped_light:
-		_dropped_light.position.y = 0.417
+		_dropped_light.top_level = false
+		_dropped_light.position = Vector3(0.0, 0.417, 0.008)
 		_dropped_light.omni_range = 12.0
 		_dropped_light.visible = false
 	is_burning = false
@@ -261,11 +270,10 @@ func drop_from_hotbar(player: Node) -> bool:
 	if _fire_particle:
 		_fire_particle.visible = true
 	if _dropped_light:
-		_dropped_light.visible = true
-		# Raise the light so it illuminates the floor from above (vertex shading
-		# requires a steep downward angle to light horizontal floor surfaces).
-		_dropped_light.position.y = 1.8
+		_dropped_light.top_level = true
+		_dropped_light.global_position = global_position + Vector3(0.0, DROPPED_LIGHT_HEIGHT_OFFSET, 0.0)
 		_dropped_light.omni_range = 16.0
+		_dropped_light.visible = true
 	_set_item_physics_enabled(true)
 	var player_node := player as Node3D
 	var forward := Vector3.FORWARD
