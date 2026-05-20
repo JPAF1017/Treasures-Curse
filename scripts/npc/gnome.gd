@@ -458,14 +458,8 @@ func _reset_direction_timer() -> void:
 func _setup_damage_debug() -> void:
 	var hurtbox := get_node_or_null("Hurtbox") as Area3D
 	if hurtbox:
-		print("[GnomeDmg] Hurtbox found — layer=%d mask=%d monitorable=%s" % [
-			hurtbox.collision_layer, hurtbox.collision_mask, str(hurtbox.monitorable)])
 		if not hurtbox.area_entered.is_connected(_on_hurtbox_area_entered):
 			hurtbox.area_entered.connect(_on_hurtbox_area_entered)
-	else:
-		print("[GnomeDmg] WARNING: No Hurtbox node found — weapons cannot hit this gnome!")
-	print("[GnomeDmg] Gnome ready — health=%.1f damage_cooldown=%.2f hit_timer=%.2f" % [
-		health, damage_action_cooldown_timer, hit_reaction_timer])
 
 func _on_hurtbox_area_entered(area: Area3D) -> void:
 	if not debug_damage_logs:

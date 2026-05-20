@@ -21,6 +21,7 @@ const UNIT_SIZE            := 10.0    ## Distance for full-volume playback
 const VOICE_VOLUME_DB      := 6.0     ## Extra gain on received voice
 const MIC_BUS_NAME         := "VoiceCapture"
 const MAX_BYTES_PER_PACKET := 1150    ## Audio bytes per RPC (header adds 4 → total ≤1154, under MTU)
+const MIC_GAIN             := 2.5     ## Amplify captured mic signal before sending (raise if quiet)
 
 var _capture_effect: AudioEffectCapture               = null
 var _capture_bus_idx: int                             = -1
@@ -136,7 +137,7 @@ func _send_voice_chunk() -> void:
 	var audio_bytes := PackedByteArray()
 	audio_bytes.resize(available * 2)
 	for i in available:
-		var mono := (frames[i].x + frames[i].y) * 0.5
+		var mono := (frames[i].x + frames[i].y) * 0.5 * MIC_GAIN
 		audio_bytes.encode_s16(i * 2, clampi(int(mono * 32767.0), -32768, 32767))
 
 	if not (multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0):

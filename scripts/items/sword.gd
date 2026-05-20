@@ -115,6 +115,10 @@ func get_hotbar_icon_texture() -> Texture2D:
 	return SWORD_ITEM_ICON
 
 
+func get_hotbar_durability_percent() -> float:
+	return clampf(float(uses_left) / float(MAX_USES), 0.0, 1.0)
+
+
 func get_hotbar_icon_modulate(alpha: float) -> Color:
 	var durability_percent := clampf(float(uses_left) / float(MAX_USES), 0.0, 1.0)
 	var dur_color := item_durability_color_start.lerp(item_durability_color_end, durability_percent)

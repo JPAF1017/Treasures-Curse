@@ -117,6 +117,10 @@ static func is_equip_input_just_pressed() -> bool:
 	return bool(equip_input.get("just_pressed", false))
 
 
+func get_hotbar_durability_percent() -> float:
+	return clampf(float(uses_left) / float(MAX_USES), 0.0, 1.0)
+
+
 func get_hotbar_icon_texture() -> Texture2D:
 	return SHOVEL_ITEM_ICON
 

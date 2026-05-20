@@ -61,9 +61,10 @@ var _table_registry: Dictionary = {}
 # ---- Statue deferred-spawn state (server only) ----
 const STATUE_COUNTDOWN_DURATION  := 60.0   # 1 minute before each spawn
 const STATUE_SEEN_DESPAWN_TIME   := 30.0   # 30 seconds after first sighting before despawn
-const STATUE_SPAWN_MIN_DIST      := 15.0   # minimum spawn distance from target player
-const STATUE_SPAWN_MAX_DIST      := 22.0   # maximum spawn distance (within detection range)
-const STATUE_SPAWN_ATTEMPTS      := 36     # angular samples to find a hidden spot
+const STATUE_SPAWN_BEHIND_MIN    := 3.0    # min distance directly behind the player
+const STATUE_SPAWN_BEHIND_MAX    := 6.0    # max distance directly behind the player
+const STATUE_SPAWN_ARC_HALF_DEG  := 45.0  # half-angle of the behind-player arc
+const STATUE_SPAWN_ATTEMPTS      := 9      # arc steps to find a hidden behind-player spot
 const STATUE_SPAWN_RETRY_SEC     := 1.0    # seconds between hidden-spot retries
 const STATUE_DESPAWN_CHECK_SEC   := 0.25   # poll interval while waiting for a no-look window
 const STATUE_VIEW_CONE_DEG       := 65.0   # slightly wider than the statue's 60° view cone
@@ -617,7 +618,7 @@ func _try_spawn_statue() -> void:
 
 	# Singleplayer: only one player. Multiplayer: pick a random target.
 	var target: Node3D = players[randi() % players.size()]
-	var spawn_pos := _find_hidden_spawn_near(target.global_position)
+	var spawn_pos := _find_hidden_spawn_near(target.global_position, target)
 	if spawn_pos == Vector3.ZERO:
 		return  # every angle is visible — retry on next interval
 
@@ -633,19 +634,28 @@ func _try_spawn_statue() -> void:
 		_statue_node.global_position = spawn_pos
 
 
-## Returns a world position near `center` that is not visible to any player and not on the top floor.
-## Returns Vector3.ZERO when no hidden spot is found in this call.
-func _find_hidden_spawn_near(center: Vector3) -> Vector3:
+## Returns a world position directly behind `target` (±STATUE_SPAWN_ARC_HALF_DEG) that is
+## not visible to any player and not on the top floor. Returns Vector3.ZERO on failure.
+func _find_hidden_spawn_near(center: Vector3, target: Node3D = null) -> Vector3:
 	var space_state := get_world_3d().direct_space_state
 	var players: Array = get_tree().get_nodes_in_group("player")
-	var top_threshold := _top_floor_y - _voxel_y * 0.4
+
+	# Determine the player's backward direction (+Z in local space = behind them).
+	var backward := Vector3(0.0, 0.0, 1.0)  # fallback: world +Z
+	if target != null:
+		var head := target.get_node_or_null("Head") as Node3D
+		if head:
+			backward = head.global_transform.basis.z.normalized()
+		else:
+			backward = target.global_transform.basis.z.normalized()
+
+	# Sweep a ±STATUE_SPAWN_ARC_HALF_DEG arc centred on the backward direction.
 	for i in STATUE_SPAWN_ATTEMPTS:
-		var angle := float(i) / float(STATUE_SPAWN_ATTEMPTS) * TAU
-		var dist := randf_range(STATUE_SPAWN_MIN_DIST, STATUE_SPAWN_MAX_DIST)
-		var candidate := center + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
-		# Reject positions at the top floor level.
-		if _top_floor_y != INF and candidate.y >= top_threshold:
-			continue
+		var t := float(i) / float(STATUE_SPAWN_ATTEMPTS - 1) if STATUE_SPAWN_ATTEMPTS > 1 else 0.5
+		var angle_offset := lerpf(-STATUE_SPAWN_ARC_HALF_DEG, STATUE_SPAWN_ARC_HALF_DEG, t)
+		var dir := backward.rotated(Vector3.UP, deg_to_rad(angle_offset))
+		var dist := randf_range(STATUE_SPAWN_BEHIND_MIN, STATUE_SPAWN_BEHIND_MAX)
+		var candidate := center + Vector3(dir.x * dist, 0.0, dir.z * dist)
 		if not _is_position_visible_to_any_player(candidate, players, space_state):
 			return candidate
 	return Vector3.ZERO
