@@ -59,8 +59,8 @@ var _item_spawner: MultiplayerSpawner = null
 var _table_registry: Dictionary = {}
 
 # ---- Statue deferred-spawn state (server only) ----
-const STATUE_COUNTDOWN_DURATION  := 180.0  # 3 minutes before each spawn
-const STATUE_SEEN_DESPAWN_TIME   := 60.0   # 1 minute after first sighting before despawn
+const STATUE_COUNTDOWN_DURATION  := 60.0   # 1 minute before each spawn
+const STATUE_SEEN_DESPAWN_TIME   := 30.0   # 30 seconds after first sighting before despawn
 const STATUE_SPAWN_MIN_DIST      := 15.0   # minimum spawn distance from target player
 const STATUE_SPAWN_MAX_DIST      := 22.0   # maximum spawn distance (within detection range)
 const STATUE_SPAWN_ATTEMPTS      := 36     # angular samples to find a hidden spot

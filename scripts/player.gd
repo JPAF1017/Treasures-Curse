@@ -257,6 +257,15 @@ var _gold_counter_panel: HBoxContainer = null
 var _gold_counter_label: Label = null
 var _gold_counter_time: float = 0.0
 
+# Spectator state (multiplayer death)
+var is_dead: bool = false
+var _is_spectating: bool = false
+var _spectate_targets: Array = []
+var _spectate_index: int = 0
+var _spectator_canvas: CanvasLayer = null
+var _spectator_label: Label = null
+var _current_spectate_target: Node = null
+
 var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
@@ -455,6 +464,11 @@ func _configure_vision_area():
 func _unhandled_input(event):
 	if not is_multiplayer_authority():
 		return
+	if is_dead:
+		if _is_spectating and event is InputEventMouseButton \
+				and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_cycle_spectate_target()
+		return
 	if event is InputEventMouseMotion:
 		var sens := SENSITIVITY * STUN_SENSITIVITY_MULTIPLIER if stun_timer > 0.0 else SENSITIVITY
 		head.rotate_y(-event.relative.x * sens)
@@ -540,6 +554,9 @@ func _physics_process(delta):
 				_prev_net_held_scene = _net_held_scene
 				_update_remote_held_proxy()
 			return
+	if is_dead:
+		_update_spectate_camera()
+		return
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	position_log_timer = max(position_log_timer - delta, 0.0)
 	attack_overlap_log_timer = max(attack_overlap_log_timer - delta, 0.0)
@@ -1563,7 +1580,10 @@ func apply_damage(amount: float) -> void:
 	_update_health_ui()
 	_apply_damage_camera_tilt()
 	if health <= 0.0:
-		get_tree().change_scene_to_file("res://menus/death_menu.tscn")
+		if multiplayer.has_multiplayer_peer() and is_multiplayer_authority():
+			_enter_death_state_multiplayer()
+		else:
+			get_tree().change_scene_to_file("res://menus/death_menu.tscn")
 
 func show_escape_warning() -> void:
 	if escape_warning_control == null:
@@ -2128,6 +2148,197 @@ func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
 		if found:
 			return found
 	return null
+
+
+# ── Spectator system (multiplayer death) ────────────────────────────────────
+
+func _enter_death_state_multiplayer() -> void:
+	is_dead = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if player_canvas_layer:
+		player_canvas_layer.visible = false
+	if stand_collision:
+		stand_collision.disabled = true
+	if crouch_collision:
+		crouch_collision.disabled = true
+	_build_death_overlay()
+
+
+func _build_death_overlay() -> void:
+	_spectator_canvas = CanvasLayer.new()
+	_spectator_canvas.name = "SpectatorCanvas"
+	_spectator_canvas.layer = 10
+	add_child(_spectator_canvas)
+
+	var font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.0, 0.0, 0.0, 0.6)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_spectator_canvas.add_child(bg)
+
+	var died_label := Label.new()
+	died_label.text = "YOU DIED"
+	died_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	died_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	died_label.offset_left = -300.0
+	died_label.offset_right = 300.0
+	died_label.offset_top = 180.0
+	died_label.offset_bottom = 260.0
+	if font:
+		died_label.add_theme_font_override("font", font)
+	died_label.add_theme_font_size_override("font_size", 64)
+	died_label.add_theme_color_override("font_color", Color(0.9, 0.1, 0.1))
+	_spectator_canvas.add_child(died_label)
+
+	var spectate_btn := Button.new()
+	spectate_btn.text = "Spectate"
+	spectate_btn.set_anchors_preset(Control.PRESET_CENTER)
+	spectate_btn.offset_left = -90.0
+	spectate_btn.offset_right = 90.0
+	spectate_btn.offset_top = -10.0
+	spectate_btn.offset_bottom = 30.0
+	if font:
+		spectate_btn.add_theme_font_override("font", font)
+	spectate_btn.add_theme_font_size_override("font_size", 28)
+	spectate_btn.pressed.connect(_begin_spectating)
+	_spectator_canvas.add_child(spectate_btn)
+
+	var menu_btn := Button.new()
+	menu_btn.text = "Main Menu"
+	menu_btn.set_anchors_preset(Control.PRESET_CENTER)
+	menu_btn.offset_left = -90.0
+	menu_btn.offset_right = 90.0
+	menu_btn.offset_top = 50.0
+	menu_btn.offset_bottom = 90.0
+	if font:
+		menu_btn.add_theme_font_override("font", font)
+	menu_btn.add_theme_font_size_override("font_size", 28)
+	menu_btn.pressed.connect(_on_spectate_main_menu)
+	_spectator_canvas.add_child(menu_btn)
+
+
+func _begin_spectating() -> void:
+	_spectate_targets = []
+	for p in get_tree().get_nodes_in_group("player"):
+		if p != self and is_instance_valid(p):
+			_spectate_targets.append(p)
+	if _spectate_targets.is_empty():
+		_on_spectate_main_menu()
+		return
+
+	_is_spectating = true
+	_spectate_index = 0
+
+	for child in _spectator_canvas.get_children():
+		child.queue_free()
+
+	var font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
+
+	_spectator_label = Label.new()
+	_spectator_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_spectator_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_spectator_label.offset_top = 12.0
+	_spectator_label.offset_bottom = 44.0
+	if font:
+		_spectator_label.add_theme_font_override("font", font)
+	_spectator_label.add_theme_font_size_override("font_size", 22)
+	_spectator_label.add_theme_color_override("font_color", Color.WHITE)
+	_spectator_canvas.add_child(_spectator_label)
+
+	var hint_label := Label.new()
+	hint_label.text = "Left Click — Next Player"
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	hint_label.offset_top = -44.0
+	hint_label.offset_bottom = -12.0
+	if font:
+		hint_label.add_theme_font_override("font", font)
+	hint_label.add_theme_font_size_override("font_size", 18)
+	hint_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
+	_spectator_canvas.add_child(hint_label)
+
+	var menu_btn := Button.new()
+	menu_btn.text = "Menu"
+	menu_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	menu_btn.offset_left = -80.0
+	menu_btn.offset_right = -8.0
+	menu_btn.offset_top = 8.0
+	menu_btn.offset_bottom = 42.0
+	if font:
+		menu_btn.add_theme_font_override("font", font)
+	menu_btn.add_theme_font_size_override("font_size", 18)
+	menu_btn.pressed.connect(_on_spectate_main_menu)
+	_spectator_canvas.add_child(menu_btn)
+
+	_apply_spectate_target()
+
+
+func _apply_spectate_target() -> void:
+	_spectate_targets = _spectate_targets.filter(func(p): return is_instance_valid(p))
+	if _spectate_targets.is_empty():
+		return
+	_spectate_index = _spectate_index % _spectate_targets.size()
+	var target: Node = _spectate_targets[_spectate_index]
+
+	# Restore the previous target before switching.
+	_restore_spectate_target(_current_spectate_target)
+	_current_spectate_target = target
+
+	# Hide the target's body mesh locally so we don't see it from inside their head.
+	var target_visual_root := target.get("visual_root") as Node3D
+	if target_visual_root:
+		target_visual_root.visible = false
+
+	# Switch to the target's own camera so we see their viewmodel (child of their camera).
+	var target_cam := target.get_node_or_null("Head/playerCamera") as Camera3D
+	if target_cam:
+		target_cam.current = true
+	if camera:
+		camera.current = false
+
+	if _spectator_label:
+		_spectator_label.text = "Spectating: %s" % target.name
+
+
+func _restore_spectate_target(target: Node) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	var target_visual_root := target.get("visual_root") as Node3D
+	if target_visual_root:
+		target_visual_root.visible = true
+	var target_cam := target.get_node_or_null("Head/playerCamera") as Camera3D
+	if target_cam:
+		target_cam.current = false
+
+
+func _cycle_spectate_target() -> void:
+	_spectate_targets = _spectate_targets.filter(func(p): return is_instance_valid(p))
+	if _spectate_targets.is_empty():
+		return
+	_spectate_index = (_spectate_index + 1) % _spectate_targets.size()
+	_apply_spectate_target()
+
+
+func _update_spectate_camera() -> void:
+	if not _is_spectating:
+		return
+	# If the current spectate target became invalid, cycle to the next valid one.
+	if _current_spectate_target == null or not is_instance_valid(_current_spectate_target):
+		_current_spectate_target = null
+		_spectate_targets = _spectate_targets.filter(func(p): return is_instance_valid(p))
+		if not _spectate_targets.is_empty():
+			_spectate_index = 0
+			_apply_spectate_target()
+
+
+func _on_spectate_main_menu() -> void:
+	_restore_spectate_target(_current_spectate_target)
+	_current_spectate_target = null
+	if camera:
+		camera.current = true
+	GameStats.reset()
+	get_tree().change_scene_to_file("res://menus/start_menu.tscn")
 
 func _update_jump_animation_phase(delta: float) -> bool:
 	if animation_player == null:

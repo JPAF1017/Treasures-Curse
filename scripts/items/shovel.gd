@@ -411,6 +411,11 @@ func _delete_item() -> void:
 					break
 				parent = parent.get_parent()
 		if player:
+			# Release movement lock and stop the swing animation before destroying the weapon.
+			_reset_swing_state(player)
+			var anim_player := _get_player_animation_player(player)
+			if anim_player and anim_player.current_animation == SWING_ANIMATION_NAME:
+				anim_player.stop()
 			player.call("_set_hotbar_item", inventory_slot_index, null, null)
 			if player.has_method("_refresh_selected_item_state"):
 				player.call("_refresh_selected_item_state")
