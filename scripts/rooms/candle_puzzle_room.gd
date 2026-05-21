@@ -25,16 +25,22 @@ const _SCENE_TO_SCRIPT: Dictionary = {
 # Shared across all instances so no two rooms pick the same table.
 static var _shared_pool: Array[String] = []
 static var _pool_idx: int = 0
-static var puzzle_door_opened: bool = false
+static var _doors_opened: Dictionary = {}     # floor_id (String) → bool
 static var player_entered_room: bool = false
 static var door_interaction_triggered: bool = false
 
 static func reset_for_generation() -> void:
 	_shared_pool.clear()
 	_pool_idx = 0
-	puzzle_door_opened = false
+	_doors_opened.clear()
 	player_entered_room = false
 	door_interaction_triggered = false
+
+static func is_any_door_opened() -> bool:
+	return _doors_opened.values().has(true)
+
+func get_floor_id() -> String:
+	return "%d" % roundi(global_position.y)
 
 # Runtime placement state
 var _hold_areas: Array[Area3D] = []        # index 0–3 → ItemHold1–4 Area3D
@@ -288,17 +294,25 @@ func _try_place_item(hold_index: int) -> void:
 func _check_slot_correct(hold_index: int, item: Node) -> void:
 	# table_slot is 1-indexed; ItemHold1 → slot 1, etc.
 	var table_slot: int = hold_index + 1
-	var expected_scene: String = TableItemSpawn.get_item_for_slot(table_slot)
+	var expected_scene: String = TableItemSpawn.get_item_for_slot(global_position.y, table_slot)
+	print("[Puzzle] _check_slot_correct hold=", hold_index, " slot=", table_slot, " floor_y=", global_position.y, " expected_scene='", expected_scene, "'")
+	print("[Puzzle]   registry=", TableItemSpawn._registry)
 	if expected_scene.is_empty():
+		print("[Puzzle]   FAIL: registry has no entry for this slot/floor")
 		return
 	var expected_script: String = _SCENE_TO_SCRIPT.get(expected_scene, "")
 	if expected_script.is_empty():
+		print("[Puzzle]   FAIL: no script mapping for scene ", expected_scene)
 		return
 	var item_script: Script = item.get_script() as Script
+	var actual_script := item_script.resource_path if item_script != null else "(none)"
+	print("[Puzzle]   expected_script=", expected_script, " actual_script=", actual_script)
 	if item_script != null and item_script.resource_path == expected_script:
+		print("[Puzzle]   CORRECT — satisfied_count will be ", _satisfied_count + 1)
 		_slot_correct[hold_index] = true
 		on_item_hold_satisfied()
 	else:
+		print("[Puzzle]   WRONG gem for this slot")
 		_show_warning2("The candles could show me how to solve this")
 
 
@@ -314,7 +328,7 @@ func on_item_hold_unsatisfied() -> void:
 
 
 func _open_door() -> void:
-	CandlePuzzleRoom.puzzle_door_opened = true
+	CandlePuzzleRoom._doors_opened[get_floor_id()] = true
 	var door := get_node_or_null("Models/WallsLR/Door_01") as Node3D
 	if door != null:
 		var tween := create_tween()

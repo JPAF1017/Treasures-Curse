@@ -13,5 +13,6 @@ static var _registry: Dictionary = {}
 static func reset_for_generation() -> void:
 	_registry.clear()
 
-static func get_item_for_slot(slot: int) -> String:
-	return _registry.get(slot, "")
+static func get_item_for_slot(floor_y: float, slot: int) -> String:
+	var key := "%d|%d" % [roundi(floor_y), slot]
+	return _registry.get(key, "")

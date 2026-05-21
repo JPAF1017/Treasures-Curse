@@ -63,9 +63,9 @@ const STATUE_COUNTDOWN_DURATION  := 60.0   # 1 minute before each spawn
 const STATUE_SEEN_DESPAWN_TIME   := 30.0   # 30 seconds after first sighting before despawn
 const STATUE_SPAWN_BEHIND_MIN    := 3.0    # min distance directly behind the player
 const STATUE_SPAWN_BEHIND_MAX    := 6.0    # max distance directly behind the player
-const STATUE_SPAWN_ARC_HALF_DEG  := 45.0  # half-angle of the behind-player arc
-const STATUE_SPAWN_ATTEMPTS      := 9      # arc steps to find a hidden behind-player spot
-const STATUE_SPAWN_RETRY_SEC     := 1.0    # seconds between hidden-spot retries
+const STATUE_SPAWN_ARC_HALF_DEG  := 90.0  # half-angle of the behind-player arc
+const STATUE_SPAWN_ATTEMPTS      := 12     # random candidates per retry
+const STATUE_SPAWN_RETRY_SEC     := 0.2    # seconds between hidden-spot retries
 const STATUE_DESPAWN_CHECK_SEC   := 0.25   # poll interval while waiting for a no-look window
 const STATUE_VIEW_CONE_DEG       := 65.0   # slightly wider than the statue's 60° view cone
 
@@ -143,8 +143,8 @@ func request_map_seed() -> void:
 @rpc("authority", "call_local", "reliable")
 func _apply_table_registry(registry: Dictionary) -> void:
 	_table_registry = registry
-	for slot: int in registry:
-		TableItemSpawn._registry[slot] = registry[slot]
+	for key: String in registry:
+		TableItemSpawn._registry[key] = registry[key]
 
 
 func _on_dungeon_failed(generator: Node) -> void:
@@ -375,6 +375,25 @@ func _on_dungeon_ready(generator: Node) -> void:
 		if pa.y != pb.y: return pa.y < pb.y
 		return pa.z < pb.z
 	)
+	# Also include TableItemSpawn nodes in pre-placed rooms that live outside the generator.
+	var _scene_root := generator.get_parent()
+	if _scene_root:
+		var _preplaced_ts := _scene_root.find_children("*", "Area3D", true, false).filter(
+			func(n: Node) -> bool:
+				return n is TableItemSpawn and not generator.is_ancestor_of(n)
+		)
+		_preplaced_ts.sort_custom(func(a: Node, b: Node) -> bool:
+			var pa := (a as Node3D).global_position
+			var pb := (b as Node3D).global_position
+			if pa.x != pb.x: return pa.x < pb.x
+			if pa.y != pb.y: return pa.y < pb.y
+			return pa.z < pb.z
+		)
+		print("[Puzzle] Pre-placed TableItemSpawn nodes found: ", _preplaced_ts.size())
+		for _pts in _preplaced_ts:
+			print("[Puzzle]   pre-placed ts: ", _pts.name, " slot=", (_pts as TableItemSpawn).table_slot, " pos=", (_pts as Node3D).global_position)
+		table_spawns.append_array(_preplaced_ts)
+	print("[Puzzle] Total TableItemSpawn nodes (generator + pre-placed): ", table_spawns.size())
 	var table_pool: Array = [
 		"res://assets/items/Gem_key1.tscn",
 		"res://assets/items/Gem_key2.tscn",
@@ -387,7 +406,14 @@ func _on_dungeon_ready(generator: Node) -> void:
 		var ts := table_spawns[i] as TableItemSpawn
 		var path: String = table_pool[i % table_pool.size()]
 		if ts.table_slot > 0:
-			table_reg[ts.table_slot] = path
+			# Walk up to the CandlePuzzleRoom so the key matches what _check_slot_correct uses.
+			var _room_ancestor: Node = (ts as Node3D).get_parent()
+			while _room_ancestor != null and not (_room_ancestor is CandlePuzzleRoom):
+				_room_ancestor = _room_ancestor.get_parent()
+			var _floor_y_key: float = (_room_ancestor as Node3D).global_position.y if _room_ancestor is CandlePuzzleRoom else (ts as Node3D).global_position.y
+			var _floor_key := "%d|%d" % [roundi(_floor_y_key), ts.table_slot]
+			print("[Puzzle] registry key=", _floor_key, " → ", path)
+			table_reg[_floor_key] = path
 		var ts_shape := ts.get_node_or_null("CollisionShape3D") as Node3D
 		var table_pos := ts_shape.global_position if ts_shape else ts.global_position
 		if _item_spawner:
@@ -649,15 +675,25 @@ func _find_hidden_spawn_near(center: Vector3, target: Node3D = null) -> Vector3:
 		else:
 			backward = target.global_transform.basis.z.normalized()
 
-	# Sweep a ±STATUE_SPAWN_ARC_HALF_DEG arc centred on the backward direction.
+	# Each call picks random angles within the behind-player arc so successive
+	# retries (every 0.2 s) explore different candidate positions.
+	var distances: Array = [STATUE_SPAWN_BEHIND_MIN,
+			lerpf(STATUE_SPAWN_BEHIND_MIN, STATUE_SPAWN_BEHIND_MAX, 0.5),
+			STATUE_SPAWN_BEHIND_MAX]
 	for i in STATUE_SPAWN_ATTEMPTS:
-		var t := float(i) / float(STATUE_SPAWN_ATTEMPTS - 1) if STATUE_SPAWN_ATTEMPTS > 1 else 0.5
-		var angle_offset := lerpf(-STATUE_SPAWN_ARC_HALF_DEG, STATUE_SPAWN_ARC_HALF_DEG, t)
+		var angle_offset := randf_range(-STATUE_SPAWN_ARC_HALF_DEG, STATUE_SPAWN_ARC_HALF_DEG)
 		var dir := backward.rotated(Vector3.UP, deg_to_rad(angle_offset))
-		var dist := randf_range(STATUE_SPAWN_BEHIND_MIN, STATUE_SPAWN_BEHIND_MAX)
-		var candidate := center + Vector3(dir.x * dist, 0.0, dir.z * dist)
-		if not _is_position_visible_to_any_player(candidate, players, space_state):
-			return candidate
+		for dist in distances:
+			var candidate := center + Vector3(dir.x * dist, 0.0, dir.z * dist)
+			# Reject candidates inside or behind a wall.
+			var wall_query := PhysicsRayQueryParameters3D.create(
+				center + Vector3(0, 1.0, 0),
+				candidate + Vector3(0, 1.0, 0)
+			)
+			if not space_state.intersect_ray(wall_query).is_empty():
+				continue
+			if not _is_position_visible_to_any_player(candidate, players, space_state):
+				return candidate
 	return Vector3.ZERO
 
 

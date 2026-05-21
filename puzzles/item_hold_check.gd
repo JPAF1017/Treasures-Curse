@@ -47,7 +47,9 @@ func _check_item(body: Node) -> bool:
 	var scr = body.get_script()
 	if scr == null:
 		return false
-	var expected_scene: String = TableItemSpawn.get_item_for_slot(table_slot)
+	var room := _find_room()
+	var floor_y: float = room.global_position.y if room != null else 0.0
+	var expected_scene: String = TableItemSpawn.get_item_for_slot(floor_y, table_slot)
 	if expected_scene.is_empty():
 		return false
 	var expected_script: String = _SCENE_TO_SCRIPT.get(expected_scene, "")

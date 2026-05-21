@@ -11,18 +11,20 @@ radius = 0.7104492
 
 [node name="Gold" type="RigidBody3D" unique_id=2016877817]
 script = ExtResource("1_script")
+held_item_scale = 2.0
+viewmodel_scale = 0.2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1080298490]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48217773, 0)
 shape = SubResource("CylinderShape3D_e3ef2")
 
 [node name="gold1" parent="." unique_id=874958781 instance=ExtResource("2_uv5uo")]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
 
 [node name="gold2" parent="." unique_id=1250451392 instance=ExtResource("3_e3ef2")]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
 visible = false
 
 [node name="gold3" parent="." unique_id=2126416426 instance=ExtResource("4_w8eeq")]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
 visible = false

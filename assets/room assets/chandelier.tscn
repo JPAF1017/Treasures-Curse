@@ -1,5 +1,54 @@
-[gd_scene load_steps=2 format=3 uid="uid://dd8iupbgnjxjg"]
+[gd_scene format=3 uid="uid://dd8iupbgnjxjg"]
 
 [ext_resource type="PackedScene" uid="uid://b623qh4jvt676" path="res://assets/PSX_Dungeon/chandelier.glb" id="1_38fla"]
+[ext_resource type="PackedScene" uid="uid://cvp45jmoq8e5j" path="res://assets/room assets/fire_particle.tscn" id="2_tmuer"]
 
-[node name="chandelier" instance=ExtResource("1_38fla")]
+[node name="chandelier" unique_id=1439248702 instance=ExtResource("1_38fla")]
+
+[node name="fire_particle" parent="." index="1" unique_id=1491166917 instance=ExtResource("2_tmuer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6.8373547, 8.838582)
+
+[node name="OmniLight3D" parent="fire_particle"]
+light_energy = 5.0
+light_size = 1.5
+omni_range = 28.0
+
+[node name="fire_particle2" parent="." index="2" unique_id=440332021 instance=ExtResource("2_tmuer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5491934, -6.8373547, 4.339477)
+
+[node name="OmniLight3D" parent="fire_particle2"]
+light_energy = 5.0
+light_size = 1.5
+omni_range = 28.0
+
+[node name="fire_particle3" parent="." index="3" unique_id=1138424596 instance=ExtResource("2_tmuer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.599284, -6.8373547, -4.3761163)
+
+[node name="OmniLight3D" parent="fire_particle3"]
+light_energy = 5.0
+light_size = 1.5
+omni_range = 28.0
+
+[node name="fire_particle4" parent="." index="4" unique_id=1389347084 instance=ExtResource("2_tmuer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014338493, -6.8373547, -8.800699)
+
+[node name="OmniLight3D" parent="fire_particle4"]
+light_energy = 5.0
+light_size = 1.5
+omni_range = 28.0
+
+[node name="fire_particle5" parent="." index="5" unique_id=1194659657 instance=ExtResource("2_tmuer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6947465, -6.8373547, -4.35942)
+
+[node name="OmniLight3D" parent="fire_particle5"]
+light_energy = 5.0
+light_size = 1.5
+omni_range = 28.0
+
+[node name="fire_particle6" parent="." index="6" unique_id=1177251213 instance=ExtResource("2_tmuer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.594567, -6.8373547, 4.3895655)
+
+[node name="OmniLight3D" parent="fire_particle6"]
+light_energy = 5.0
+light_size = 1.5
+omni_range = 28.0

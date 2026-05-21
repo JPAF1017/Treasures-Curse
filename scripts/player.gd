@@ -256,6 +256,8 @@ var _sub_prog_last_text: String = ""
 var _gold_counter_panel: HBoxContainer = null
 var _gold_counter_label: Label = null
 var _gold_counter_time: float = 0.0
+var _synced_gold_count: int = 0      # replicated to all peers via RPC
+var _last_broadcast_gold: int = -1   # detects local count changes for RPC
 
 # Spectator state (multiplayer death)
 var is_dead: bool = false
@@ -483,7 +485,7 @@ func _unhandled_input(event):
 				if stamina <= 0.0:
 					return
 				var selected_item := _get_selected_primary_item()
-				if selected_item != null and (_is_gem_key_item_model(selected_item) or (selected_item.get_meta("puzzle_item", false) and not CandlePuzzleRoom.puzzle_door_opened)):
+				if selected_item != null and (_is_gem_key_item_model(selected_item) or (selected_item.get_meta("puzzle_item", false) and not CandlePuzzleRoom.is_any_door_opened())):
 					if warning_control != null:
 						warning_control.visible = true
 						_warning_timer = WARNING_DISPLAY_TIME
@@ -2607,6 +2609,11 @@ func _setup_gold_counter_ui() -> void:
 	_gold_counter_label = label
 
 
+@rpc("any_peer", "call_local", "reliable")
+func _sync_gold_count(count: int) -> void:
+	_synced_gold_count = count
+
+
 func _count_hotbar_gold() -> int:
 	var count := 0
 	for item in hotbar_item_models:
@@ -2619,7 +2626,22 @@ func _update_gold_counter_ui(delta: float) -> void:
 	if _gold_counter_panel == null or _gold_counter_label == null:
 		return
 	_gold_counter_time += delta
-	var gold := _count_hotbar_gold()
+	var my_gold := _count_hotbar_gold()
+	# In multiplayer, broadcast our count so every peer can display the shared total.
+	if multiplayer.has_multiplayer_peer() and is_multiplayer_authority():
+		if my_gold != _last_broadcast_gold:
+			_last_broadcast_gold = my_gold
+			rpc("_sync_gold_count", my_gold)
+	# Display value: sum all players in multiplayer, own count in singleplayer.
+	var gold: int
+	if multiplayer.has_multiplayer_peer():
+		gold = 0
+		for p in get_tree().get_nodes_in_group("player"):
+			if is_instance_valid(p):
+				gold += int(p.get("_synced_gold_count") if p.get("_synced_gold_count") != null else 0)
+		gold = mini(gold, 4)
+	else:
+		gold = my_gold
 	_gold_counter_label.text = "%d/4" % gold
 	# Color: red at 0, green at 4 (via HSV hue sweep)
 	var t := float(gold) / 4.0
@@ -2640,7 +2662,7 @@ func _update_sub_progression_ui() -> void:
 	if _sub_prog_panel == null or _sub_prog_label == null:
 		return
 	var sub_text := ""
-	if CandlePuzzleRoom.door_interaction_triggered and not CandlePuzzleRoom.puzzle_door_opened:
+	if CandlePuzzleRoom.door_interaction_triggered and not CandlePuzzleRoom.is_any_door_opened():
 		sub_text = "place gem stones on the slabs"
 	if sub_text.is_empty():
 		_sub_prog_panel.visible = false

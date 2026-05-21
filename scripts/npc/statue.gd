@@ -49,6 +49,7 @@ var memory_log_timer: float = 0.0
 var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
 var attack_timer: float = 0.0
+var has_been_seen: bool = false   # statue cannot attack until a player has looked at it once
 
 # Bone sounds
 var bones_sounds: Array[AudioStreamPlayer3D] = []
@@ -314,7 +315,10 @@ func _physics_process(delta):
 				trail_sample_timer = TRAIL_SAMPLE_INTERVAL
 
 		# Weeping Angel behavior - freeze if player is looking at statue
-		if _is_player_looking_at_statue():
+		var _looking_now := _is_player_looking_at_statue()
+		if _looking_now:
+			has_been_seen = true
+		if _looking_now:
 			# Player is looking - freeze completely
 			velocity.x = 0
 			velocity.z = 0
@@ -439,6 +443,8 @@ func _is_player_in_attack_area() -> bool:
 func _process_attack(delta: float) -> void:
 	attack_timer = max(attack_timer - delta, 0.0)
 	if attack_timer > 0.0:
+		return
+	if not has_been_seen:
 		return
 	if attack_area == null or _is_player_looking_at_statue():
 		return

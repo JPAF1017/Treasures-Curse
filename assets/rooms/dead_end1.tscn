@@ -1,11 +1,10 @@
 [gd_scene format=3 uid="uid://dnirglxqvkts0"]
 
-[ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_4vehx"]
-[ext_resource type="Script" uid="uid://deadendroom01" path="res://assets/rooms/dead_end.gd" id="6_dead1"]
 [ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_a6egj"]
 [ext_resource type="PackedScene" uid="uid://c5tachymoo3s2" path="res://assets/room assets/wall_01.tscn" id="3_7rntx"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="4_k6dju"]
 [ext_resource type="PackedScene" uid="uid://d1e1ffdtkokq8" path="res://assets/room assets/torch.tscn" id="5_7rntx"]
+[ext_resource type="Script" uid="uid://deadendroom01" path="res://assets/rooms/dead_end.gd" id="6_dead1"]
 
 [node name="DeadEnd1" type="Node3D" unique_id=194753619]
 script = ExtResource("6_dead1")
@@ -16,7 +15,7 @@ metadata/_custom_type_script = "uid://c801ki3oghumx"
 [node name="Floor" type="Node3D" parent="Models" unique_id=1296148809]
 
 [node name="Floor_Tiles" parent="Models/Floor" unique_id=157708764 instance=ExtResource("2_a6egj")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -5, 0)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -4.75, 0)
 
 [node name="Walls" type="Node3D" parent="Models" unique_id=1911773406]
 
