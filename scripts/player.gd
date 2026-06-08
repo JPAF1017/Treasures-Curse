@@ -258,6 +258,7 @@ var _gold_counter_label: Label = null
 var _gold_counter_time: float = 0.0
 var _synced_gold_count: int = 0      # replicated to all peers via RPC
 var _last_broadcast_gold: int = -1   # detects local count changes for RPC
+var _gold_teleport_triggered: bool = false  # set true once 5 gold total is reached
 
 # Spectator state (multiplayer death)
 var is_dead: bool = false
@@ -2413,7 +2414,7 @@ func _setup_progression_ui() -> void:
 	panel.set_offset(SIDE_LEFT, 14.0)
 	panel.set_offset(SIDE_TOP, 14.0)
 	panel.set_offset(SIDE_RIGHT, 520.0)
-	panel.set_offset(SIDE_BOTTOM, 63.0)
+	panel.set_offset(SIDE_BOTTOM, 90.0)
 	panel.grow_horizontal = Control.GROW_DIRECTION_END
 	panel.modulate.a = 0.0  # start invisible for fade-in
 	hud_control.add_child(panel)
@@ -2433,7 +2434,8 @@ func _setup_progression_ui() -> void:
 	label.name = "ProgressLabel"
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var prog_font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
 	if prog_font:
 		label.add_theme_font_override("font", prog_font)
@@ -2453,9 +2455,9 @@ func _setup_progression_ui() -> void:
 	sub_panel.set_anchor(SIDE_RIGHT, 0.0)
 	sub_panel.set_anchor(SIDE_BOTTOM, 0.0)
 	sub_panel.set_offset(SIDE_LEFT, 14.0)
-	sub_panel.set_offset(SIDE_TOP, 68.0)
+	sub_panel.set_offset(SIDE_TOP, 95.0)
 	sub_panel.set_offset(SIDE_RIGHT, 520.0)
-	sub_panel.set_offset(SIDE_BOTTOM, 112.0)
+	sub_panel.set_offset(SIDE_BOTTOM, 139.0)
 	sub_panel.grow_horizontal = Control.GROW_DIRECTION_END
 	sub_panel.modulate.a = 0.0
 	sub_panel.visible = false
@@ -2614,12 +2616,18 @@ func _sync_gold_count(count: int) -> void:
 	_synced_gold_count = count
 
 
+@rpc("any_peer", "call_local", "reliable")
+func _rpc_teleport_to_skull_puzzle(pos: Vector3) -> void:
+	if is_multiplayer_authority():
+		global_position = pos
+
+
 func _count_hotbar_gold() -> int:
 	var count := 0
 	for item in hotbar_item_models:
 		if _is_gold_item_model(item):
 			count += 1
-	return mini(count, 4)
+	return count
 
 
 func _update_gold_counter_ui(delta: float) -> void:
@@ -2639,9 +2647,19 @@ func _update_gold_counter_ui(delta: float) -> void:
 		for p in get_tree().get_nodes_in_group("player"):
 			if is_instance_valid(p):
 				gold += int(p.get("_synced_gold_count") if p.get("_synced_gold_count") != null else 0)
-		gold = mini(gold, 4)
 	else:
 		gold = my_gold
+	# Gold teleport trigger: server (peer 1) in MP, local player in SP
+	if not _gold_teleport_triggered:
+		var should_teleport: bool
+		if multiplayer.has_multiplayer_peer():
+			should_teleport = (multiplayer.get_unique_id() == 1 and gold >= 5)
+		else:
+			should_teleport = (gold >= 5)
+		if should_teleport:
+			_gold_teleport_triggered = true
+			_do_gold_teleport()
+	gold = mini(gold, 4)
 	_gold_counter_label.text = "%d/4" % gold
 	# Color: red at 0, green at 4 (via HSV hue sweep)
 	var t := float(gold) / 4.0
@@ -2656,6 +2674,20 @@ func _update_gold_counter_ui(delta: float) -> void:
 	_gold_counter_panel.set_offset(SIDE_TOP, 14.0 + sy)
 	_gold_counter_panel.set_offset(SIDE_RIGHT, -14.0 + sx)
 	_gold_counter_panel.set_offset(SIDE_BOTTOM, 128.0 + sy)
+
+
+func _do_gold_teleport() -> void:
+	var skull_room := get_tree().get_root().find_child("SkullPuzzle", true, false) as Node3D
+	if not is_instance_valid(skull_room):
+		push_warning("Gold teleport: SkullPuzzle room not found in scene.")
+		return
+	var target_pos := skull_room.global_position + Vector3(0.0, -3.0, 0.0)
+	if multiplayer.has_multiplayer_peer():
+		for p: Node in get_tree().get_nodes_in_group("player"):
+			if is_instance_valid(p) and p.has_method("_rpc_teleport_to_skull_puzzle"):
+				p.rpc("_rpc_teleport_to_skull_puzzle", target_pos)
+	else:
+		global_position = target_pos
 
 
 func _update_sub_progression_ui() -> void:

@@ -1111,7 +1111,6 @@ NOW MOVE UP TO ESCAPE!"
 horizontal_alignment = 1
 
 [node name="Warning" type="Control" parent="CanvasLayer" unique_id=2135034321]
-visible = false
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -1139,7 +1138,8 @@ offset_bottom = 4.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "I need to place this somewhere..."
+text = "  
+"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -1165,14 +1165,15 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -13.0
-offset_top = 4.0
-offset_right = 14.0
-offset_bottom = 4.0
+offset_left = -34.0
+offset_top = 44.0
+offset_right = 35.0
+offset_bottom = 44.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "I can't place this here..."
+text = "
+"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -1207,7 +1208,7 @@ offset_bottom = 7.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "I need to bring this with me at the gate"
+text = "  "
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -1240,7 +1241,7 @@ offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "I can use this to open a door..."
+text = "  "
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -1273,9 +1274,36 @@ offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("4_rfe5m")
-text = "I need more treasures"
+text = "  "
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="RoomTitle" type="Control" parent="CanvasLayer" unique_id=2135034321]
+visible = false
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 30.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="RichTextLabel" parent="CanvasLayer/RoomTitle" unique_id=2135034322]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/normal_font_size = 48
+theme_override_fonts/normal_font = ExtResource("4_rfe5m")
+bbcode_enabled = true
+text = ""
+horizontal_alignment = 1
+scroll_active = false
+mouse_filter = 2
 
 [node name="FootstepPlayer" type="AudioStreamPlayer" parent="." unique_id=2135034317]
 volume_db = -3.0

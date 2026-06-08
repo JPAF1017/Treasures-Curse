@@ -326,10 +326,9 @@ func _handle_solo_exit() -> void:
 	if _player == null:
 		return
 	var gold := _count_gold_for_player(_player)
-	var items := _count_items_for_player(_player)
-	if items == 0:
+	if gold == 0:
 		_show_exit_question("empty")
-	elif gold == 5 and items == 5:
+	elif gold >= 1:
 		GameStats.stop_timer()
 		get_tree().change_scene_to_file(ENDING_BAD_PATH)
 	else:
@@ -338,20 +337,15 @@ func _handle_solo_exit() -> void:
 
 func _handle_multiplayer_exit() -> void:
 	var all_players := get_tree().get_nodes_in_group("player")
-	var all_empty := true
-	var all_have_gold := true
+	var any_has_gold := false
 	for p in all_players:
-		if _count_items_for_player(p) > 0:
-			all_empty = false
-		if _count_gold_for_player(p) < 1:
-			all_have_gold = false
-	if all_empty:
+		if _count_gold_for_player(p) >= 1:
+			any_has_gold = true
+	if not any_has_gold:
 		_show_exit_question("empty")
-	elif all_have_gold:
+	else:
 		GameStats.stop_timer()
 		get_tree().change_scene_to_file(ENDING_BAD_PATH)
-	else:
-		_show_exit_question("multiplayer_incomplete")
 
 
 func _show_exit_question(mode: String) -> void:

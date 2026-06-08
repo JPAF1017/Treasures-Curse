@@ -200,7 +200,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# Remove all procedurally placed non-corridor rooms on the bottom floor.
 	# Pre-placed rooms and corridors are kept; only random filler rooms are removed.
-	const PREPLACED_NAMES := ["StartRoom", "IntroArena", "TreasureRoom", "Stair", "Bridge"]
+	const PREPLACED_NAMES := ["StartRoom", "IntroArena", "TreasureRoom", "Stair", "Bridge", "Gauntlet"]
 	for child in generator.get_children():
 		if not (child is DungeonRoom3D):
 			continue
@@ -218,6 +218,71 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# Refresh all_rooms after removals.
 	all_rooms = generator.find_children("*", "DungeonRoom3D", true, false)
+	# Spawn gauntlet enemies below each room's chandelier and open each
+	# room's Door node when all enemies in that room have been killed.
+	var _gauntlet_node := generator.find_child("Gauntlet", true, false)
+	if is_instance_valid(_gauntlet_node):
+		var _g := _gauntlet_node as Node
+
+		# Spawn an NPC and return the live node reference.
+		var _spawn_npc := func(scene: PackedScene, pos: Vector3) -> Node3D:
+			if _npc_spawner:
+				return _npc_spawner.spawn({"scene": scene.resource_path, "pos": pos}) as Node3D
+			var _n: Node3D = scene.instantiate()
+			add_child(_n)
+			_n.global_position = pos
+			return _n
+
+		# When all enemies in the list have left the tree, queue_free the door.
+		var _watch_room := func(enemies: Array, door: Node3D) -> void:
+			if enemies.is_empty() or not is_instance_valid(door):
+				return
+			var _alive := [enemies.size()]
+			for _e: Node3D in enemies:
+				if is_instance_valid(_e):
+					(_e as Node).tree_exiting.connect(func() -> void:
+						_alive[0] -= 1
+						if _alive[0] <= 0 and is_instance_valid(door):
+							door.queue_free()
+					)
+
+		# -- Room1: 1 knight --
+		var _r1: Array = []
+		var _chan1 := _g.get_node_or_null("Models/Room1/Props/chandelier") as Node3D
+		var _flr1  := _g.get_node_or_null("Models/Room1/Floor") as Node3D
+		if _chan1 and _flr1:
+			var _fy1 := _flr1.global_position.y + 1.0
+			var _n1 := _spawn_npc.call(KNIGHT_SCENE, Vector3(_chan1.global_position.x, _fy1, _chan1.global_position.z)) as Node3D
+			if _n1: _r1.append(_n1)
+		_watch_room.call(_r1, _g.get_node_or_null("Models/Room1/Door") as Node3D)
+
+		# -- Room2: 1 knight + 2 chargers --
+		var _r2: Array = []
+		var _chan2 := _g.get_node_or_null("Models/Room2/Props/chandelier") as Node3D
+		var _flr2  := _g.get_node_or_null("Models/Room2/Floor") as Node3D
+		if _chan2 and _flr2:
+			var _cx2 := _chan2.global_position.x
+			var _fy2 := _flr2.global_position.y + 1.0
+			var _cz2 := _chan2.global_position.z
+			for _entry in [[KNIGHT_SCENE, Vector3(_cx2, _fy2, _cz2)],
+					[CHARGER_SCENE, Vector3(_cx2 - 2.0, _fy2, _cz2)],
+					[CHARGER_SCENE, Vector3(_cx2 + 2.0, _fy2, _cz2)]]:
+				var _n2 := _spawn_npc.call(_entry[0], _entry[1]) as Node3D
+				if _n2: _r2.append(_n2)
+		_watch_room.call(_r2, _g.get_node_or_null("Models/Room2/Door") as Node3D)
+
+		# -- Room3: 2 knights --
+		var _r3: Array = []
+		var _chan3 := _g.get_node_or_null("Models/Room3/Props/chandelier") as Node3D
+		var _flr3  := _g.get_node_or_null("Models/Room3/Floor") as Node3D
+		if _chan3 and _flr3:
+			var _cx3 := _chan3.global_position.x
+			var _fy3 := _flr3.global_position.y + 1.0
+			var _cz3 := _chan3.global_position.z
+			for _offset: float in [-1.5, 1.5]:
+				var _n3 := _spawn_npc.call(KNIGHT_SCENE, Vector3(_cx3 + _offset, _fy3, _cz3)) as Node3D
+				if _n3: _r3.append(_n3)
+		_watch_room.call(_r3, _g.get_node_or_null("Models/Room3/Door") as Node3D)
 
 	# Sort rooms by a deterministic key so find_children order doesn't affect placement.
 	all_rooms.sort_custom(func(a: Node, b: Node) -> bool:
@@ -239,7 +304,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# Eligible rooms: above the bottom floor, at least 4 voxels away horizontally from start
 	# (or directly above/below it). Candle puzzle rooms are always excluded.
 	var rooms: Array = all_rooms.filter(func(r: Node) -> bool:
-		if r.name == "StartRoom" or r.name == "IntroArena":
+		if r.name == "StartRoom" or r.name == "IntroArena" or r.name == "SkullPuzzle":
 			return false
 		if r is CandlePuzzleRoom:
 			return false

@@ -56,6 +56,9 @@ var _place_item_control: Control = null
 var _place_item_label: Label = null
 var _warning2_control: Control = null
 var _warning2_label: Label = null
+var _room_title_control: Control = null
+var _room_title_rtl: RichTextLabel = null
+var _room_title_tween: Tween = null
 
 # Interaction state
 var _hovered_hold_index: int = -1
@@ -82,6 +85,12 @@ func _find_hold_areas() -> void:
 		if area != null:
 			_hold_areas.append(area)
 	_door_area = find_child("DoorArea", true, false) as Area3D
+	var title_area := find_child("RoomTitle", true, false) as Area3D
+	if title_area != null:
+		if not title_area.body_entered.is_connected(_on_room_title_body_entered):
+			title_area.body_entered.connect(_on_room_title_body_entered)
+		if not title_area.body_exited.is_connected(_on_room_title_body_exited):
+			title_area.body_exited.connect(_on_room_title_body_exited)
 
 
 func _process(delta: float) -> void:
@@ -148,6 +157,12 @@ func _find_player_if_needed() -> void:
 	_place_item_label = _player.get_node_or_null("CanvasLayer/Control/PlaceItem/Label") as Label
 	_warning2_control = _player.get_node_or_null("CanvasLayer/Warning2") as Control
 	_warning2_label = _player.get_node_or_null("CanvasLayer/Warning2/Label") as Label
+	_room_title_control = _player.get_node_or_null("CanvasLayer/RoomTitle") as Control
+	if _room_title_control != null:
+		_room_title_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_room_title_rtl = _player.get_node_or_null("CanvasLayer/RoomTitle/Label") as RichTextLabel
+	if _room_title_rtl != null and _room_title_rtl.custom_effects.is_empty():
+		_room_title_rtl.custom_effects = [RichTextRotatingDegrade.new()]
 
 
 func _get_player_camera() -> Camera3D:
@@ -232,6 +247,35 @@ func _set_warning2_visible(visible_state: bool) -> void:
 	if _warning2_control != null and is_instance_valid(_warning2_control):
 		_warning2_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_warning2_control.visible = visible_state
+
+
+func _on_room_title_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player"):
+		_find_player_if_needed()
+		if _room_title_rtl != null and is_instance_valid(_room_title_rtl):
+			_room_title_rtl.text = "[rotating_degrade duration=1.5 end=13 start_color=#ffffff end_color=#8888ff]Crystal Puzzle[/rotating_degrade]"
+		if _room_title_control != null and is_instance_valid(_room_title_control):
+			if _room_title_tween != null:
+				_room_title_tween.kill()
+			var vh := _room_title_control.get_viewport_rect().size.y
+			_room_title_control.offset_top = vh * 0.5 - 100.0
+			_room_title_control.offset_bottom = vh * 0.5 - 10.0
+			_room_title_control.visible = true
+			_room_title_tween = create_tween().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+			_room_title_tween.tween_interval(0.5)
+			_room_title_tween.tween_property(_room_title_control, "offset_top", 30.0, 0.5)
+			_room_title_tween.parallel().tween_property(_room_title_control, "offset_bottom", 120.0, 0.5)
+
+
+func _on_room_title_body_exited(body: Node3D) -> void:
+	if body.is_in_group("player"):
+		if _room_title_tween != null:
+			_room_title_tween.kill()
+			_room_title_tween = null
+		if _room_title_control != null and is_instance_valid(_room_title_control):
+			_room_title_control.visible = false
+		if _room_title_rtl != null and is_instance_valid(_room_title_rtl):
+			_room_title_rtl.text = ""
 
 
 func _show_warning2(msg: String) -> void:
