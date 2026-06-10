@@ -131,6 +131,7 @@ const JUMP_PHASE_ACTIVE = 1
 @onready var health_label_digit: Label = $CanvasLayer/Control/Health/LabelDigit
 @onready var player_canvas_layer: CanvasLayer = $CanvasLayer
 @onready var filter_rect: ColorRect = get_node_or_null("CanvasLayer/Filter")
+var _cel_rect: ColorRect = null
 @onready var pickup_control: Control = $CanvasLayer/Control/Pickup
 @onready var footstep_player: AudioStreamPlayer = $FootstepPlayer
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
@@ -379,6 +380,8 @@ func _ready():
 	swing_player.stream = load(SWING_SOUND_PATH)	
 	# React to PSX filter setting changes at runtime (e.g. changed from pause menu).
 	SettingsManager.psx_filter_changed.connect(_on_psx_filter_changed)
+	SettingsManager.shader_changed.connect(_on_cel_shader_changed)
+	_setup_cel_shader()
 	# Show loading screen until the player first moves.
 	if filter_rect != null:
 		filter_rect.visible = false
@@ -1673,6 +1676,28 @@ func _apply_psx_filter_setting(enabled: bool) -> void:
 
 func _on_psx_filter_changed(enabled: bool) -> void:
 	_apply_psx_filter_setting(enabled)
+
+
+func _setup_cel_shader() -> void:
+	if player_canvas_layer == null:
+		return
+	_cel_rect = ColorRect.new()
+	_cel_rect.name = "CelShader"
+	_cel_rect.anchor_left = 0.0
+	_cel_rect.anchor_top = 0.0
+	_cel_rect.anchor_right = 1.0
+	_cel_rect.anchor_bottom = 1.0
+	_cel_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sm := ShaderMaterial.new()
+	sm.shader = preload("res://entities/cel_screen.gdshader")
+	_cel_rect.material = sm
+	_cel_rect.visible = SettingsManager.shader_enabled
+	player_canvas_layer.add_child(_cel_rect)
+
+
+func _on_cel_shader_changed(enabled: bool) -> void:
+	if _cel_rect != null:
+		_cel_rect.visible = enabled
 
 func _on_item_wheel_slot_switched() -> void:
 	if not _item_wheel_hint_active:

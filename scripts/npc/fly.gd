@@ -891,7 +891,6 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 			return result
 	return null
 
-# --- Collision ---
 
 func _update_collision_mode() -> void:
 	if not ground_collision:

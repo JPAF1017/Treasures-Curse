@@ -40,9 +40,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -423.0
-offset_top = -247.0
+offset_top = -275.0
 offset_right = 423.0
-offset_bottom = 247.0
+offset_bottom = 275.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
@@ -137,6 +137,25 @@ theme_override_font_sizes/font_size = 32
 text = "Exclusive Fullscreen"
 
 [node name="FullscreenCheck" type="CheckBox" parent="Panel/MarginContainer/VBoxContainer/FullscreenRow" unique_id=100000023]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+
+[node name="ShaderRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer" unique_id=100000032]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ShaderLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ShaderRow" unique_id=100000033]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_f368g")
+theme_override_font_sizes/font_size = 32
+text = "Shader"
+
+[node name="ShaderCheck" type="CheckBox" parent="Panel/MarginContainer/VBoxContainer/ShaderRow" unique_id=100000034]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4

@@ -94,6 +94,7 @@ func _apply_pixel_shading(node: Node) -> void:
 	for child in node.get_children():
 		_apply_pixel_shading(child)
 
+
 func _setup_player_reference():
 	# Wait for the first physics frame
 	await get_tree().physics_frame

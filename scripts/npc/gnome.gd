@@ -936,6 +936,7 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 
 	return null
 
+
 func _format_vec3(v: Vector3) -> String:
 	return "(%.2f, %.2f, %.2f)" % [v.x, v.y, v.z]
 

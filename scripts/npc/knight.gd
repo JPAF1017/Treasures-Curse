@@ -728,6 +728,7 @@ func _apply_pixel_shading(node: Node) -> void:
 	for child in node.get_children():
 		_apply_pixel_shading(child)
 
+
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
 		return node

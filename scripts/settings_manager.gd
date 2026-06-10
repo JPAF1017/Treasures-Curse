@@ -2,6 +2,7 @@ extends Node
 
 signal psx_filter_changed(enabled: bool)
 signal aspect_ratio_changed(index: int)
+signal shader_changed(enabled: bool)
 
 const SETTINGS_PATH := "user://settings.cfg"
 
@@ -11,6 +12,7 @@ var psx_filter_enabled: bool = true
 var exclusive_fullscreen: bool = false
 var generation_seed: int = 0  # 0 = random each run
 var aspect_ratio: int = 0  # index: 0=Auto, 1=16:9, 2=16:10, 3=4:3, 4=21:9
+var shader_enabled: bool = false
 
 
 func _ready() -> void:
@@ -36,6 +38,12 @@ func set_vsync(value: bool) -> void:
 func set_psx_filter(value: bool) -> void:
 	psx_filter_enabled = value
 	psx_filter_changed.emit(value)
+	_save()
+
+
+func set_shader_enabled(value: bool) -> void:
+	shader_enabled = value
+	shader_changed.emit(value)
 	_save()
 
 
@@ -103,6 +111,7 @@ func _save() -> void:
 	cfg.set_value("display", "exclusive_fullscreen", exclusive_fullscreen)
 	cfg.set_value("display", "generation_seed", generation_seed)
 	cfg.set_value("display", "aspect_ratio", aspect_ratio)
+	cfg.set_value("display", "shader_enabled", shader_enabled)
 	cfg.save(SETTINGS_PATH)
 
 
@@ -116,3 +125,4 @@ func _load() -> void:
 	exclusive_fullscreen = cfg.get_value("display", "exclusive_fullscreen", false)
 	generation_seed = cfg.get_value("display", "generation_seed", 0)
 	aspect_ratio = cfg.get_value("display", "aspect_ratio", 0)
+	shader_enabled = cfg.get_value("display", "shader_enabled", false)

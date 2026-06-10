@@ -116,6 +116,7 @@ const SLOPE_ALIGN_SPEED = 10.0  # How fast to tilt toward the slope
 
 func _ready():
 	top_level = true
+	add_to_group("charger")
 	_fix_glb_metallic(self)
 	# Configure slope handling
 	floor_stop_on_slope = true
@@ -156,7 +157,6 @@ func _ready():
 	idle_sound_player = get_node_or_null("Sounds/IdleSound") as AudioStreamPlayer3D
 	idle_sound_timer = randf_range(2.0, 3.0)
 	growl_sound_player = get_node_or_null("Sounds/GrowlSound") as AudioStreamPlayer3D
-
 
 func _fix_glb_metallic(node: Node) -> void:
 	if node is MeshInstance3D:
