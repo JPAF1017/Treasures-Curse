@@ -59,7 +59,7 @@ var _item_spawner: MultiplayerSpawner = null
 var _table_registry: Dictionary = {}
 
 # ---- Statue deferred-spawn state (server only) ----
-const STATUE_COUNTDOWN_DURATION  := 60.0   # 1 minute before each spawn
+const STATUE_COUNTDOWN_DURATION  := 120.0  # 2 minutes before each spawn
 const STATUE_SEEN_DESPAWN_TIME   := 30.0   # 30 seconds after first sighting before despawn
 const STATUE_SPAWN_BEHIND_MIN    := 3.0    # min distance directly behind the player
 const STATUE_SPAWN_BEHIND_MAX    := 6.0    # max distance directly behind the player
@@ -79,6 +79,7 @@ var _statue_node: Node3D = null            # live statue reference (null = not s
 var _statue_seen: bool = false             # has any player spotted the statue?
 var _statue_seen_timer: float = 0.0        # 1-min countdown after first sighting
 var _despawn_check_timer: float = 0.0      # poll interval while waiting for no-look moment
+var _statue_intro_triggered: bool = false  # true once a player has entered the IntroStatue room
 
 
 func _ready() -> void:
@@ -309,8 +310,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 		if r is CandlePuzzleRoom:
 			return false
 		var rp := (r as Node3D).global_position
-		# Exclude rooms on the bottom floor (same Y level as the start room)
-		if abs(rp.y - start_pos.y) < voxel_y:
+		# Exclude rooms on the bottom two floors
+		if abs(rp.y - start_pos.y) < voxel_y * 2.0:
 			return false
 		var rp_xz := Vector2(rp.x, rp.z)
 		var horiz_dist := rp_xz.distance_to(start_pos_xz)
@@ -412,10 +413,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 	for room: Node in all_rooms:
 		if not (room is BigRoom):
 			continue
-		# Skip big rooms on the bottom floor or in the IntroArena
+		# Skip big rooms on the bottom two floors or in the IntroArena
 		if (room as Node3D).name == "IntroArena":
 			continue
-		if abs((room as Node3D).global_position.y - start_pos.y) < voxel_y:
+		if abs((room as Node3D).global_position.y - start_pos.y) < voxel_y * 2.0:
 			continue
 		for spawn_name: String in ["Spawn/SpawnItem", "Spawn/SpawnItem2"]:
 			var spawn_area := room.get_node_or_null(spawn_name) as Node3D
@@ -491,10 +492,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# ---------- Spawn items across the map (server only) ----------
 	# Pool includes upper-floor rooms AND corridors for wider distribution.
-	# Stair rooms and puzzle rooms are excluded; bottom floor already filtered above.
+	# Stair rooms and puzzle rooms are excluded; bottom two floors already filtered above.
 	var spawn_pool: Array = all_rooms.filter(func(r: Node) -> bool:
 		var rp := (r as Node3D).global_position
-		if abs(rp.y - start_pos.y) < voxel_y:
+		if abs(rp.y - start_pos.y) < voxel_y * 2.0:
 			return false
 		if r is CandlePuzzleRoom:
 			return false
@@ -548,6 +549,57 @@ func _on_dungeon_ready(generator: Node) -> void:
 			add_child(sword)
 			sword.global_position = sword_pos
 
+	# Helper: spawn one NPC in an intro room and open its back door when it dies.
+	var _spawn_intro_room := func(room_name: String, scene: PackedScene) -> void:
+		var intro_room := generator.find_child(room_name, true, false) as Node3D
+		if not intro_room:
+			return
+		var room_pos := intro_room.global_position
+		var npc_ref: Node3D = null
+		if _npc_spawner:
+			npc_ref = _npc_spawner.spawn({"scene": scene.resource_path, "pos": room_pos + Vector3(0, 1.0, 0)})
+		else:
+			npc_ref = scene.instantiate()
+			add_child(npc_ref)
+			npc_ref.global_position = room_pos + Vector3(0, 1.0, 0)
+		if npc_ref and npc_ref.has_signal("died"):
+			var door := intro_room.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
+			if door:
+				npc_ref.died.connect(func() -> void:
+					var tw := door.create_tween()
+					tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
+						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+				)
+
+	_spawn_intro_room.call("IntroFly",      FLY_SCENE)
+
+	# IntroGnomes: spawn 3 gnomes; door opens only when all 3 are dead.
+	var intro_gnomes := generator.find_child("IntroGnomes", true, false) as Node3D
+	if intro_gnomes:
+		var gnomes_pos := intro_gnomes.global_position
+		var gnome_door := intro_gnomes.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
+		var alive_gnomes := [3]
+		var offsets := [Vector3(-2.5, 1.0, 0.0), Vector3(0.0, 1.0, 0.0), Vector3(2.5, 1.0, 0.0)]
+		for offset: Vector3 in offsets:
+			var gnome_ref: Node3D = null
+			if _npc_spawner:
+				gnome_ref = _npc_spawner.spawn({"scene": GNOME_SCENE.resource_path, "pos": gnomes_pos + offset})
+			else:
+				gnome_ref = GNOME_SCENE.instantiate()
+				add_child(gnome_ref)
+				gnome_ref.global_position = gnomes_pos + offset
+			if gnome_ref and gnome_ref.has_signal("died") and gnome_door:
+				gnome_ref.died.connect(func() -> void:
+					alive_gnomes[0] -= 1
+					if alive_gnomes[0] <= 0:
+						var tw := gnome_door.create_tween()
+						tw.tween_property(gnome_door, "rotation_degrees:y", 60.0, 1.2) \
+							.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+				)
+
+	_spawn_intro_room.call("IntroKnight",   KNIGHT_SCENE)
+	_spawn_intro_room.call("IntroShambler", SHAMBLER_SCENE)
+
 	# Notify the multiplayer player spawner so it places a character for each client.
 	var player_spawner := get_node_or_null("PlayerSpawner")
 	if player_spawner and player_spawner.has_method("activate"):
@@ -556,6 +608,18 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# Move the host's embedded player to the start room.
 	# (PlayerSpawner only handles extra multiplayer clients; the host player
 	# is a static node in the scene and always needs to be relocated here.)
+	# Connect the IntroStatue room's RoomTitle area so the statue spawns immediately
+	# when a player first walks in, starting the despawn/respawn cycle.
+	var intro_statue_room := generator.find_child("IntroStatue", true, false) as Node3D
+	if intro_statue_room:
+		var room_title := intro_statue_room.get_node_or_null("RoomTitle") as Area3D
+		if room_title:
+			room_title.body_entered.connect(_on_intro_statue_body_entered)
+		else:
+			push_warning("[StatueSpawn] Could not find RoomTitle in IntroStatue room.")
+	else:
+		push_warning("[StatueSpawn] Could not find IntroStatue room — statue trigger disabled.")
+
 	var host_player := get_node_or_null("player") as Node3D
 	if host_player:
 		host_player.global_position = start_pos + Vector3(0, 1.0, 0)
@@ -682,15 +746,8 @@ func _process(delta: float) -> void:
 						_despawn_statue()
 		return
 
-	# --- No active statue: wait for a player on the 2nd floor, then countdown ---
-	if not _statue_timer_active:
-		for p in get_tree().get_nodes_in_group("player"):
-			if is_instance_valid(p) and (p as Node3D).global_position.y > _second_floor_y:
-				_statue_timer_active = true
-				_statue_countdown = STATUE_COUNTDOWN_DURATION
-				print("[StatueSpawn] Player reached 2nd floor — 3-min countdown started.")
-				break
-	else:
+	# --- No active statue: retry spawning once the intro room trigger has fired ---
+	if _statue_timer_active:
 		_statue_countdown -= delta
 		if _statue_countdown <= 0.0:
 			_spawn_retry_timer -= delta
@@ -760,6 +817,21 @@ func _find_hidden_spawn_near(center: Vector3, target: Node3D = null) -> Vector3:
 			if not _is_position_visible_to_any_player(candidate, players, space_state):
 				return candidate
 	return Vector3.ZERO
+
+
+## Fires when any body enters the IntroStatue room's RoomTitle Area3D (server only).
+## Immediately kicks off the statue spawn instead of waiting for the 2nd-floor countdown.
+func _on_intro_statue_body_entered(body: Node3D) -> void:
+	if not body.is_in_group("player"):
+		return
+	if _statue_intro_triggered or _statue_node != null:
+		return
+	_statue_intro_triggered = true
+	# Set countdown to 0 so _process begins spawning retries on the very next frame.
+	_statue_timer_active = true
+	_statue_countdown = 0.0
+	_spawn_retry_timer = 0.0
+	print("[StatueSpawn] Player entered IntroStatue room — statue spawn triggered.")
 
 
 ## Despawns the active statue and resets the spawn cycle to its 3-min countdown.

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dy4bd3w4fvfmb"]
 
 [ext_resource type="Script" uid="uid://c801ki3oghumx" path="res://addons/SimpleDungeons/DungeonRoom3D.gd" id="1_5c8ci"]
-[ext_resource type="Script" uid="uid://c5roomtitle3g1" path="res://scripts/rooms/room_title_area.gd" id="12_rtitle"]
 [ext_resource type="PackedScene" uid="uid://chedh0vevmtjy" path="res://assets/room assets/floor_tiles.tscn" id="2_35rif"]
 [ext_resource type="PackedScene" uid="uid://mx5lse0npag8" path="res://assets/room assets/candle_02.tscn" id="3_4ro6e"]
 [ext_resource type="PackedScene" uid="uid://covmwn16vmv06" path="res://assets/room assets/door_frame_02.tscn" id="3_kgqpw"]
@@ -14,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://b73y1fuhewrxj" path="res://assets/room assets/pillar.tscn" id="8_4ro6e"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="10_3uvtc"]
 [ext_resource type="PackedScene" uid="uid://6chv37vnq2ot" path="res://assets/room assets/pillar_collapsed_01.tscn" id="11_sq6fl"]
+[ext_resource type="Script" uid="uid://b5hwvfjjhc7iw" path="res://scripts/rooms/room_title_area.gd" id="12_rtitle"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_sq6fl"]
 size = Vector3(29, 19, 29)
