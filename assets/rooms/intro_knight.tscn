@@ -267,7 +267,7 @@ transform = Transform3D(-0.45, -3.934025e-08, 0, 3.934025e-08, -0.45, 0, 0, 0, 0
 
 [node name="RoomTitle" type="Area3D" parent="." unique_id=639267067]
 script = ExtResource("14_6j03m")
-title_text = "Rotten Dog"
+title_text = "The Rusted"
 tracked_enemy_group = "charger"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RoomTitle" unique_id=1402718508]

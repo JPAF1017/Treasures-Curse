@@ -81,6 +81,10 @@ var _statue_seen_timer: float = 0.0        # 1-min countdown after first sightin
 var _despawn_check_timer: float = 0.0      # poll interval while waiting for no-look moment
 var _statue_intro_triggered: bool = false  # true once a player has entered the IntroStatue room
 
+# Enemies that must stay inside their intro room.
+# Each entry: { "enemy": Node3D, "center": Vector3, "half_xz": float }
+var _confined_enemies: Array = []
+
 
 func _ready() -> void:
 	# Wire up the MultiplayerSpawner nodes so they know which scenes to replicate.
@@ -549,7 +553,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 			add_child(sword)
 			sword.global_position = sword_pos
 
-	# Helper: spawn one NPC in an intro room and open its back door when it dies.
+	# Helper: spawn one NPC in an intro room, open its back door when it dies,
+	# and confine it to the room bounds.
 	var _spawn_intro_room := func(room_name: String, scene: PackedScene) -> void:
 		var intro_room := generator.find_child(room_name, true, false) as Node3D
 		if not intro_room:
@@ -562,14 +567,16 @@ func _on_dungeon_ready(generator: Node) -> void:
 			npc_ref = scene.instantiate()
 			add_child(npc_ref)
 			npc_ref.global_position = room_pos + Vector3(0, 1.0, 0)
-		if npc_ref and npc_ref.has_signal("died"):
-			var door := intro_room.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
-			if door:
-				npc_ref.died.connect(func() -> void:
-					var tw := door.create_tween()
-					tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
-						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-				)
+		if npc_ref:
+			_confined_enemies.append({"enemy": npc_ref, "center": room_pos, "half_xz": 13.0})
+			if npc_ref.has_signal("died"):
+				var door := intro_room.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
+				if door:
+					npc_ref.died.connect(func() -> void:
+						var tw := door.create_tween()
+						tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
+							.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+					)
 
 	_spawn_intro_room.call("IntroFly",      FLY_SCENE)
 
@@ -589,6 +596,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 				add_child(gnome_ref)
 				gnome_ref.global_position = gnomes_pos + offset
 			if gnome_ref and gnome_ref.has_signal("died") and gnome_door:
+				_confined_enemies.append({"enemy": gnome_ref, "center": gnomes_pos, "half_xz": 13.0})
 				gnome_ref.died.connect(func() -> void:
 					alive_gnomes[0] -= 1
 					if alive_gnomes[0] <= 0:
@@ -599,6 +607,37 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	_spawn_intro_room.call("IntroKnight",   KNIGHT_SCENE)
 	_spawn_intro_room.call("IntroShambler", SHAMBLER_SCENE)
+
+	# IntroShy: spawn 1 shy; door opens the first time the player looks at it.
+	# The shy is not killed — the sight event alone unlocks the exit.
+	var intro_shy := generator.find_child("IntroShy", true, false) as Node3D
+	if intro_shy:
+		var shy_pos := intro_shy.global_position
+		var shy_door := intro_shy.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
+		var shy_ref: Node3D = null
+		if _npc_spawner:
+			shy_ref = _npc_spawner.spawn({"scene": SHY_SCENE.resource_path, "pos": shy_pos + Vector3(0, 1.0, 0)})
+		else:
+			shy_ref = SHY_SCENE.instantiate()
+			add_child(shy_ref)
+			shy_ref.global_position = shy_pos + Vector3(0, 1.0, 0)
+		if shy_ref and shy_door:
+			_confined_enemies.append({"enemy": shy_ref, "center": shy_pos, "half_xz": 13.0})
+			# Wait until _ready() has run so the Seen area node is resolved.
+			shy_ref.ready.connect(func() -> void:
+				var seen_area := shy_ref.get_node_or_null("Seen") as Area3D
+				if seen_area == null:
+					return
+				var _door_opened := [false]
+				seen_area.area_entered.connect(func(area: Area3D) -> void:
+					if _door_opened[0] or not area.is_in_group("player_vision"):
+						return
+					_door_opened[0] = true
+					var tw := shy_door.create_tween()
+					tw.tween_property(shy_door, "rotation_degrees:y", 60.0, 1.2) \
+						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+				)
+			, CONNECT_ONE_SHOT)
 
 	# Notify the multiplayer player spawner so it places a character for each client.
 	var player_spawner := get_node_or_null("PlayerSpawner")
@@ -728,6 +767,23 @@ func _process(delta: float) -> void:
 	var is_server := not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
 	if not is_server:
 		return
+
+	# --- Confine intro-room enemies inside their room bounds ---
+	for entry in _confined_enemies:
+		var enemy: Node3D = entry["enemy"]
+		if not is_instance_valid(enemy):
+			continue
+		var center: Vector3 = entry["center"]
+		var half: float = entry["half_xz"]
+		var pos := enemy.global_position
+		var dx := pos.x - center.x
+		var dz := pos.z - center.z
+		if abs(dx) > half or abs(dz) > half:
+			enemy.global_position = Vector3(
+				center.x + clampf(dx, -half, half),
+				pos.y,
+				center.z + clampf(dz, -half, half)
+			)
 
 	# --- Active-statue lifecycle: sighting detection → 1-min → despawn ---
 	if _statue_node != null and is_instance_valid(_statue_node):
