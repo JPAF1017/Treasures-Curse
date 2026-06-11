@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://dkkfirmv0b6g6" path="res://assets/room assets/hexagon.tscn" id="9_gcy53"]
 [ext_resource type="PackedScene" uid="uid://maopr6lanado" path="res://assets/room assets/block.tscn" id="10_pmov4"]
 [ext_resource type="Script" uid="uid://bd8nte0nn5lih" path="res://scripts/rooms/skull_puzzle_controller.gd" id="11_spctl"]
+[ext_resource type="Script" uid="uid://b5hwvfjjhc7iw" path="res://scripts/rooms/room_title_area.gd" id="14_spctl"]
 [ext_resource type="PackedScene" uid="uid://bxirt6iwy3jjx" path="res://assets/room assets/candle_01.tscn" id="13_pmov4"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door3d"]
@@ -23,6 +24,9 @@ size = Vector3(5, 7, 1)
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_acw4b"]
 height = 1.6826172
 radius = 1.8051758
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pmov4"]
+size = Vector3(29, 9, 9)
 
 [node name="SkullPuzzle" type="Node3D" unique_id=1594414824]
 script = ExtResource("1_ecoyj")
@@ -202,3 +206,11 @@ transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 8, -5, 7)
 
 [node name="Candle_04" parent="." unique_id=874664001 instance=ExtResource("13_pmov4")]
 transform = Transform3D(0.21213202, 0, -0.21213202, 0, 0.29999998, 0, 0.21213202, 0, 0.21213202, 8, -5, 3)
+
+[node name="RoomTitle" type="Area3D" parent="." unique_id=1233731798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+script = ExtResource("14_spctl")
+title_text = "The Skull Altar"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomTitle" unique_id=467779153]
+shape = SubResource("BoxShape3D_pmov4")
