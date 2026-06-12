@@ -1,7 +1,7 @@
+Node3D
 CollisionShape3D
 Area3D
 CSGBox3D
-Node3D
 DungeonRoom3D
 TextureRect
 SpotLight3D

@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal died
+
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
@@ -96,6 +98,7 @@ var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	top_level = true
+	add_to_group("fly")
 	randomize()
 	space_state = get_world_3d().direct_space_state
 	animation_player = _find_animation_player(self)
@@ -707,6 +710,7 @@ func _die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	died.emit()
 	GameStats.record_kill("fly")
 	health = 0
 	hit_reaction_timer = 0.0

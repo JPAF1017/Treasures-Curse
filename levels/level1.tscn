@@ -16,9 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://hh0x2plnwp2j" path="res://assets/rooms/candle_puzzle2.tscn" id="12_w7ck5"]
 [ext_resource type="PackedScene" uid="uid://wu5u2yv35nhd" path="res://assets/rooms/candle_puzzle3.tscn" id="13_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://dnirglxqvkts0" path="res://assets/rooms/dead_end1.tscn" id="13_a5s8o"]
-[ext_resource type="PackedScene" uid="uid://ce7b2crcnu3xb" path="res://assets/rooms/gauntlet.tscn" id="17_w7ck5"]
-[ext_resource type="PackedScene" uid="uid://d12awthj6x7s6" path="res://assets/rooms/skull_room.tscn" id="18_ou4v7"]
-[ext_resource type="PackedScene" uid="uid://cq5nv7x75cfpq" path="res://assets/rooms/skull_puzzle.tscn" id="19_53hnx"]
+[ext_resource type="PackedScene" uid="uid://bkdfgmyojwnsa" path="res://assets/rooms/intro_fly.tscn" id="17_w7ck5"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 [ext_resource type="Script" uid="uid://pnceodedcutd" path="res://scripts/multiplayer/player_spawner.gd" id="100_playerspawner"]
@@ -51,8 +49,10 @@ corridor_room_scene = ExtResource("3_omn1t")
 dungeon_size = Vector3i(17, 8, 17)
 metadata/_custom_type_script = "uid://bqeu73gvoygbb"
 
+[node name="1st Floor" type="Node3D" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1362538531]
+
 [node name="StartRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2057079214 instance=ExtResource("4_lf3p4")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 80, -35, 0)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 80, -35, 0)
 
 [node name="TreasureRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=731915099 instance=ExtResource("10_8bcou")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -30, -30, 0)
@@ -64,16 +64,7 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -65,
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, -35, 0)
 
 [node name="IntroArena" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=917700208 instance=ExtResource("11_f7u7y")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 20, -30, 0)
-
-[node name="CandlePuzzle2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1505842369 instance=ExtResource("11_l7nqg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -70, -25, -35)
-
-[node name="CandlePuzzle3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2062432672 instance=ExtResource("12_w7ck5")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -60, -25, 20)
-
-[node name="CandlePuzzle4" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1009069009 instance=ExtResource("13_2nn5w")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -80, -25, 20)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 20, -30, 0)
 
 [node name="DeadEnd1" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=194753619 instance=ExtResource("12_jq2cn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, -35, 10)
@@ -85,7 +76,7 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 80, 
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 70, -35, -10)
 
 [node name="DeadEnd4" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2117947165 instance=ExtResource("12_jq2cn")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 70, -35, 10)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, 70, -35, 10)
 
 [node name="DeadEnd5" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=955444089 instance=ExtResource("13_a5s8o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -35, 10)
@@ -97,7 +88,7 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 40, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -35, 10)
 
 [node name="DeadEnd8" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=844635269 instance=ExtResource("12_jq2cn")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -10, -35, 10)
+transform = Transform3D(1.1924882e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924882e-08, -10, -35, 10)
 
 [node name="DeadEnd9" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2000428933 instance=ExtResource("12_jq2cn")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -10, -35, -10)
@@ -114,6 +105,9 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -50,
 [node name="DeadEnd13" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1238867164 instance=ExtResource("13_a5s8o")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -30, -35, -20)
 
+[node name="DeadEnd14" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1871235707 instance=ExtResource("13_a5s8o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, -35, 20)
+
 [node name="Corridor" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=338039733 instance=ExtResource("3_omn1t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, -35, 0)
 
@@ -129,50 +123,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -35, 0)
 [node name="Corridor5" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=649997077 instance=ExtResource("3_omn1t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, -35, 0)
 
-[node name="DeadEnd14" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1871235707 instance=ExtResource("13_a5s8o")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, -35, 20)
+[node name="2nd Floor" type="Node3D" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=986579984]
 
-[node name="CandlePuzzle5" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1213306135 instance=ExtResource("11_l7nqg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -15, -55)
+[node name="CandlePuzzle2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1505842369 instance=ExtResource("11_l7nqg")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -70, -25, -35)
 
-[node name="CandlePuzzle6" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1979268629 instance=ExtResource("12_w7ck5")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 40, -15, 70)
+[node name="CandlePuzzle3" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2062432672 instance=ExtResource("12_w7ck5")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -60, -25, 20)
 
-[node name="CandlePuzzle7" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1271838382 instance=ExtResource("13_2nn5w")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 20, -15, 70)
+[node name="CandlePuzzle4" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1009069009 instance=ExtResource("13_2nn5w")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -80, -25, 20)
 
-[node name="Gauntlet" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=674470128 instance=ExtResource("17_w7ck5")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 30, 0)
-
-[node name="Stair2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=464877298 instance=ExtResource("2_045es")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -65, 20, 30)
-
-[node name="SkullRoom" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1148952945 instance=ExtResource("18_ou4v7")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 30, 25, 50)
-
-[node name="SkullRoom2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1290302523 instance=ExtResource("18_ou4v7")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 10, 25, 50)
-
-[node name="SkullPuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1594414824 instance=ExtResource("19_53hnx")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 20, 25, 65)
-
-[node name="CandlePuzzle8" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=253866913 instance=ExtResource("11_l7nqg")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 45, 5, 40)
-
-[node name="CandlePuzzle9" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=249902296 instance=ExtResource("12_w7ck5")]
-transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 70, 5, -40)
-
-[node name="CandlePuzzle10" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=400220537 instance=ExtResource("13_2nn5w")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 20, 5, 10)
-
-[node name="CandlePuzzle11" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=130384605 instance=ExtResource("11_l7nqg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, -5, -55)
-
-[node name="CandlePuzzle12" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=385351060 instance=ExtResource("12_w7ck5")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -20, -5, 70)
-
-[node name="CandlePuzzle13" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1139504265 instance=ExtResource("13_2nn5w")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 10, -5, 40)
+[node name="IntroFly" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2134636989 instance=ExtResource("17_w7ck5")]
+transform = Transform3D(7.5497894e-08, 0, 1, 0, 1, 0, -1, 0, 7.5497894e-08, -30, -20, 30)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)
