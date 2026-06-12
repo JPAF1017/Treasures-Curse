@@ -254,6 +254,7 @@ var _progression_label: Label = null
 var _sub_prog_panel: Control = null
 var _sub_prog_label: Label = null
 var _sub_prog_last_text: String = ""
+var _sub_prog_anim_tween: Tween = null
 var _gold_counter_panel: HBoxContainer = null
 var _gold_counter_label: Label = null
 var _gold_counter_time: float = 0.0
@@ -2719,8 +2720,11 @@ func _update_sub_progression_ui() -> void:
 	if _sub_prog_panel == null or _sub_prog_label == null:
 		return
 	var sub_text := ""
-	if CandlePuzzleRoom.door_interaction_triggered and not CandlePuzzleRoom.is_any_door_opened():
-		sub_text = "place gem stones on the slabs"
+	if CandlePuzzleRoom.player_inside_room and not CandlePuzzleRoom.is_any_door_opened():
+		if CandlePuzzleRoom.door_interaction_triggered:
+			sub_text = "place gem stones on the slabs"
+		else:
+			sub_text = "Interact with the door"
 	if sub_text.is_empty():
 		_sub_prog_panel.visible = false
 	else:
@@ -2729,7 +2733,30 @@ func _update_sub_progression_ui() -> void:
 			_sub_prog_panel.modulate.a = 1.0
 			_sub_prog_panel.visible = true
 			_sub_prog_last_text = sub_text
+			_play_sub_progression_attention_effect()
 		_sub_prog_panel.visible = true
+
+
+func _play_sub_progression_attention_effect() -> void:
+	if _sub_prog_panel == null:
+		return
+	if _sub_prog_anim_tween != null and _sub_prog_anim_tween.is_valid():
+		_sub_prog_anim_tween.kill()
+	# Reset scale and pivot to centre before animating
+	_sub_prog_panel.pivot_offset = _sub_prog_panel.size * 0.5
+	_sub_prog_panel.scale = Vector2.ONE
+	# Scale pop: grow then spring back
+	_sub_prog_anim_tween = create_tween().set_parallel(true)
+	_sub_prog_anim_tween.tween_property(_sub_prog_panel, "scale",
+			Vector2(1.18, 1.18), 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_sub_prog_anim_tween.chain().tween_property(_sub_prog_panel, "scale",
+			Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Colour flash: bright gold burst then fade back to white
+	_sub_prog_anim_tween.tween_property(_sub_prog_panel, "modulate",
+			Color(1.6, 1.4, 0.6, 1.0), 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_sub_prog_anim_tween.chain().tween_property(_sub_prog_panel, "modulate",
+			Color.WHITE, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
 
 
 func _play_progression_attention_effect() -> void:

@@ -27,6 +27,7 @@ static var _shared_pool: Array[String] = []
 static var _pool_idx: int = 0
 static var _doors_opened: Dictionary = {}     # floor_id (String) → bool
 static var player_entered_room: bool = false
+static var player_inside_room: bool = false
 static var door_interaction_triggered: bool = false
 
 static func reset_for_generation() -> void:
@@ -34,6 +35,7 @@ static func reset_for_generation() -> void:
 	_pool_idx = 0
 	_doors_opened.clear()
 	player_entered_room = false
+	player_inside_room = false
 	door_interaction_triggered = false
 
 static func is_any_door_opened() -> bool:
@@ -99,10 +101,6 @@ func _process(delta: float) -> void:
 	_find_player_if_needed()
 	if _player == null:
 		return
-	if not CandlePuzzleRoom.player_entered_room:
-		if global_position.distance_to(_player.global_position) <= 25.0:
-			CandlePuzzleRoom.player_entered_room = true
-
 	# Only manage PlaceItem when the player is near this room.
 	if global_position.distance_to(_player.global_position) > INTERACT_RANGE:
 		if _hovered_hold_index >= 0 or _door_hovered:
@@ -251,6 +249,8 @@ func _set_warning2_visible(visible_state: bool) -> void:
 
 func _on_room_title_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player"):
+		CandlePuzzleRoom.player_entered_room = true
+		CandlePuzzleRoom.player_inside_room = true
 		_find_player_if_needed()
 		if _room_title_rtl != null and is_instance_valid(_room_title_rtl):
 			_room_title_rtl.text = "[rotating_degrade duration=1.5 end=13 start_color=#ffffff end_color=#8888ff]Crystal Puzzle[/rotating_degrade]"
@@ -269,6 +269,7 @@ func _on_room_title_body_entered(body: Node3D) -> void:
 
 func _on_room_title_body_exited(body: Node3D) -> void:
 	if body.is_in_group("player"):
+		CandlePuzzleRoom.player_inside_room = false
 		if _room_title_tween != null:
 			_room_title_tween.kill()
 			_room_title_tween = null
@@ -321,8 +322,7 @@ func _try_place_item(hold_index: int) -> void:
 		var item_script := item.get_script() as Script
 		var script_path := item_script.resource_path if item_script != null else ""
 		match script_path:
-			"res://scripts/items/gem_key1.gd", "res://scripts/items/gem_key2.gd", \
-			"res://scripts/items/gem_key3.gd", "res://scripts/items/gem_key4.gd":
+			"res://scripts/items/gem_key1.gd", "res://scripts/items/gem_key2.gd", "res://scripts/items/gem_key3.gd", "res://scripts/items/gem_key4.gd":
 				item.scale = Vector3(1.5, 1.5, 1.5)
 
 	# Mark slot occupied, track placed item, clear prompt
@@ -340,7 +340,7 @@ func _check_slot_correct(hold_index: int, item: Node) -> void:
 	var table_slot: int = hold_index + 1
 	var expected_scene: String = TableItemSpawn.get_item_for_slot(global_position.y, table_slot)
 	print("[Puzzle] _check_slot_correct hold=", hold_index, " slot=", table_slot, " floor_y=", global_position.y, " expected_scene='", expected_scene, "'")
-	print("[Puzzle]   registry=", TableItemSpawn._registry)
+	print("[Puzzle]   registry=", TableItemSpawn.registry)
 	if expected_scene.is_empty():
 		print("[Puzzle]   FAIL: registry has no entry for this slot/floor")
 		return

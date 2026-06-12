@@ -149,7 +149,7 @@ func request_map_seed() -> void:
 func _apply_table_registry(registry: Dictionary) -> void:
 	_table_registry = registry
 	for key: String in registry:
-		TableItemSpawn._registry[key] = registry[key]
+		TableItemSpawn.registry[key] = registry[key]
 
 
 func _on_dungeon_failed(generator: Node) -> void:
@@ -243,9 +243,9 @@ func _on_dungeon_ready(generator: Node) -> void:
 			if enemies.is_empty() or not is_instance_valid(door):
 				return
 			var _alive := [enemies.size()]
-			for _e: Node3D in enemies:
-				if is_instance_valid(_e):
-					(_e as Node).tree_exiting.connect(func() -> void:
+			for enemy: Node3D in enemies:
+				if is_instance_valid(enemy):
+					(enemy as Node).tree_exiting.connect(func() -> void:
 						_alive[0] -= 1
 						if _alive[0] <= 0 and is_instance_valid(door):
 							door.queue_free()
@@ -269,10 +269,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 			var _cx2 := _chan2.global_position.x
 			var _fy2 := _flr2.global_position.y + 1.0
 			var _cz2 := _chan2.global_position.z
-			for _entry in [[KNIGHT_SCENE, Vector3(_cx2, _fy2, _cz2)],
+			for entry in [[KNIGHT_SCENE, Vector3(_cx2, _fy2, _cz2)],
 					[CHARGER_SCENE, Vector3(_cx2 - 2.0, _fy2, _cz2)],
 					[CHARGER_SCENE, Vector3(_cx2 + 2.0, _fy2, _cz2)]]:
-				var _n2 := _spawn_npc.call(_entry[0], _entry[1]) as Node3D
+				var _n2 := _spawn_npc.call(entry[0], entry[1]) as Node3D
 				if _n2: _r2.append(_n2)
 		_watch_room.call(_r2, _g.get_node_or_null("Models/Room2/Door") as Node3D)
 
@@ -284,8 +284,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 			var _cx3 := _chan3.global_position.x
 			var _fy3 := _flr3.global_position.y + 1.0
 			var _cz3 := _chan3.global_position.z
-			for _offset: float in [-1.5, 1.5]:
-				var _n3 := _spawn_npc.call(KNIGHT_SCENE, Vector3(_cx3 + _offset, _fy3, _cz3)) as Node3D
+			for offset_val: float in [-1.5, 1.5]:
+				var _n3 := _spawn_npc.call(KNIGHT_SCENE, Vector3(_cx3 + offset_val, _fy3, _cz3)) as Node3D
 				if _n3: _r3.append(_n3)
 		_watch_room.call(_r3, _g.get_node_or_null("Models/Room3/Door") as Node3D)
 
@@ -300,8 +300,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 
 	# Compute top floor Y — statue will never be allowed to spawn at this level.
 	var _max_room_y := -INF
-	for _rr in all_rooms:
-		var _ry := (_rr as Node3D).global_position.y
+	for r_node in all_rooms:
+		var _ry := (r_node as Node3D).global_position.y
 		if _ry > _max_room_y:
 			_max_room_y = _ry
 	_top_floor_y = _max_room_y
@@ -460,8 +460,8 @@ func _on_dungeon_ready(generator: Node) -> void:
 			return pa.z < pb.z
 		)
 		print("[Puzzle] Pre-placed TableItemSpawn nodes found: ", _preplaced_ts.size())
-		for _pts in _preplaced_ts:
-			print("[Puzzle]   pre-placed ts: ", _pts.name, " slot=", (_pts as TableItemSpawn).table_slot, " pos=", (_pts as Node3D).global_position)
+		for pts in _preplaced_ts:
+			print("[Puzzle]   pre-placed ts: ", pts.name, " slot=", (pts as TableItemSpawn).table_slot, " pos=", (pts as Node3D).global_position)
 		table_spawns.append_array(_preplaced_ts)
 	print("[Puzzle] Total TableItemSpawn nodes (generator + pre-placed): ", table_spawns.size())
 	var table_pool: Array = [
@@ -554,7 +554,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 			sword.global_position = sword_pos
 
 	# Helper: spawn one NPC in an intro room, open its back door when it dies,
-	# and confine it to the room bounds.
+	# and confine it to the room bounds. Also spawns a sword in the center.
 	var _spawn_intro_room := func(room_name: String, scene: PackedScene) -> void:
 		var intro_room := generator.find_child(room_name, true, false) as Node3D
 		if not intro_room:
@@ -577,6 +577,14 @@ func _on_dungeon_ready(generator: Node) -> void:
 						tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
 							.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 					)
+		# Spawn a sword in the middle of the room
+		var sword_pos := room_pos + Vector3(0, 0.5, 0)
+		if _item_spawner:
+			_item_spawner.spawn({"scene": ITEM_SCENES["sword"], "pos": sword_pos})
+		else:
+			var sword: Node3D = load(ITEM_SCENES["sword"]).instantiate()
+			add_child(sword)
+			sword.global_position = sword_pos
 
 	_spawn_intro_room.call("IntroFly",      FLY_SCENE)
 
@@ -604,6 +612,14 @@ func _on_dungeon_ready(generator: Node) -> void:
 						tw.tween_property(gnome_door, "rotation_degrees:y", 60.0, 1.2) \
 							.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 				)
+		# Spawn a sword in the middle of the room
+		var sword_pos := gnomes_pos + Vector3(0, 0.5, 0)
+		if _item_spawner:
+			_item_spawner.spawn({"scene": ITEM_SCENES["sword"], "pos": sword_pos})
+		else:
+			var sword: Node3D = load(ITEM_SCENES["sword"]).instantiate()
+			add_child(sword)
+			sword.global_position = sword_pos
 
 	_spawn_intro_room.call("IntroKnight",   KNIGHT_SCENE)
 	_spawn_intro_room.call("IntroShambler", SHAMBLER_SCENE)
@@ -623,8 +639,9 @@ func _on_dungeon_ready(generator: Node) -> void:
 			shy_ref.global_position = shy_pos + Vector3(0, 1.0, 0)
 		if shy_ref and shy_door:
 			_confined_enemies.append({"enemy": shy_ref, "center": shy_pos, "half_xz": 13.0})
-			# Wait until _ready() has run so the Seen area node is resolved.
-			shy_ref.ready.connect(func() -> void:
+			# Wait until _ready() has run so the Seen area node is resolved,
+			# or set it up immediately if the node is already ready.
+			var setup_seen_area := func() -> void:
 				var seen_area := shy_ref.get_node_or_null("Seen") as Area3D
 				if seen_area == null:
 					return
@@ -637,7 +654,11 @@ func _on_dungeon_ready(generator: Node) -> void:
 					tw.tween_property(shy_door, "rotation_degrees:y", 60.0, 1.2) \
 						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 				)
-			, CONNECT_ONE_SHOT)
+			
+			if shy_ref.is_node_ready():
+				setup_seen_area.call()
+			else:
+				shy_ref.ready.connect(setup_seen_area, CONNECT_ONE_SHOT)
 
 	# Notify the multiplayer player spawner so it places a character for each client.
 	var player_spawner := get_node_or_null("PlayerSpawner")
