@@ -769,10 +769,11 @@ func _process(delta: float) -> void:
 		return
 
 	# --- Confine intro-room enemies inside their room bounds ---
+	_confined_enemies = _confined_enemies.filter(func(e: Dictionary) -> bool:
+		return is_instance_valid(e.get("enemy"))
+	)
 	for entry in _confined_enemies:
 		var enemy: Node3D = entry["enemy"]
-		if not is_instance_valid(enemy):
-			continue
 		var center: Vector3 = entry["center"]
 		var half: float = entry["half_xz"]
 		var pos := enemy.global_position

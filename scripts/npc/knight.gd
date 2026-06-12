@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal died
+
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
@@ -161,6 +163,7 @@ const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdsh
 
 func _ready() -> void:
 	top_level = true
+	add_to_group("knight")
 	_apply_pixel_shading(self)
 	randomize()
 	space_state = get_world_3d().direct_space_state
@@ -340,6 +343,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	died.emit()
 	GameStats.record_kill("knight")
 	health = 0
 	hit_reaction_timer = 0.0

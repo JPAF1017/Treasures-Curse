@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal died
+
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
@@ -94,6 +96,7 @@ const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdsh
 
 func _ready() -> void:
 	top_level = true
+	add_to_group("shambler")
 	_apply_pixel_shading(self)
 	randomize()
 	floor_stop_on_slope = true
@@ -663,6 +666,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	died.emit()
 	GameStats.record_kill("shambler")
 	health = 0
 	hit_reaction_timer = 0.0

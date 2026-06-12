@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal died
+
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyKnockback := preload("res://scripts/npc/NPCKnockbackComponent.gd")
@@ -889,6 +891,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	died.emit()
 	GameStats.record_kill("gnome")
 	health = 0.0
 	is_stunned = false
