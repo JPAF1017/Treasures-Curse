@@ -11,6 +11,7 @@ const RAYCAST_DISTANCE := 5.0
 const SKULL_PLACE_Y_OFFSET := 1.3
 const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
+const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
 
 static var player_entered_room: bool = false
 static var door_opened_static: bool = false
@@ -290,9 +291,15 @@ func _check_puzzle() -> void:
 func _open_door() -> void:
 	SkullPuzzleController.door_opened_static = true
 	_play_door_sound(door.global_position if door != null else global_position)
+	var concrete_player := _play_concrete_sound(door.global_position if door != null else global_position)
 	var tween := create_tween()
 	tween.tween_property(door, "rotation:y", deg_to_rad(DOOR_OPEN_Y_DEGREES), DOOR_OPEN_DURATION) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if concrete_player != null:
+		tween.finished.connect(func():
+			concrete_player.stop()
+			concrete_player.queue_free()
+		)
 
 
 func _play_door_sound(pos: Vector3) -> void:
@@ -301,10 +308,22 @@ func _play_door_sound(pos: Vector3) -> void:
 	if scene_root:
 		scene_root.add_child(sound_player)
 		sound_player.stream = load(DOOR_OPEN_SOUND_PATH)
-		sound_player.volume_db = linear_to_db(0.7)
+		sound_player.volume_db = linear_to_db(0.2)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)
 		sound_player.play()
+
+
+func _play_concrete_sound(pos: Vector3) -> AudioStreamPlayer3D:
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(CONCRETE_SOUND_PATH)
+		sound_player.global_position = pos
+		sound_player.play()
+		return sound_player
+	return null
 
 
 func _count_gold_for_player(player: Node) -> int:

@@ -14,6 +14,7 @@ const ITEM_PLACE_Y_OFFSET := 1.5
 const WARNING2_DISPLAY_TIME := 3.0
 const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
+const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
 
 # Maps table item scene path → expected item script path (mirrors item_hold_check.gd)
 const _SCENE_TO_SCRIPT: Dictionary = {
@@ -377,9 +378,15 @@ func _open_door() -> void:
 	var door := get_node_or_null("Models/WallsLR/Door_01") as Node3D
 	_play_door_sound(door.global_position if door != null else global_position)
 	if door != null:
+		var concrete_player := _play_concrete_sound(door.global_position)
 		var tween := create_tween()
 		tween.tween_property(door, "rotation:y", door.rotation.y + PI / 2.0, 1.0) \
 			.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+		if concrete_player != null:
+			tween.finished.connect(func():
+				concrete_player.stop()
+				concrete_player.queue_free()
+			)
 	# Keep gem keys frozen in place as decorative trophies.
 	# Disable their collision so they cannot be picked up from the hold.
 	for placed_item in _placed_items:
@@ -399,10 +406,24 @@ func _play_door_sound(pos: Vector3) -> void:
 	if scene_root:
 		scene_root.add_child(sound_player)
 		sound_player.stream = load(DOOR_OPEN_SOUND_PATH)
-		sound_player.volume_db = linear_to_db(0.7)
+		sound_player.volume_db = linear_to_db(0.2)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)
 		sound_player.play()
+
+
+func _play_concrete_sound(pos: Vector3) -> AudioStreamPlayer3D:
+	if Engine.is_editor_hint():
+		return null
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(CONCRETE_SOUND_PATH)
+		sound_player.global_position = pos
+		sound_player.play()
+		return sound_player
+	return null
 
 
 func _randomize_tables() -> void:

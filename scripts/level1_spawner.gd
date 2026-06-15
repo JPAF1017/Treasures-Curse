@@ -11,6 +11,7 @@ const STATUE_SCENE  := preload("res://entities/statue.tscn")
 const SHY_SCENE     := preload("res://entities/shy.tscn")
 const KNIGHT_SCENE  := preload("res://entities/knight.tscn")
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
+const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
 
 const CHARGER_COUNT  := 5
 const FLY_COUNT      := 5
@@ -1011,10 +1012,22 @@ func _play_door_sound(pos: Vector3) -> void:
 	if scene_root:
 		scene_root.add_child(sound_player)
 		sound_player.stream = load(DOOR_OPEN_SOUND_PATH)
-		sound_player.volume_db = linear_to_db(0.7)
+		sound_player.volume_db = linear_to_db(0.2)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)
 		sound_player.play()
+
+
+func _play_concrete_sound(pos: Vector3) -> AudioStreamPlayer3D:
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(CONCRETE_SOUND_PATH)
+		sound_player.global_position = pos
+		sound_player.play()
+		return sound_player
+	return null
 
 
 @rpc("authority", "call_local", "reliable")
@@ -1025,6 +1038,12 @@ func rpc_open_or_delete_door(door_path: NodePath, should_delete: bool, target_ro
 		if should_delete:
 			door_node.queue_free()
 		else:
+			var concrete_player := _play_concrete_sound(door_node.global_position)
 			var tw := door_node.create_tween()
 			tw.tween_property(door_node, "rotation_degrees:y", target_rotation, 1.2) \
 				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			if concrete_player != null:
+				tw.finished.connect(func():
+					concrete_player.stop()
+					concrete_player.queue_free()
+				)
