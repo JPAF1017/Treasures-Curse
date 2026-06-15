@@ -10,6 +10,7 @@ const GNOME_SCENE   := preload("res://entities/gnome.tscn")
 const STATUE_SCENE  := preload("res://entities/statue.tscn")
 const SHY_SCENE     := preload("res://entities/shy.tscn")
 const KNIGHT_SCENE  := preload("res://entities/knight.tscn")
+const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 
 const CHARGER_COUNT  := 5
 const FLY_COUNT      := 5
@@ -248,7 +249,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 					(enemy as Node).tree_exiting.connect(func() -> void:
 						_alive[0] -= 1
 						if _alive[0] <= 0 and is_instance_valid(door):
-							door.queue_free()
+							if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+								rpc("rpc_open_or_delete_door", door.get_path(), true, 0.0)
+							else:
+								rpc_open_or_delete_door(door.get_path(), true, 0.0)
 					)
 
 		# -- Room1: 1 knight --
@@ -529,9 +533,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 			var door := intro_arena.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
 			if door:
 				charger_ref.died.connect(func() -> void:
-					var tw := door.create_tween()
-					tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
-						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+					if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+						rpc("rpc_open_or_delete_door", door.get_path(), false, 60.0)
+					else:
+						rpc_open_or_delete_door(door.get_path(), false, 60.0)
 					var players := get_tree().get_nodes_in_group("player")
 					var someone_hurt := players.any(func(p: Node) -> bool:
 						return p.get(&"health") != null and (p.get(&"health") as float) < 100.0
@@ -573,9 +578,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 				var door := intro_room.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
 				if door:
 					npc_ref.died.connect(func() -> void:
-						var tw := door.create_tween()
-						tw.tween_property(door, "rotation_degrees:y", 60.0, 1.2) \
-							.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+						if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+							rpc("rpc_open_or_delete_door", door.get_path(), false, 60.0)
+						else:
+							rpc_open_or_delete_door(door.get_path(), false, 60.0)
 					)
 		# Spawn a sword in the middle of the room
 		var sword_pos := room_pos + Vector3(0, 0.5, 0)
@@ -608,9 +614,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 				gnome_ref.died.connect(func() -> void:
 					alive_gnomes[0] -= 1
 					if alive_gnomes[0] <= 0:
-						var tw := gnome_door.create_tween()
-						tw.tween_property(gnome_door, "rotation_degrees:y", 60.0, 1.2) \
-							.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+						if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+							rpc("rpc_open_or_delete_door", gnome_door.get_path(), false, 60.0)
+						else:
+							rpc_open_or_delete_door(gnome_door.get_path(), false, 60.0)
 				)
 		# Spawn a sword in the middle of the room
 		var sword_pos := gnomes_pos + Vector3(0, 0.5, 0)
@@ -650,9 +657,10 @@ func _on_dungeon_ready(generator: Node) -> void:
 					if _door_opened[0] or not area.is_in_group("player_vision"):
 						return
 					_door_opened[0] = true
-					var tw := shy_door.create_tween()
-					tw.tween_property(shy_door, "rotation_degrees:y", 60.0, 1.2) \
-						.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+					if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+						rpc("rpc_open_or_delete_door", shy_door.get_path(), false, 60.0)
+					else:
+						rpc_open_or_delete_door(shy_door.get_path(), false, 60.0)
 				)
 			
 			if shy_ref.is_node_ready():
@@ -995,3 +1003,28 @@ func _is_position_visible_to_any_player(
 			if result.is_empty():
 				return true  # player has clear line of sight to this position
 	return false
+
+
+func _play_door_sound(pos: Vector3) -> void:
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(DOOR_OPEN_SOUND_PATH)
+		sound_player.volume_db = linear_to_db(0.7)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
+
+
+@rpc("authority", "call_local", "reliable")
+func rpc_open_or_delete_door(door_path: NodePath, should_delete: bool, target_rotation: float = 60.0) -> void:
+	var door_node = get_node_or_null(door_path) as Node3D
+	if door_node:
+		_play_door_sound(door_node.global_position)
+		if should_delete:
+			door_node.queue_free()
+		else:
+			var tw := door_node.create_tween()
+			tw.tween_property(door_node, "rotation_degrees:y", target_rotation, 1.2) \
+				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
