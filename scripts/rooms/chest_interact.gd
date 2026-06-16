@@ -6,6 +6,8 @@ const LID_OPEN_DURATION := 1.0
 const GOLD_SCENE: PackedScene = preload("res://assets/items/gold.tscn")
 const GOLD_POP_SPEED := 3.0
 
+
+
 @onready var chest_area: Area3D = $Chest/Area3D
 @onready var chest_lid: Node3D = $Chest/Cube_085
 @onready var spawn_area: Area3D = $Chest/Spawn
@@ -115,7 +117,14 @@ func _open_chest() -> void:
 		deg_to_rad(LID_OPEN_DEGREES), LID_OPEN_DURATION
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
+	var sound_player := AudioStreamPlayer3D.new()
+	sound_player.stream = load("res://sounds/Interactions/openchest.mp3")
+	add_child(sound_player)
+	sound_player.play()
+	sound_player.finished.connect(sound_player.queue_free)
+
 	_spawn_gold()
+
 
 
 func _spawn_gold() -> void:
