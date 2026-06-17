@@ -241,6 +241,8 @@ var _grab_escape_immune_timer: float = 0.0
 # Progression tracking
 var _prog_stage: int = 1  # advances forward only (1=weapon … 7=GET OUT)
 var _prog_weapon_picked: bool = false
+var _connected_chargers: Array[int] = []
+var _charger_killed: bool = false
 var _prog_damaged: bool = false
 var _prog_health_used: bool = false
 var _prog_upper_floor: bool = false
@@ -2520,6 +2522,15 @@ func _update_progression_ui(delta: float) -> void:
 	if not _game_started:
 		return
 
+	# Progression: track charger death for stage 2
+	if not _charger_killed:
+		for charger in get_tree().get_nodes_in_group("charger"):
+			var id := charger.get_instance_id()
+			if not _connected_chargers.has(id):
+				_connected_chargers.append(id)
+				if not charger.died.is_connected(_on_charger_died):
+					charger.died.connect(_on_charger_died)
+
 	# Fade in after 5 seconds of gameplay
 	if not _prog_faded_in:
 		_prog_fade_timer += delta
@@ -2541,7 +2552,7 @@ func _update_progression_ui(delta: float) -> void:
 			_prog_upper_floor = true
 
 	# Advance stage forward only — never go back
-	# Stages: 1=weapon, 2=stairs(+health hint), 3=fight to top, 4=collect skulls, 5=GET OUT
+	# Stages: 1=weapon, 2=kill charger, 3=stairs(+health hint), 4=fight to top, 5=collect skulls, 6=GET OUT
 	var advanced := true
 	while advanced:
 		advanced = false
@@ -2551,16 +2562,20 @@ func _update_progression_ui(delta: float) -> void:
 					_prog_stage = 2
 					advanced = true
 			2:
-				if _prog_upper_floor:
+				if _charger_killed:
 					_prog_stage = 3
 					advanced = true
 			3:
-				if SkullPuzzleController.player_entered_room:
+				if _prog_upper_floor:
 					_prog_stage = 4
 					advanced = true
 			4:
-				if SkullPuzzleController.door_opened_static:
+				if SkullPuzzleController.player_entered_room:
 					_prog_stage = 5
+					advanced = true
+			5:
+				if SkullPuzzleController.door_opened_static:
+					_prog_stage = 6
 					advanced = true
 
 	# Display the text for the current stage
@@ -2569,16 +2584,18 @@ func _update_progression_ui(delta: float) -> void:
 		1:
 			text = "find a weapon to defend yourself"
 		2:
+			text = "Fight your foe in front of you"
+		3:
 			# Health potion replaces stairs hint while player is damaged and hasn't used one
 			if _prog_damaged and not _prog_health_used:
 				text = "find a health potion to heal up"
 			else:
 				text = "find the stairs to ascend"
-		3:
-			text = "fight your way to the top and reach the gate"
 		4:
-			text = "collect the skulls to exit the dungeon"
+			text = "fight your way to the top and reach the gate"
 		5:
+			text = "collect the skulls to exit the dungeon"
+		6:
 			text = "GET OUT"
 
 	if text.is_empty():
@@ -2593,6 +2610,10 @@ func _update_progression_ui(delta: float) -> void:
 
 	# Sub-progression: "add gem stones to the slabs" — shown after door interaction, hidden once solved
 	_update_sub_progression_ui()
+
+
+func _on_charger_died() -> void:
+	_charger_killed = true
 
 func _setup_gold_counter_ui() -> void:
 	if hud_control == null:
@@ -2733,6 +2754,18 @@ func _update_sub_progression_ui() -> void:
 			sub_text = "Interact with the door"
 	elif ROOM_TITLE_AREA_SCRIPT.player_in_dog_room:
 		sub_text = "Dodge the dog's attack by moving sideways"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_fly_room:
+		sub_text = "It will fly when nearing its death"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_gnome_room:
+		sub_text = "They will latch you in place, keep jumping to escape"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_knight_room:
+		sub_text = "Watch out for its sword"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_shambler_room:
+		sub_text = "Attack its back"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_shy_room:
+		sub_text = "Look at it if you dare"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_statue_room:
+		sub_text = "It won't move when you look at it"
 	if sub_text.is_empty():
 		_sub_prog_panel.visible = false
 	else:

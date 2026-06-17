@@ -2,9 +2,21 @@ class_name RoomTitleArea
 extends Area3D
 
 static var player_in_dog_room: bool = false
+static var player_in_fly_room: bool = false
+static var player_in_gnome_room: bool = false
+static var player_in_knight_room: bool = false
+static var player_in_shambler_room: bool = false
+static var player_in_shy_room: bool = false
+static var player_in_statue_room: bool = false
 
 static func reset_for_generation() -> void:
 	player_in_dog_room = false
+	player_in_fly_room = false
+	player_in_gnome_room = false
+	player_in_knight_room = false
+	player_in_shambler_room = false
+	player_in_shy_room = false
+	player_in_statue_room = false
 
 @export var title_text: String = ""
 @export var tracked_enemy_group: String = ""
@@ -44,6 +56,18 @@ func _on_tracked_enemy_died() -> void:
 		_title_disabled = true
 		if title_text == "Rotten Dog":
 			RoomTitleArea.player_in_dog_room = false
+		elif title_text == "Carrionfly":
+			RoomTitleArea.player_in_fly_room = false
+		elif title_text == "Clingers":
+			RoomTitleArea.player_in_gnome_room = false
+		elif title_text == "The Rusted":
+			RoomTitleArea.player_in_knight_room = false
+		elif title_text == "The Flayed":
+			RoomTitleArea.player_in_shambler_room = false
+		elif title_text == "The Mourning":
+			RoomTitleArea.player_in_shy_room = false
+		elif title_text == "The Patient One":
+			RoomTitleArea.player_in_statue_room = false
 		_hide_title()
 
 
@@ -79,6 +103,18 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	if title_text == "Rotten Dog":
 		RoomTitleArea.player_in_dog_room = true
+	elif title_text == "Carrionfly":
+		RoomTitleArea.player_in_fly_room = true
+	elif title_text == "Clingers":
+		RoomTitleArea.player_in_gnome_room = true
+	elif title_text == "The Rusted":
+		RoomTitleArea.player_in_knight_room = true
+	elif title_text == "The Flayed":
+		RoomTitleArea.player_in_shambler_room = true
+	elif title_text == "The Mourning":
+		RoomTitleArea.player_in_shy_room = true
+	elif title_text == "The Patient One":
+		RoomTitleArea.player_in_statue_room = true
 	_find_player_ui()
 	if _room_title_rtl != null and is_instance_valid(_room_title_rtl):
 		_room_title_rtl.text = "[rotating_degrade duration=1.5 end=%d start_color=#ffffff end_color=#8888ff]%s[/rotating_degrade]" \
@@ -101,4 +137,16 @@ func _on_body_exited(body: Node3D) -> void:
 		return
 	if title_text == "Rotten Dog":
 		RoomTitleArea.player_in_dog_room = false
+	elif title_text == "Carrionfly":
+		RoomTitleArea.player_in_fly_room = false
+	elif title_text == "Clingers":
+		RoomTitleArea.player_in_gnome_room = false
+	elif title_text == "The Rusted":
+		RoomTitleArea.player_in_knight_room = false
+	elif title_text == "The Flayed":
+		RoomTitleArea.player_in_shambler_room = false
+	elif title_text == "The Mourning":
+		RoomTitleArea.player_in_shy_room = false
+	elif title_text == "The Patient One":
+		RoomTitleArea.player_in_statue_room = false
 	_hide_title()
