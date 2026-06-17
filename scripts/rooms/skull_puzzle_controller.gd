@@ -112,6 +112,7 @@ func _process(delta: float) -> void:
 			else:
 				if _get_selected_item() != null:
 					_show_warning2("I can't place this here")
+					_play_invalid_sound(_hovered_area.global_position)
 				else:
 					_show_warning2("I could place something here but what?")
 		elif _door_hovered:
@@ -373,6 +374,18 @@ func _play_concrete_sound(pos: Vector3) -> AudioStreamPlayer3D:
 		sound_player.play()
 		return sound_player
 	return null
+
+
+func _play_invalid_sound(pos: Vector3) -> void:
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load("res://sounds/Interactions/invalid.mp3")
+		sound_player.volume_db = linear_to_db(0.4)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
 
 
 func _count_gold_for_player(player: Node) -> int:

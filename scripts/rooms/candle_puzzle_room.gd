@@ -297,6 +297,7 @@ func _try_place_item(hold_index: int) -> void:
 	if not item.get_meta("puzzle_item", false):
 		_set_place_item_visible(false)
 		_show_warning2("I can't place this here...")
+		_play_invalid_sound(_hold_areas[hold_index].global_position)
 		return
 
 	# Use drop_from_hotbar so every item type handles its own viewmodel/hand cleanup.
@@ -360,6 +361,7 @@ func _check_slot_correct(hold_index: int, item: Node) -> void:
 	else:
 		print("[Puzzle]   WRONG gem for this slot")
 		_show_warning2("The candles could show me how to solve this")
+		_play_invalid_sound(_hold_areas[hold_index].global_position)
 
 
 func on_item_hold_satisfied() -> void:
@@ -424,6 +426,20 @@ func _play_concrete_sound(pos: Vector3) -> AudioStreamPlayer3D:
 		sound_player.play()
 		return sound_player
 	return null
+
+
+func _play_invalid_sound(pos: Vector3) -> void:
+	if Engine.is_editor_hint():
+		return
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load("res://sounds/Interactions/invalid.mp3")
+		sound_player.volume_db = linear_to_db(0.4)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
 
 
 func _randomize_tables() -> void:
