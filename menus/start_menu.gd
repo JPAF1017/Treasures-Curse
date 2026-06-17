@@ -49,6 +49,7 @@ func _on_play_pressed() -> void:
 	# Reset puzzle pool state so each run gets a fresh shuffle
 	CandlePuzzleRoom.reset_for_generation()
 	TableItemSpawn.reset_for_generation()
+	SkullPuzzleController.reset_for_generation()
 	var packed: PackedScene = load(TEST_MAP_PATH)
 	_map_instance = packed.instantiate()
 	var generator := _find_dungeon_generator(_map_instance)

@@ -103,6 +103,7 @@ func _on_connected_to_server() -> void:
 func _start_game() -> void:
 	CandlePuzzleRoom.reset_for_generation()
 	TableItemSpawn.reset_for_generation()
+	SkullPuzzleController.reset_for_generation()
 	var packed: PackedScene = load(GAME_SCENE_PATH)
 	_map_instance = packed.instantiate()
 	var generator := _find_dungeon_generator(_map_instance)

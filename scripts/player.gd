@@ -2725,6 +2725,11 @@ func _update_sub_progression_ui() -> void:
 			sub_text = "place gem stones on the slabs"
 		else:
 			sub_text = "Interact with the door"
+	elif SkullPuzzleController.player_inside_room and not SkullPuzzleController.door_opened_static:
+		if SkullPuzzleController.door_interaction_triggered:
+			sub_text = "Place something on the altar"
+		else:
+			sub_text = "Interact with the door"
 	if sub_text.is_empty():
 		_sub_prog_panel.visible = false
 	else:

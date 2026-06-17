@@ -15,6 +15,8 @@ const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
 
 static var player_entered_room: bool = false
 static var door_opened_static: bool = false
+static var door_interaction_triggered: bool = false
+static var player_inside_room: bool = false
 
 @onready var key_area_1: Area3D = $Key
 @onready var key_area_2: Area3D = $Key2
@@ -42,12 +44,40 @@ var _door_hovered: bool = false
 var _warning2_timer: float = 0.0
 
 
+static func reset_for_generation() -> void:
+	player_entered_room = false
+	door_opened_static = false
+	door_interaction_triggered = false
+	player_inside_room = false
+
+
 func _ready() -> void:
-	find_child.call_deferred("_find_door_area")
+	call_deferred("_find_door_area")
 	key_area_1.body_entered.connect(_on_key_1_body_entered)
 	key_area_1.body_exited.connect(_on_key_1_body_exited)
 	key_area_2.body_entered.connect(_on_key_2_body_entered)
 	key_area_2.body_exited.connect(_on_key_2_body_exited)
+
+	var title_area := get_node_or_null("../../RoomTitle") as Area3D
+	if title_area != null:
+		title_area.body_entered.connect(_on_room_title_body_entered)
+		title_area.body_exited.connect(_on_room_title_body_exited)
+
+
+func _on_room_title_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player"):
+		SkullPuzzleController.player_inside_room = true
+
+
+func _on_room_title_body_exited(body: Node3D) -> void:
+	if body.is_in_group("player"):
+		SkullPuzzleController.player_inside_room = false
+
+
+func _find_door_area() -> void:
+	var door_node := get_node_or_null("../Door/Door_01")
+	if door_node != null:
+		_door_area = door_node.find_child("DoorArea", true, false) as Area3D
 
 
 func _process(delta: float) -> void:
@@ -85,6 +115,7 @@ func _process(delta: float) -> void:
 				else:
 					_show_warning2("I could place something here but what?")
 		elif _door_hovered:
+			SkullPuzzleController.door_interaction_triggered = true
 			_show_warning2("I think I need to place something on the slabs to open this")
 
 
