@@ -1,4 +1,10 @@
+class_name RoomTitleArea
 extends Area3D
+
+static var player_in_dog_room: bool = false
+
+static func reset_for_generation() -> void:
+	player_in_dog_room = false
 
 @export var title_text: String = ""
 @export var tracked_enemy_group: String = ""
@@ -36,6 +42,8 @@ func _on_tracked_enemy_died() -> void:
 	_enemy_death_count += 1
 	if _enemy_death_count >= _enemy_total:
 		_title_disabled = true
+		if title_text == "Rotten Dog":
+			RoomTitleArea.player_in_dog_room = false
 		_hide_title()
 
 
@@ -69,6 +77,8 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	if _title_disabled:
 		return
+	if title_text == "Rotten Dog":
+		RoomTitleArea.player_in_dog_room = true
 	_find_player_ui()
 	if _room_title_rtl != null and is_instance_valid(_room_title_rtl):
 		_room_title_rtl.text = "[rotating_degrade duration=1.5 end=%d start_color=#ffffff end_color=#8888ff]%s[/rotating_degrade]" \
@@ -89,4 +99,6 @@ func _on_body_entered(body: Node3D) -> void:
 func _on_body_exited(body: Node3D) -> void:
 	if not body.is_in_group("player"):
 		return
+	if title_text == "Rotten Dog":
+		RoomTitleArea.player_in_dog_room = false
 	_hide_title()

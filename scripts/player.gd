@@ -46,6 +46,7 @@ const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 const VOICE_CHAT_SCRIPT: Script = preload("res://scripts/multiplayer/voice_chat.gd")
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
+const ROOM_TITLE_AREA_SCRIPT: Script = preload("res://scripts/rooms/room_title_area.gd")
 const SMOKE_ITEM_SCRIPT: Script = preload("res://scripts/items/smoke.gd")
 const SKULL_KEY_ITEM_SCRIPT: Script = preload("res://scripts/items/skull_key.gd")
 const TORCH_ITEM_SCRIPT: Script = preload("res://scripts/items/torch.gd")
@@ -2730,6 +2731,8 @@ func _update_sub_progression_ui() -> void:
 			sub_text = "Place something on the altar"
 		else:
 			sub_text = "Interact with the door"
+	elif ROOM_TITLE_AREA_SCRIPT.player_in_dog_room:
+		sub_text = "Dodge the dog's attack by moving sideways"
 	if sub_text.is_empty():
 		_sub_prog_panel.visible = false
 	else:

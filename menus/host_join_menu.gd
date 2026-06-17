@@ -3,6 +3,7 @@ extends Control
 const PORT := 7777
 const MAX_CLIENTS := 3
 const GAME_SCENE_PATH := "res://levels/level1.tscn"
+const ROOM_TITLE_AREA_SCRIPT := preload("res://scripts/rooms/room_title_area.gd")
 
 @onready var host_button: Button = $Buttons/Host
 @onready var join_button: Button = $Buttons/Join
@@ -104,6 +105,7 @@ func _start_game() -> void:
 	CandlePuzzleRoom.reset_for_generation()
 	TableItemSpawn.reset_for_generation()
 	SkullPuzzleController.reset_for_generation()
+	ROOM_TITLE_AREA_SCRIPT.reset_for_generation()
 	var packed: PackedScene = load(GAME_SCENE_PATH)
 	_map_instance = packed.instantiate()
 	var generator := _find_dungeon_generator(_map_instance)
