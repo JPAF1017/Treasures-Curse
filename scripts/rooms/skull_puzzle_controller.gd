@@ -80,7 +80,10 @@ func _process(delta: float) -> void:
 			if _get_selected_skull_key() != null:
 				_try_place_skull(_hovered_area)
 			else:
-				_show_warning2("I could place something here but what?")
+				if _get_selected_item() != null:
+					_show_warning2("I can't place this here")
+				else:
+					_show_warning2("I could place something here but what?")
 		elif _door_hovered:
 			_show_warning2("I think I need to place something on the slabs to open this")
 
@@ -121,6 +124,21 @@ func _get_selected_skull_key() -> Node:
 	return null
 
 
+func _get_selected_item() -> Node:
+	if _player == null:
+		return null
+	var models = _player.get("hotbar_item_models")
+	if models == null:
+		return null
+	var idx: int = int(_player.get("selected_hotbar_slot_index"))
+	if idx < 0 or idx >= models.size():
+		return null
+	var item: Node = models[idx]
+	if item == null or not is_instance_valid(item):
+		return null
+	return item
+
+
 func _update_interact_prompt() -> void:
 	_door_hovered = false
 	var camera := _get_player_camera()
@@ -149,17 +167,17 @@ func _update_interact_prompt() -> void:
 		elif not _door_opened and collider == _door_area:
 			_door_hovered = true
 
-	var has_skull := _get_selected_skull_key() != null
+	var has_item := _get_selected_item() != null
 
 	if aimed == exit_area:
 		_hovered_area = aimed
 		_set_place_item_label("interact")
 		_set_place_item_visible(true)
-	elif aimed != null and has_skull:
+	elif aimed != null and has_item:
 		_hovered_area = aimed
 		_set_place_item_label("place item")
 		_set_place_item_visible(true)
-	elif aimed != null and not has_skull:
+	elif aimed != null and not has_item:
 		_hovered_area = aimed
 		_set_place_item_label("interact")
 		_set_place_item_visible(true)

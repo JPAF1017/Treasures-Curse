@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1781603519
+::res://::1781677321
 export_presets.cfg::TextFile::-1::1779345796::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1777213248::1777213249::1::::<><><>0<>0<>cae14fdf34577903ea8282ebd52773bb<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
@@ -495,7 +495,7 @@ statue.gd::GDScript::998346533100298730::1781608157::0::1::::<>CharacterBody3D<>
 ::res://scripts/rooms/::1780915064
 big_room.gd::GDScript::1491222591273790336::1777228408::0::1::::BigRoom<>DungeonRoom3D<><>0<>1<><>::
 candle_puzzle_room.gd::GDScript::8273511203469505923::1781522744::0::1::::CandlePuzzleRoom<>DungeonRoom3D<><>0<>1<><>::
-chest_interact.gd::GDScript::5687805647447693754::1781608309::0::1::::<>Node3D<><>0<>0<><>::
+chest_interact.gd::GDScript::5687805647447693754::1781608430::0::1::::<>Node3D<><>0<>0<><>::
 room_title_area.gd::GDScript::4507910189563735558::1780916295::0::1::::<>Area3D<><>0<>0<><>::
 skull_puzzle_controller.gd::GDScript::2665935180804063843::1781522733::0::1::::SkullPuzzleController<>Node3D<><>0<>0<><>::
 ::res://scripts/ui/::1778180229
@@ -538,8 +538,9 @@ goodend1.mp3::AudioStreamMP3::5313619837699842288::1778206099::1778206100::1::::
 goodend2.mp3::AudioStreamMP3::3974644414902293587::1778206099::1778206100::1::::<><><>0<>0<>26173536a13506d24ab257be555a7e02<>res://.godot/imported/goodend2.mp3-47e84cba6c6c66aeb34386f77ae76060.mp3str::
 goodend3.mp3::AudioStreamMP3::2202290478329621687::1778206099::1778206100::1::::<><><>0<>0<>2e91886d139d7fe62170853aff818328<>res://.godot/imported/goodend3.mp3-062d43e4c8cbffbc381734bd75e02c09.mp3str::
 goodend4.mp3::AudioStreamMP3::3323169916901671305::1778206099::1778206100::1::::<><><>0<>0<>b37256f28d97c99f428fd57ea666438e<>res://.godot/imported/goodend4.mp3-8de55f27062d767c6356216820a5f601.mp3str::
-::res://sounds/Interactions/::1781608259
+::res://sounds/Interactions/::1781679171
 concrete.mp3::AudioStreamMP3::3671617568397470376::1781522235::1781522488::1::::<><><>0<>0<>a0e30faf665ecc7944365cfd0fd7e252<>res://.godot/imported/concrete.mp3-157046cd65097c6382bafa4823d98623.mp3str::
+invalid.mp3::AudioStreamMP3::415120424689846984::1781679136::1781679202::1::::<><><>0<>0<>7358167dd3b4588499fb38d7d0e65068<>res://.godot/imported/invalid.mp3-69b9bc12deb0ecb5f5a62aca4b91093a.mp3str::
 openchest.mp3::AudioStreamMP3::7704934370201252551::1781608242::1781608376::1::::<><><>0<>0<>3e5629ad99035542ba13098aae0727b3<>res://.godot/imported/openchest.mp3-24e24a4b98b514111e9cc6d156d8902a.mp3str::
 opening.mp3::AudioStreamMP3::4085414749281883466::1781521022::1781521954::1::::<><><>0<>0<>2083a8e0f3259d2f2ff8a78f9ed406d7<>res://.godot/imported/opening.mp3-e1d349fcb4aed59ae823c6ca2b95f131.mp3str::
 ::res://sounds/knight/::1776598493
