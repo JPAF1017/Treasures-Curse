@@ -394,6 +394,13 @@ func _apply_attack_damage(player: Node, amount: float, knockback_strength: float
 			_apply_npc_knockback(target, player, knockback_strength)
 			swing_damaged_targets[target.get_instance_id()] = true
 			dealt_damage = true
+			# Spawn blood splatter at the target's position
+			if target is Node3D:
+				var hit_dir := Vector3.ZERO
+				var player_node := player as Node3D
+				if player_node:
+					hit_dir = ((target as Node3D).global_position - player_node.global_position).normalized()
+				BloodSplatterEffect.spawn(target.get_tree(), (target as Node3D).global_position, hit_dir)
 
 	if dealt_damage:
 		uses_left -= 1
