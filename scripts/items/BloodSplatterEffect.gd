@@ -68,7 +68,6 @@ static func _spawn_single_particle(root: Node, scene_tree: SceneTree, origin: Ve
 
 	# Offset origin slightly upward to roughly centre-mass height
 	var spawn_pos := origin + Vector3(0.0, randf_range(0.6, 1.2), 0.0)
-	mesh_instance.global_position = spawn_pos if root.is_inside_tree() else spawn_pos
 	root.add_child(mesh_instance)
 	mesh_instance.global_position = spawn_pos
 
