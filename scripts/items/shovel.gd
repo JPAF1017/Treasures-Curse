@@ -76,6 +76,7 @@ var swing_momentum_applied_dir: Vector3 = Vector3.ZERO
 var current_swing_damage: float = SWING_DAMAGE_INCOMPLETE
 var current_swing_stun_duration: float = SWING_STUN_DURATION_INCOMPLETE
 var swing_damaged_targets: Dictionary = {}
+var swing_hit_environment: bool = false
 var uses_left: int = MAX_USES
 var item_durability_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
 var item_durability_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
@@ -145,6 +146,7 @@ func begin_primary_action(player: Node) -> bool:
 	swing_was_released_early = false
 	swing_damage_ready = false
 	swing_damaged_targets.clear()
+	swing_hit_environment = false
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
 	current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):
@@ -398,6 +400,10 @@ func _apply_attack_damage(player: Node, amount: float, stun_duration: float) -> 
 				if player_node:
 					hit_dir = ((target as Node3D).global_position - player_node.global_position).normalized()
 				BloodSplatterEffect.spawn(target.get_tree(), (target as Node3D).global_position, hit_dir)
+
+	if not swing_hit_environment:
+		if melee_shared.check_and_apply_environment_hit(self, player):
+			swing_hit_environment = true
 
 	if dealt_damage:
 		uses_left -= 1
@@ -794,6 +800,7 @@ func _reset_swing_state(player: Node) -> void:
 	swing_momentum_applied = false
 	swing_momentum_applied_dir = Vector3.ZERO
 	swing_damaged_targets.clear()
+	swing_hit_environment = false
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
 	current_swing_stun_duration = SWING_STUN_DURATION_INCOMPLETE
 	if player and player.has_method("set_movement_locked_by"):

@@ -8,8 +8,8 @@ extends RefCounted
 # ── Configuration ──────────────────────────────────────────────────────────────
 const PARTICLE_COUNT_MIN := 30
 const PARTICLE_COUNT_MAX := 45
-const PARTICLE_RADIUS_MIN := 0.03
-const PARTICLE_RADIUS_MAX := 0.08
+const PARTICLE_RADIUS_MIN := 0.06
+const PARTICLE_RADIUS_MAX := 0.16
 const BURST_SPEED_MIN := 1.5
 const BURST_SPEED_MAX := 4.5
 const UPWARD_BIAS := 1.5

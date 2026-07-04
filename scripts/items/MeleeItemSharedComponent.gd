@@ -147,3 +147,34 @@ func swing_frame_to_time(frame: int, animation_fps: float) -> float:
 	if animation_fps <= 0.0:
 		return 0.0
 	return max(frame - 1, 0) / animation_fps
+
+
+func check_and_apply_environment_hit(item_node: Node, player: Node, reach: float = 3.0) -> bool:
+	if player == null:
+		return false
+	var camera: Camera3D = player.get("camera") as Camera3D
+	if camera == null:
+		return false
+
+	var space_state: PhysicsDirectSpaceState3D = camera.get_world_3d().direct_space_state
+	if space_state == null:
+		return false
+
+	var origin: Vector3 = camera.global_position
+	var target_pos: Vector3 = origin - camera.global_transform.basis.z * reach
+
+	var query := PhysicsRayQueryParameters3D.create(origin, target_pos)
+	query.exclude = [player]
+	query.collide_with_bodies = true
+	query.collide_with_areas = false
+	query.collision_mask = 1
+
+	var result := space_state.intersect_ray(query)
+	if result.has("position"):
+		var hit_collider = result.get("collider")
+		if hit_collider != null and not hit_collider.has_method("apply_damage") and not hit_collider.is_in_group("player"):
+			var hit_pos: Vector3 = result["position"]
+			var hit_normal: Vector3 = result["normal"]
+			SparksEffect.spawn(player.get_tree(), hit_pos, hit_normal)
+			return true
+	return false
