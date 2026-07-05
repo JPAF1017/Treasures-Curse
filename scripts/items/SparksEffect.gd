@@ -6,10 +6,10 @@ extends RefCounted
 ## deflected along the surface normal, then fall with gravity and fade out.
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-const PARTICLE_COUNT_MIN := 8
-const PARTICLE_COUNT_MAX := 16
-const PARTICLE_RADIUS_MIN := 0.03
-const PARTICLE_RADIUS_MAX := 0.08
+const PARTICLE_COUNT_MIN := 40
+const PARTICLE_COUNT_MAX := 58
+const PARTICLE_RADIUS_MIN := 0.078
+const PARTICLE_RADIUS_MAX := 0.208
 const BURST_SPEED_MIN := 1.5
 const BURST_SPEED_MAX := 5.0
 const GRAVITY := 12.0 # sparks fall slightly faster

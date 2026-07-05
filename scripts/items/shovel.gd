@@ -400,6 +400,7 @@ func _apply_attack_damage(player: Node, amount: float, stun_duration: float) -> 
 				if player_node:
 					hit_dir = ((target as Node3D).global_position - player_node.global_position).normalized()
 				BloodSplatterEffect.spawn(target.get_tree(), (target as Node3D).global_position, hit_dir)
+				melee_shared.play_sound_at_pos(target.get_tree(), "res://sounds/Interactions/hit_blunt.mp3", (target as Node3D).global_position)
 
 	if not swing_hit_environment:
 		if melee_shared.check_and_apply_environment_hit(self, player):

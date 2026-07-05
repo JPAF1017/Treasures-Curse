@@ -6,10 +6,10 @@ extends RefCounted
 ## on hit, then fall with gravity and fade out.
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-const PARTICLE_COUNT_MIN := 30
-const PARTICLE_COUNT_MAX := 45
-const PARTICLE_RADIUS_MIN := 0.06
-const PARTICLE_RADIUS_MAX := 0.16
+const PARTICLE_COUNT_MIN := 40
+const PARTICLE_COUNT_MAX := 58
+const PARTICLE_RADIUS_MIN := 0.078
+const PARTICLE_RADIUS_MAX := 0.208
 const BURST_SPEED_MIN := 1.5
 const BURST_SPEED_MAX := 4.5
 const UPWARD_BIAS := 1.5

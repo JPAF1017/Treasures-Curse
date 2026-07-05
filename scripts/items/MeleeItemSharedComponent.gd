@@ -149,6 +149,21 @@ func swing_frame_to_time(frame: int, animation_fps: float) -> float:
 	return max(frame - 1, 0) / animation_fps
 
 
+func play_sound_at_pos(scene_tree: SceneTree, path: String, pos: Vector3, volume_db: float = 0.0) -> void:
+	if scene_tree == null:
+		return
+	var root := scene_tree.current_scene
+	if root == null:
+		return
+	var audio_player := AudioStreamPlayer3D.new()
+	root.add_child(audio_player)
+	audio_player.stream = load(path)
+	audio_player.global_position = pos
+	audio_player.volume_db = volume_db
+	audio_player.finished.connect(audio_player.queue_free)
+	audio_player.play()
+
+
 func check_and_apply_environment_hit(item_node: Node, player: Node, reach: float = 3.0) -> bool:
 	if player == null:
 		return false
@@ -176,5 +191,6 @@ func check_and_apply_environment_hit(item_node: Node, player: Node, reach: float
 			var hit_pos: Vector3 = result["position"]
 			var hit_normal: Vector3 = result["normal"]
 			SparksEffect.spawn(player.get_tree(), hit_pos, hit_normal)
+			play_sound_at_pos(player.get_tree(), "res://sounds/Interactions/hit_solid.mp3", hit_pos)
 			return true
 	return false
