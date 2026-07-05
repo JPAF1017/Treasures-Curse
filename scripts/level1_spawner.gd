@@ -87,6 +87,12 @@ var _statue_intro_triggered: bool = false  # true once a player has entered the 
 # Each entry: { "enemy": Node3D, "center": Vector3, "half_xz": float }
 var _confined_enemies: Array = []
 
+# ---- Torch catch-up spawning state (server only) ----
+const TORCH_SPAWN_DESPAWN_TIME := 15.0
+const TORCH_SPAWN_COOLDOWN_TIME := 15.0
+# Key: player (Node3D), Value: Dictionary with {"torch": Node3D, "timer": float, "cooldown": float}
+var _player_spawned_torches: Dictionary = {}
+
 
 func _ready() -> void:
 	# Wire up the MultiplayerSpawner nodes so they know which scenes to replicate.
@@ -348,13 +354,28 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# count > 1 means a group spawning close together in the same room
 	# NOTE: chargers are spawned exclusively in IntroArena below, not here.
 	var tasks: Array = []
-	for i in FLY_COUNT:
+
+	# Determine spawn counts (optionally boosted by NG+ Bonus Spawns reward).
+	var _fly_count: int = FLY_COUNT
+	var _shambler_count: int = SHAMBLER_COUNT
+	var _gnome_groups: int = GNOME_GROUPS
+	if SettingsManager.bonus_spawns:
+		_fly_count = ceili(float(_fly_count) * 1.2)
+		_shambler_count = ceili(float(_shambler_count) * 1.2)
+		_gnome_groups = ceili(float(_gnome_groups) * 1.2)
+
+	for i in _fly_count:
 		tasks.append([FLY_SCENE, 1])
-	for i in SHAMBLER_COUNT:
+	for i in _shambler_count:
 		tasks.append([SHAMBLER_SCENE, 1])
-	for i in GNOME_GROUPS:
+	for i in _gnome_groups:
 		var group_size: int = 2 if rng.randi() % 2 == 0 else 3
 		tasks.append([GNOME_SCENE, group_size])
+
+	# NG+ Bonus Spawns: add knights to the procedural spawn pool.
+	if SettingsManager.bonus_spawns:
+		tasks.append([KNIGHT_SCENE, 1])
+		tasks.append([KNIGHT_SCENE, 1])
 
 	# Shuffle tasks so enemy types are interleaved, dispersed across eligible rooms.
 	_rng_shuffle(tasks, rng)
@@ -775,6 +796,8 @@ func _do_spawn_item(data: Dictionary) -> Node:
 	var packed := load(data["scene"]) as PackedScene
 	var node: Node3D = packed.instantiate() as Node3D
 	node.position = data["pos"]
+	if data.get("is_burning", false) and "is_burning" in node:
+		node.set("is_burning", true)
 	if data.get("puzzle_item", false):
 		node.set_meta("puzzle_item", true)
 		# Freeze briefly so CSG table collision has time to generate before physics.
@@ -792,10 +815,13 @@ func _do_spawn_item(data: Dictionary) -> Node:
 # ---------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
-	if _second_floor_y == INF:
-		return
 	var is_server := not multiplayer.has_multiplayer_peer() or multiplayer.is_server()
 	if not is_server:
+		return
+
+	_process_player_torches(delta)
+
+	if _second_floor_y == INF:
 		return
 
 	# --- Confine intro-room enemies inside their room bounds ---
@@ -904,6 +930,95 @@ func _find_hidden_spawn_near(center: Vector3, target: Node3D = null) -> Vector3:
 			if not _is_position_visible_to_any_player(candidate, players, space_state):
 				return candidate
 	return Vector3.ZERO
+
+
+## Process active player spawned torches and handle catch-up spawning for players without a torch.
+func _process_player_torches(delta: float) -> void:
+	# 1. Clean up and update existing spawned torches
+	var player_keys := _player_spawned_torches.keys()
+	for player in player_keys:
+		var state: Dictionary = _player_spawned_torches[player]
+		
+		# Decrement cooldown
+		if state.get("cooldown", 0.0) > 0.0:
+			state["cooldown"] = maxf(state["cooldown"] - delta, 0.0)
+		
+		if not is_instance_valid(player):
+			# Player disconnected/freed; despawn their torch if still active
+			var torch_node = state.get("torch")
+			if is_instance_valid(torch_node):
+				torch_node.queue_free()
+			_player_spawned_torches.erase(player)
+			continue
+			
+		var torch_node = state.get("torch")
+		if is_instance_valid(torch_node):
+			# Check if it has been picked up
+			var is_picked_up := false
+			if torch_node.get("inventory_slot_index", -1) >= 0:
+				is_picked_up = true
+			
+			if is_picked_up:
+				# Torch was picked up by someone; clear from tracking but do not delete
+				state["torch"] = null
+			else:
+				# Torch is still on the ground; decrement its despawn timer
+				state["timer"] -= delta
+				if state["timer"] <= 0.0:
+					print("[TorchSpawn] Despawning torch for player ", player.name, " (not picked up in time)")
+					torch_node.queue_free()
+					state["torch"] = null
+					state["cooldown"] = TORCH_SPAWN_COOLDOWN_TIME
+		else:
+			# Torch was deleted or picked up and freed; make sure the reference is null
+			if state.get("torch") != null:
+				state["torch"] = null
+
+	# 2. Check all active players to spawn a torch if they don't have one and are not on cooldown
+	var players := get_tree().get_nodes_in_group("player")
+	for player in players:
+		if not is_instance_valid(player):
+			continue
+		
+		# If they already have a torch in their inventory, we don't spawn
+		if player.has_method("has_torch_in_hotbar") and player.has_torch_in_hotbar():
+			continue
+			
+		# Check if we are already tracking a state for this player
+		var state: Dictionary = _player_spawned_torches.get(player, {})
+		if state.is_empty():
+			# Initialize state
+			state = {
+				"torch": null,
+				"timer": 0.0,
+				"cooldown": 0.0
+			}
+			_player_spawned_torches[player] = state
+			
+		# If there's an active torch, or we are on cooldown, do nothing
+		if is_instance_valid(state.get("torch")) or state.get("cooldown", 0.0) > 0.0:
+			continue
+			
+		# Attempt to spawn a torch behind the player
+		var spawn_pos := _find_hidden_spawn_near(player.global_position, player)
+		if spawn_pos != Vector3.ZERO:
+			print("[TorchSpawn] Spawning torch behind player ", player.name, " at ", spawn_pos)
+			var torch_node: Node3D = null
+			if _item_spawner:
+				torch_node = _item_spawner.spawn({
+					"scene": "res://assets/items/torch.tscn",
+					"pos": spawn_pos,
+					"is_burning": true
+				})
+			else:
+				var packed := load("res://assets/items/torch.tscn") as PackedScene
+				torch_node = packed.instantiate() as Node3D
+				torch_node.position = spawn_pos
+				torch_node.set("is_burning", true)
+				add_child(torch_node)
+			
+			state["torch"] = torch_node
+			state["timer"] = TORCH_SPAWN_DESPAWN_TIME
 
 
 ## Fires when any body enters the IntroStatue room's RoomTitle Area3D (server only).

@@ -68,9 +68,13 @@ var _torch_lit_state: bool = false
 func _ready() -> void:
 	_configure_item_physics()
 	if _fire_particle:
-		_fire_particle.visible = false
+		_fire_particle.visible = is_burning
 	if _dropped_light:
-		_dropped_light.visible = false
+		_dropped_light.visible = is_burning and inventory_slot_index < 0
+		if _dropped_light.visible:
+			_dropped_light.top_level = true
+			_dropped_light.global_position = global_position + Vector3(0.0, DROPPED_LIGHT_HEIGHT_OFFSET, 0.0)
+			_dropped_light.omni_range = 16.0
 	_setup_item_durability_palette_colors()
 
 func _setup_item_durability_palette_colors() -> void:
@@ -101,7 +105,7 @@ func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Co
 const DROPPED_LIGHT_HEIGHT_OFFSET := 1.2
 
 func _process(delta: float) -> void:
-	if is_burning:
+	if is_burning and not SettingsManager.unlimited_torch:
 		usable_time_left -= delta
 		if usable_time_left <= 0.0:
 			_delete_torch()

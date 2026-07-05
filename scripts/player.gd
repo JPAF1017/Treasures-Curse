@@ -662,10 +662,11 @@ func _physics_process(delta):
 #jump input
 	var jump_pressed := not is_movement_locked and Input.is_action_just_pressed("ui_accept")
 	if jump_pressed and is_on_floor():
-		if stamina >= JUMP_STAMINA_COST:
-			stamina = max(stamina - JUMP_STAMINA_COST, 0.0)
-			if stamina <= 0.0:
-				stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
+		if stamina >= JUMP_STAMINA_COST or SettingsManager.unlimited_stamina:
+			if not SettingsManager.unlimited_stamina:
+				stamina = max(stamina - JUMP_STAMINA_COST, 0.0)
+				if stamina <= 0.0:
+					stamina_refill_delay_timer = STAMINA_REFILL_DELAY_SECONDS
 			tired_jump_active = false
 			jump_phase = JUMP_PHASE_ACTIVE
 			velocity.y = JUMP_VELOCITY
@@ -692,13 +693,13 @@ func _physics_process(delta):
 		speed = CROUCH_SPEED
 	elif is_crouching:
 		speed = CROUCH_SPEED
-	elif sprint_input and can_sprint and stamina > 0.0:
+	elif sprint_input and can_sprint and (stamina > 0.0 or SettingsManager.unlimited_stamina):
 		is_sprinting = true
 		speed = SPRINT_SPEED
 	else:
 		speed = WALK_SPEED
 
-	if is_sprinting:
+	if is_sprinting and not SettingsManager.unlimited_stamina:
 		var drain: float = STAMINA_DRAIN_PER_SECOND * delta
 		stamina = max(stamina - drain, 0.0)
 		if stamina <= 0.0:
@@ -1718,13 +1719,13 @@ func _update_dark_adapt(delta: float) -> void:
 	_dark_adapt_scan_timer -= delta
 	if _dark_adapt_scan_timer <= 0.0:
 		_dark_adapt_scan_timer = DARK_ADAPT_SCAN_INTERVAL
-		_dark_adapt_has_torch = _has_torch_in_hotbar()
+		_dark_adapt_has_torch = has_torch_in_hotbar()
 	var target := 0.0 if _dark_adapt_has_torch else DARK_ADAPT_MAX_ENERGY
 	var speed := DARK_ADAPT_OUT_SPEED if _dark_adapt_has_torch else DARK_ADAPT_IN_SPEED
 	_dark_adapt_energy = move_toward(_dark_adapt_energy, target, speed * delta)
 	dark_adapt_light.light_energy = _dark_adapt_energy
 
-func _has_torch_in_hotbar() -> bool:
+func has_torch_in_hotbar() -> bool:
 	for item_model in hotbar_item_models:
 		if _is_torch_item_model(item_model):
 			return true
@@ -1748,7 +1749,7 @@ func _create_torch_arrow() -> void:
 func _update_torch_arrow(delta: float) -> void:
 	if _torch_arrow_label == null:
 		return
-	if _has_torch_in_hotbar():
+	if has_torch_in_hotbar():
 		_torch_arrow_label.visible = false
 		_torch_arrow_target = null
 		return

@@ -14,6 +14,12 @@ var generation_seed: int = 0  # 0 = random each run
 var aspect_ratio: int = 0  # index: 0=Auto, 1=16:9, 2=16:10, 3=4:3, 4=21:9
 var shader_enabled: bool = false
 
+# --- New Game+ progression ---
+var completion_count: int = 0
+var unlimited_torch: bool = false
+var unlimited_stamina: bool = false
+var bonus_spawns: bool = false
+
 
 func _ready() -> void:
 	_load()
@@ -65,6 +71,38 @@ func set_aspect_ratio(index: int) -> void:
 	_save()
 
 
+# --- New Game+ helpers ---
+
+func is_unlimited_torch_unlocked() -> bool:
+	return completion_count >= 1
+
+func is_unlimited_stamina_unlocked() -> bool:
+	return completion_count >= 2
+
+func is_bonus_spawns_unlocked() -> bool:
+	return completion_count >= 3
+
+
+func set_unlimited_torch(value: bool) -> void:
+	unlimited_torch = value and is_unlimited_torch_unlocked()
+	_save()
+
+
+func set_unlimited_stamina(value: bool) -> void:
+	unlimited_stamina = value and is_unlimited_stamina_unlocked()
+	_save()
+
+
+func set_bonus_spawns(value: bool) -> void:
+	bonus_spawns = value and is_bonus_spawns_unlocked()
+	_save()
+
+
+func increment_completion() -> void:
+	completion_count += 1
+	_save()
+
+
 func _apply_volume() -> void:
 	var bus_idx := AudioServer.get_bus_index("Master")
 	if bus_idx >= 0:
@@ -112,6 +150,10 @@ func _save() -> void:
 	cfg.set_value("display", "generation_seed", generation_seed)
 	cfg.set_value("display", "aspect_ratio", aspect_ratio)
 	cfg.set_value("display", "shader_enabled", shader_enabled)
+	cfg.set_value("progress", "completion_count", completion_count)
+	cfg.set_value("progress", "unlimited_torch", unlimited_torch)
+	cfg.set_value("progress", "unlimited_stamina", unlimited_stamina)
+	cfg.set_value("progress", "bonus_spawns", bonus_spawns)
 	cfg.save(SETTINGS_PATH)
 
 
@@ -126,3 +168,7 @@ func _load() -> void:
 	generation_seed = cfg.get_value("display", "generation_seed", 0)
 	aspect_ratio = cfg.get_value("display", "aspect_ratio", 0)
 	shader_enabled = cfg.get_value("display", "shader_enabled", false)
+	completion_count = cfg.get_value("progress", "completion_count", 0)
+	unlimited_torch = cfg.get_value("progress", "unlimited_torch", false)
+	unlimited_stamina = cfg.get_value("progress", "unlimited_stamina", false)
+	bonus_spawns = cfg.get_value("progress", "bonus_spawns", false)

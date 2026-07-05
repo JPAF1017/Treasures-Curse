@@ -144,4 +144,5 @@ func _finish() -> void:
 		_music_player.stop()
 	if is_instance_valid(_audio_player):
 		_audio_player.stop()
+	SettingsManager.increment_completion()
 	get_tree().change_scene_to_file(ESCAPE_MENU_PATH)

@@ -4,6 +4,10 @@ const CORRIDOR_SCENE_PATH := "res://assets/rooms/corridor.tscn"
 
 var seed_locked: bool = false
 
+var _unlimited_torch_check: CheckBox = null
+var _unlimited_stamina_check: CheckBox = null
+var _bonus_spawns_check: CheckBox = null
+
 @onready var volume_slider: HSlider = $Panel/MarginContainer/VBoxContainer/VolumeRow/VolumeSlider
 @onready var volume_value_label: Label = $Panel/MarginContainer/VBoxContainer/VolumeRow/VolumeValue
 @onready var vsync_check: CheckBox = $Panel/MarginContainer/VBoxContainer/VSyncRow/VSyncCheck
@@ -41,6 +45,9 @@ func _ready() -> void:
 	seed_input.text_changed.connect(_on_seed_changed)
 	back_button.pressed.connect(_on_back_pressed)
 	unstuck_button.pressed.connect(_on_unstuck_pressed)
+
+	# --- NG+ reward toggles (only shown when unlocked) ---
+	_create_reward_toggles()
 
 
 func _on_volume_changed(value: float) -> void:
@@ -127,3 +134,82 @@ func _collect_corridors(node: Node, result: Array[Node3D]) -> void:
 		result.append(node as Node3D)
 	for child in node.get_children():
 		_collect_corridors(child, result)
+
+
+# --- New Game+ reward toggles ---
+
+func _create_reward_toggles() -> void:
+	var vbox := $Panel/MarginContainer/VBoxContainer as VBoxContainer
+	var font := load("res://assets/ui/dungeon-mode.ttf") as FontFile
+	# Insert position: just before UnstuckRow.
+	var insert_idx := unstuck_row.get_index()
+
+	var reward_rows_added := 0
+
+	if SettingsManager.is_unlimited_torch_unlocked():
+		var row := _make_reward_row("Unlimited Torch", font)
+		_unlimited_torch_check = row[1]
+		_unlimited_torch_check.button_pressed = SettingsManager.unlimited_torch
+		_unlimited_torch_check.toggled.connect(_on_unlimited_torch_toggled)
+		vbox.add_child(row[0])
+		vbox.move_child(row[0], insert_idx + reward_rows_added)
+		reward_rows_added += 1
+
+	if SettingsManager.is_unlimited_stamina_unlocked():
+		var row := _make_reward_row("Unlimited Stamina", font)
+		_unlimited_stamina_check = row[1]
+		_unlimited_stamina_check.button_pressed = SettingsManager.unlimited_stamina
+		_unlimited_stamina_check.toggled.connect(_on_unlimited_stamina_toggled)
+		vbox.add_child(row[0])
+		vbox.move_child(row[0], insert_idx + reward_rows_added)
+		reward_rows_added += 1
+
+	if SettingsManager.is_bonus_spawns_unlocked():
+		var row := _make_reward_row("Bonus Spawns", font)
+		_bonus_spawns_check = row[1]
+		_bonus_spawns_check.button_pressed = SettingsManager.bonus_spawns
+		_bonus_spawns_check.toggled.connect(_on_bonus_spawns_toggled)
+		vbox.add_child(row[0])
+		vbox.move_child(row[0], insert_idx + reward_rows_added)
+		reward_rows_added += 1
+
+	# Grow the panel so the new rows don't overlap the back button.
+	if reward_rows_added > 0:
+		panel.offset_top -= reward_rows_added * 32.0
+		panel.offset_bottom += reward_rows_added * 32.0
+
+
+## Builds a single HBoxContainer row with a Label + CheckBox, matching the existing settings style.
+## Returns [row_container, checkbox] so the caller can configure the checkbox.
+func _make_reward_row(label_text: String, font: FontFile) -> Array:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0, 50)
+	row.add_theme_constant_override("separation", 12)
+
+	var lbl := Label.new()
+	lbl.custom_minimum_size = Vector2(210, 0)
+	lbl.add_theme_font_override("font", font)
+	lbl.add_theme_font_size_override("font_size", 32)
+	lbl.text = label_text
+	row.add_child(lbl)
+
+	var chk := CheckBox.new()
+	chk.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chk.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	chk.add_theme_font_override("font", font)
+	chk.add_theme_font_size_override("font_size", 32)
+	row.add_child(chk)
+
+	return [row, chk]
+
+
+func _on_unlimited_torch_toggled(pressed: bool) -> void:
+	SettingsManager.set_unlimited_torch(pressed)
+
+
+func _on_unlimited_stamina_toggled(pressed: bool) -> void:
+	SettingsManager.set_unlimited_stamina(pressed)
+
+
+func _on_bonus_spawns_toggled(pressed: bool) -> void:
+	SettingsManager.set_bonus_spawns(pressed)
