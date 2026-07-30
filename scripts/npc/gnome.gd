@@ -194,6 +194,7 @@ func _physics_process(delta: float) -> void:
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
 
 	move_and_slide()
+	EnemyLocomotion.push_rigid_bodies(self)
 
 func _should_run_chase() -> bool:
 	if is_player_in_chase and _has_valid_target_player():

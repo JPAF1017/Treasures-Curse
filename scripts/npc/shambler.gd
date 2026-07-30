@@ -201,6 +201,7 @@ func _physics_process(delta: float) -> void:
 		_update_attack_sounds()
 
 	move_and_slide()
+	EnemyLocomotion.push_rigid_bodies(self)
 
 func _on_detect_body_entered(body: Node3D) -> void:
 	if not (body is CharacterBody3D):

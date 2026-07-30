@@ -304,6 +304,7 @@ func _physics_process(delta):
 	if knockback_component.is_active():
 		knockback_component.update(delta)
 		move_and_slide()
+		EnemyLocomotion.push_rigid_bodies(self)
 		_align_to_slope(delta)
 		return
 
@@ -618,6 +619,7 @@ func _physics_process(delta):
 	
 	# Apply physics movement
 	move_and_slide()
+	EnemyLocomotion.push_rigid_bodies(self)
 	
 	# Align visuals and collision to slope
 	_align_to_slope(delta)

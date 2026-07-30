@@ -427,6 +427,7 @@ func _physics_process(delta):
 	_process_attack(delta)
 
 	move_and_slide()
+	EnemyLocomotion.push_rigid_bodies(self)
 
 func _process(_delta):
 	# Head tracking runs in _process AFTER animations update

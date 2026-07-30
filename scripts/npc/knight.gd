@@ -309,6 +309,7 @@ func _physics_process(delta: float) -> void:
 	_play_animation()
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
 	move_and_slide()
+	EnemyLocomotion.push_rigid_bodies(self)
 
 func apply_damage(amount: float) -> void:
 	_log_attack("apply_damage called amount=%.2f health_before=%d" % [amount, health])

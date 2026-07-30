@@ -306,6 +306,7 @@ func _physics_process(delta: float) -> void:
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)
 	_update_collision_mode()
 	move_and_slide()
+	EnemyLocomotion.push_rigid_bodies(self)
 
 func _update_float_state(delta: float) -> void:
 	# Hover at target height above ground
