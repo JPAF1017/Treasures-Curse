@@ -11,7 +11,7 @@ height = 3.128662
 [node name="Torch" type="RigidBody3D" unique_id=2074645289]
 script = ExtResource("1_torch")
 held_item_scale = 0.6
-viewmodel_scale = 0.09999999999999999
+viewmodel_scale = 0.1
 
 [node name="torch" parent="." unique_id=352546870 instance=ExtResource("2_hr5o3")]
 transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)
@@ -27,6 +27,5 @@ shape = SubResource("CapsuleShape3D_hr5o3")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.417, 0.008)
 light_color = Color(0.855485, 0.46624, 0, 1)
 light_energy = 6.0
-light_bake_mode = 0
 light_volumetric_fog_energy = 0.0
 omni_range = 12.0

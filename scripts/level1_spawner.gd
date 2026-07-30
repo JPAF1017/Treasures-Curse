@@ -984,6 +984,10 @@ func _process_player_torches(delta: float) -> void:
 		# If they already have a torch in their inventory, we don't spawn
 		if player.has_method("has_torch_in_hotbar") and player.has_torch_in_hotbar():
 			continue
+
+		# If there is a burning torch dropped on the floor, do not spawn another torch until it depletes
+		if _has_active_dropped_burning_torch():
+			continue
 			
 		# Check if we are already tracking a state for this player
 		var state: Dictionary = _player_spawned_torches.get(player, {})
@@ -1020,6 +1024,20 @@ func _process_player_torches(delta: float) -> void:
 			
 			state["torch"] = torch_node
 			state["timer"] = TORCH_SPAWN_DESPAWN_TIME
+
+
+## Returns true if there is any active, burning torch currently dropped on the ground.
+func _has_active_dropped_burning_torch() -> bool:
+	var torches := get_tree().get_nodes_in_group("torch_items")
+	for node in torches:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var inv_idx = node.get("inventory_slot_index")
+		var is_burning = node.get("is_burning")
+		var time_left = node.get("usable_time_left")
+		if inv_idx != null and inv_idx < 0 and is_burning == true and time_left != null and time_left > 0.0:
+			return true
+	return false
 
 
 ## Fires when any body enters the IntroStatue room's RoomTitle Area3D (server only).

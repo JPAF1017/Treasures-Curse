@@ -66,6 +66,7 @@ var _torch_lit_state: bool = false
 
 
 func _ready() -> void:
+	add_to_group("torch_items")
 	_configure_item_physics()
 	if _fire_particle:
 		_fire_particle.visible = is_burning
