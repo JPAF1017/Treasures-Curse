@@ -955,7 +955,8 @@ func _process_player_torches(delta: float) -> void:
 		if is_instance_valid(torch_node):
 			# Check if it has been picked up
 			var is_picked_up := false
-			if torch_node.get("inventory_slot_index", -1) >= 0:
+			var inv_idx = torch_node.get("inventory_slot_index")
+			if inv_idx != null and inv_idx >= 0:
 				is_picked_up = true
 			
 			if is_picked_up:
