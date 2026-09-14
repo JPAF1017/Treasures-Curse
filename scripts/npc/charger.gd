@@ -4,7 +4,9 @@ const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd"
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyKnockback := preload("res://scripts/npc/NPCKnockbackComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
+const ChargerWallImpactEffect := preload("res://scripts/items/ChargerWallImpactEffect.gd")
 
+const WALL_COLLISION_STUN_DURATION = 1.5
 const HEALTH_MAX = 20.0
 const GRAVITY = 20.0
 const SPEED = 5.0
@@ -480,20 +482,18 @@ func _physics_process(delta):
 				rotation.y = lerp_angle(rotation.y, _yaw_with_facing_offset(direction_to_player), delta * _get_turn_speed(5.0))
 		
 		# Move toward player if not too close
-		if _update_cooldown_chase_movement(direction_to_player, distance_to_player, delta):
-			pass
-		elif distance_to_player > STOP_DISTANCE:
-			# Check if decelerating (let inertia handle movement)
-			if is_decelerating:
-				pass  # Velocity is handled in deceleration section above
-			# Check if backing up or charging (handled above)
-			elif is_backing_up or is_charging:
-				pass  # Movement handled in backup/charge sections
-			# Check if currently lunging (continue lunge until animation ends)
-			elif is_lunging:
-				# Continue lunging in the locked direction at high speed
+		if is_charging or is_lunging or is_decelerating:
+			# High-speed attack / inertia movements continue through STOP_DISTANCE to hit target or wall
+			if is_lunging:
 				velocity.x = lunge_direction.x * LUNGE_SPEED
 				velocity.z = lunge_direction.z * LUNGE_SPEED
+			# is_charging and is_decelerating velocities are maintained from their respective blocks
+		elif _update_cooldown_chase_movement(direction_to_player, distance_to_player, delta):
+			pass
+		elif distance_to_player > STOP_DISTANCE:
+			# Check if backing up (handled above)
+			if is_backing_up:
+				pass  # Movement handled in backup section
 			# Check if player is in lunge range and lunge is ready (start wind-up)
 			elif is_player_in_lunge_range and can_lunge and has_line_of_sight and backup_initiate_cooldown_timer <= 0.0:
 				# Start wind-up phase
@@ -621,6 +621,9 @@ func _physics_process(delta):
 	move_and_slide()
 	EnemyLocomotion.push_rigid_bodies(self)
 	
+	# Check for high-speed wall or pillar impact on missed charges/lunges
+	_check_wall_collision()
+
 	# Align visuals and collision to slope
 	_align_to_slope(delta)
 
@@ -1065,3 +1068,80 @@ func _enable_shadows(node: Node):
 	
 	for child in node.get_children():
 		_enable_shadows(child)
+
+func _check_wall_collision() -> void:
+	if is_dead or is_stunned:
+		return
+	if not (is_charging or is_lunging or is_decelerating):
+		return
+	if not is_on_wall():
+		return
+
+	# Forward movement direction during charge/lunge/inertia
+	var forward_dir := lunge_direction if is_lunging else (charge_direction if is_charging else decel_velocity.normalized())
+	if forward_dir.length_squared() < 0.001:
+		forward_dir = -global_transform.basis.z
+
+	var best_collision: KinematicCollision3D = null
+	var best_normal := Vector3.ZERO
+	var best_pos := Vector3.ZERO
+	var min_dot := -0.05
+
+	for i in range(get_slide_collision_count()):
+		var col := get_slide_collision(i)
+		if col == null:
+			continue
+		var collider := col.get_collider()
+		# Ignore player or NPCs/enemies
+		if collider is Node and (collider.is_in_group("player") or collider.is_in_group("enemy") or collider.is_in_group("charger")):
+			continue
+		var norm := col.get_normal()
+		# Surface must be predominantly vertical (wall or pillar)
+		if absf(norm.y) > 0.65:
+			continue
+
+		# Must be moving into the wall surface
+		var dot := forward_dir.dot(norm)
+		if dot < min_dot:
+			min_dot = dot
+			best_collision = col
+			best_normal = norm
+			best_pos = col.get_position()
+
+	# Fallback if is_on_wall() is true
+	if best_collision == null:
+		var wall_norm := get_wall_normal()
+		if absf(wall_norm.y) <= 0.65 and forward_dir.dot(wall_norm) < -0.1:
+			best_normal = wall_norm
+			best_pos = global_position - wall_norm * 0.6
+
+	if best_normal.length_squared() > 0.001:
+		_on_wall_collision_impact(best_pos, best_normal)
+
+func _on_wall_collision_impact(contact_pos: Vector3, wall_normal: Vector3) -> void:
+	var effect_pos := contact_pos
+	# Ensure effect spawns at chest/head height on the wall
+	effect_pos.y = maxf(effect_pos.y, global_position.y - 0.2)
+
+	# Spawn visual particle shower of rock chips, heavy dust plume, sparks & impact audio
+	ChargerWallImpactEffect.spawn(get_tree(), effect_pos, wall_normal)
+
+	# Play pain whine/yelp when slamming violently into the wall
+	if pain_sound_player:
+		pain_sound_player.stop()
+		pain_sound_player.play()
+
+	# Apply recoil bump off the wall
+	knockback_component.begin_knockback(self, wall_normal, 2.8, 0.2, 0.18)
+
+	# Stun charger — stops charge/lunge and leaves charger dazed
+	apply_stun_state(WALL_COLLISION_STUN_DURATION)
+
+	# Reset attack states
+	is_charging = false
+	is_lunging = false
+	is_decelerating = false
+	has_damaged_during_lunge = false
+	can_lunge = false
+	lunge_timer = 0.0
+	backup_initiate_cooldown_timer = BACKUP_INITIATE_COOLDOWN

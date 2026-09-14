@@ -56,9 +56,9 @@ This document tracks particle FX implementations and enhancements across the gam
 ---
 
 ### 4. Enemy Behaviors
-- [ ] **4.1 Charger Wall Collision**
+- [x] **4.1 Charger Wall Collision**
   - **Description**: Shower of crumbled rock chips and heavy impact dust when the Charger misses and collides with a dungeon wall/pillar.
-  - **Files**: [scripts/npc/charger.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/charger.gd).
+  - **Files**: [scripts/npc/charger.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/charger.gd), [scripts/items/ChargerWallImpactEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChargerWallImpactEffect.gd).
   - **Priority**: Medium
 
 - [ ] **4.2 Statue Awakening / Movement Crumble**
@@ -88,6 +88,8 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Puzzle Pedestal Socketing & Altar Pulse**: Ethereal cyan and purple arcane rune flashes, expanding horizontal mist rings, and drifting soul embers on socketing skulls/gem keys and completing altar puzzles ([scripts/items/PedestalSocketEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PedestalSocketEffect.gd), [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd), [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd)).
 - [x] **Hard Landing, Jump & Sprint Dust**: Radial expanding ring of dungeon stone dust, central ground puff, and tumbling 3D stone debris chips dynamically scaling between jump takeoff, soft landings, and high-velocity hard landings, plus alternating backward-kicking dust puffs and pebbles while sprinting ([scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
 - [x] **Exhaustion / Heavy Breathing (Low Stamina)**: Rhythmic condensation cold breath mist puffs in front of the first-person camera, subtle screen-space sweat droplets sliding along viewport edges, and flashing fatigue UI pulse when stamina reaches zero or recovers from depletion ([scripts/items/ExhaustionBreathEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ExhaustionBreathEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
+- [x] **Charger Wall Collision**: Shower of tumbled stone masonry chips, expanding pulverized stone dust cloud, radial shockwave dust ring, bright stone friction sparks, sound FX, recoil bounce, and stun reaction when the Charger misses a charge/lunge and slams into a dungeon wall or pillar ([scripts/items/ChargerWallImpactEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChargerWallImpactEffect.gd), [scripts/npc/charger.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/charger.gd)).
+
 
 
 
