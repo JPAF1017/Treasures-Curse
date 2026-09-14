@@ -37,6 +37,8 @@ const JUMP_ANIMATION_FPS = 30.0
 const JUMP_AIR_LOOP_SPEED = 0.45
 const BUMP_STEP_VELOCITY = 2.2
 const BUMP_STEP_COOLDOWN = 0.12
+const MIN_LANDING_DUST_SPEED = 2.4
+const HARD_LANDING_SPEED_THRESHOLD = 12.0
 const SENSITIVITY = 0.003
 const STUN_SENSITIVITY_MULTIPLIER = 0.08
 const BOB_FREQ = 2.0
@@ -62,6 +64,7 @@ const GEM_KEY2_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key2.gd")
 const GEM_KEY3_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key3.gd")
 const GEM_KEY4_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key4.gd")
 const PICKUP_SPARKLES_SCRIPT: Script = preload("res://scripts/items/PickupSparklesEffect.gd")
+const LANDING_DUST_SCRIPT: Script = preload("res://scripts/items/LandingDustEffect.gd")
 const STEP_SOUND_PATHS := [
 	"res://sounds/player/step1.mp3",
 	"res://sounds/player/step2.mp3",
@@ -121,6 +124,7 @@ var stamina_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 var stamina_color_low: Color = Color(1.0, 0.3, 0.3, 1.0)
 var health_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 var stun_timer: float = 0.0
+var _landing_impact_offset: float = 0.0
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
@@ -673,6 +677,8 @@ func _physics_process(delta):
 #jump input
 	var jump_pressed := not is_movement_locked and Input.is_action_just_pressed("ui_accept")
 	if jump_pressed and is_on_floor():
+		var feet_pos := _get_feet_position()
+		LANDING_DUST_SCRIPT.spawn_jump(get_tree(), feet_pos)
 		if stamina >= JUMP_STAMINA_COST or SettingsManager.unlimited_stamina:
 			if not SettingsManager.unlimited_stamina:
 				stamina = max(stamina - JUMP_STAMINA_COST, 0.0)
@@ -832,7 +838,9 @@ func _physics_process(delta):
 #------------------------------------------------------
 #headbob during movement
 	t_bob += delta * velocity.length() * float(is_on_floor())
-	camera.transform.origin = _headbob(t_bob)
+	if _landing_impact_offset > 0.0:
+		_landing_impact_offset = move_toward(_landing_impact_offset, 0.0, delta * 0.9)
+	camera.transform.origin = _headbob(t_bob) + Vector3(0.0, -_landing_impact_offset, 0.0)
 #------------------------------------------------------
 #fov changing
 	var velocity_clamped = clamp(velocity.length(), 0.5, SPRINT_SPEED * 2)
@@ -848,10 +856,15 @@ func _physics_process(delta):
 			velocity.y = BUMP_STEP_VELOCITY
 			bump_step_timer = BUMP_STEP_COOLDOWN
 	
+	var was_in_air: bool = not is_on_floor()
+	var pre_landing_vert_speed: float = -velocity.y
+
 	move_and_slide()
 	ENEMY_LOCOMOTION_SCRIPT.push_rigid_bodies(self, 2.5)
 	if tired_jump_active and is_on_floor():
 		tired_jump_active = false
+	if was_in_air and is_on_floor():
+		_handle_player_landing(pre_landing_vert_speed)
 	_try_auto_equip_item()
 	_log_player_position()
 	_log_attack_overlap_snapshot()
@@ -1938,6 +1951,38 @@ func _play_random_step() -> void:
 		return
 	var stream: AudioStream = _step_sounds[randi() % _step_sounds.size()]
 	playback.play_stream(stream, 0.0, footstep_player.volume_db)
+
+func _handle_player_landing(fall_speed: float) -> void:
+	if fall_speed < MIN_LANDING_DUST_SPEED:
+		return
+
+	var is_hard := fall_speed >= HARD_LANDING_SPEED_THRESHOLD
+	var intensity := clampf((fall_speed - MIN_LANDING_DUST_SPEED) / (HARD_LANDING_SPEED_THRESHOLD - MIN_LANDING_DUST_SPEED), 0.0, 1.5)
+	var feet_pos := _get_feet_position()
+	LANDING_DUST_SCRIPT.spawn_landing(get_tree(), feet_pos, is_hard, intensity)
+
+	_play_landing_sound(is_hard)
+	if is_hard:
+		_landing_impact_offset = minf(0.08 + intensity * 0.06, 0.16)
+
+func _get_feet_position() -> Vector3:
+	var feet_pos := global_position + Vector3(0.0, -2.05, 0.0)
+	for i in range(get_slide_collision_count()):
+		var col := get_slide_collision(i)
+		if col != null and col.get_normal().y > 0.5:
+			feet_pos = col.get_position()
+			break
+	return feet_pos
+
+func _play_landing_sound(is_hard: bool) -> void:
+	if _step_sounds.is_empty() or footstep_player == null:
+		return
+	var playback := footstep_player.get_stream_playback() as AudioStreamPlaybackPolyphonic
+	if playback == null:
+		return
+	var stream: AudioStream = _step_sounds[randi() % _step_sounds.size()]
+	var vol_offset := 4.5 if is_hard else 0.0
+	playback.play_stream(stream, 0.0, footstep_player.volume_db + vol_offset)
 
 func _update_swing_sound(swing_active: bool) -> void:
 	var item := _get_selected_primary_item()

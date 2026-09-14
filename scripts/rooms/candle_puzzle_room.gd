@@ -15,6 +15,7 @@ const WARNING2_DISPLAY_TIME := 3.0
 const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
+const PedestalSocketEffect = preload("res://scripts/items/PedestalSocketEffect.gd")
 
 # Maps table item scene path → expected item script path (mirrors item_hold_check.gd)
 const _SCENE_TO_SCRIPT: Dictionary = {
@@ -328,6 +329,9 @@ func _try_place_item(hold_index: int) -> void:
 			"res://scripts/items/gem_key1.gd", "res://scripts/items/gem_key2.gd", "res://scripts/items/gem_key3.gd", "res://scripts/items/gem_key4.gd":
 				item.scale = Vector3(1.5, 1.5, 1.5)
 
+	# Ethereal cyan cursed energy pulse at pedestal
+	PedestalSocketEffect.spawn(get_tree(), target_pos, PedestalSocketEffect.PulseTheme.CYAN)
+
 	# Mark slot occupied, track placed item, clear prompt
 	_slot_occupied[hold_index] = true
 	_placed_items[hold_index] = item
@@ -377,6 +381,8 @@ func on_item_hold_unsatisfied() -> void:
 
 func _open_door() -> void:
 	CandlePuzzleRoom._doors_opened[get_floor_id()] = true
+	var altar_center := global_position + Vector3(0.0, ITEM_PLACE_Y_OFFSET, 0.0)
+	PedestalSocketEffect.spawn_altar_completion(get_tree(), altar_center, PedestalSocketEffect.PulseTheme.CYAN)
 	var door := get_node_or_null("Models/WallsLR/Door_01") as Node3D
 	_play_door_sound(door.global_position if door != null else global_position)
 	if door != null:

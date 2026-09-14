@@ -17,17 +17,17 @@ This document tracks particle FX implementations and enhancements across the gam
   - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1450-L1480) (`pick_up_into_hotbar()`), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd), [scripts/items/PickupSparklesEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PickupSparklesEffect.gd).
   - **Priority**: Medium
 
-- [ ] **1.3 Puzzle Pedestal Socketing (Cursed Energy Pulse)**
+- [x] **1.3 Puzzle Pedestal Socketing (Cursed Energy Pulse)**
   - **Description**: An ethereal cyan or purple rune flash and expanding ring of mist when placing a skull or key into its pedestal or completing an altar.
-  - **Files**: [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd), [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd).
+  - **Files**: [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd), [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd), [scripts/items/PedestalSocketEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PedestalSocketEffect.gd).
   - **Priority**: Medium
 
 ---
 
 ### 2. Player Movement & Locomotion
-- [ ] **2.1 Hard Landing & Jump Dust**
+- [x] **2.1 Hard Landing & Jump Dust**
   - **Description**: Radial ring of stone dust puffing outward at the player's feet upon landing on the floor after a fall or jump.
-  - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L650-L720) (`_physics_process()`).
+  - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L670-L685) (`_physics_process()`), [scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd).
   - **Priority**: High
 
 - [ ] **2.2 Exhaustion / Heavy Breathing (Low Stamina)**
@@ -90,4 +90,7 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Damage & Heal Screen Tints**: Instant pop and smooth quad ease-out red screen tint on taking damage and green screen tint on healing ([scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
 - [x] **Chest Opening Burst**: Ancient dungeon seam dust and golden sparkling dust burst upon opening chests ([scripts/items/ChestOpenParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChestOpenParticleEffect.gd), [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd)).
 - [x] **Gold & Key Pickup Sparkles**: 3D burst of twinkling radiant star particles and floating fairy dust sparks themed per item on picking up gold, gem keys, or skull keys ([scripts/items/PickupSparklesEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PickupSparklesEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd)).
+- [x] **Puzzle Pedestal Socketing & Altar Pulse**: Ethereal cyan and purple arcane rune flashes, expanding horizontal mist rings, and drifting soul embers on socketing skulls/gem keys and completing altar puzzles ([scripts/items/PedestalSocketEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PedestalSocketEffect.gd), [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd), [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd)).
+- [x] **Hard Landing & Jump Dust**: Radial expanding ring of dungeon stone dust, central ground puff, and tumbling 3D stone debris chips dynamically scaling between jump takeoff, soft landings, and high-velocity hard landings with camera impact recovery and landing sound ([scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
+
 

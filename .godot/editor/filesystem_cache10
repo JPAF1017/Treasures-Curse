@@ -4,7 +4,7 @@ AGENTS.md::TextFile::-1::1789380708::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1779345796::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1777213248::1777213249::1::::<><><>0<>0<>cae14fdf34577903ea8282ebd52773bb<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
-TODO_PARTICLES.md::TextFile::-1::1789381400::0::1::::<><><>0<>0<><>::
+TODO_PARTICLES.md::TextFile::-1::1789382023::0::1::::<><><>0<>0<><>::
 ::res://addons/::1785392700
 ::res://addons/godot-rapier3d/::1785392703
 faucet_3d.gd::GDScript::8140319914564040734::1785392701::0::1::::Faucet3D<>Fluid3D<><>0<>0<><>::
@@ -492,7 +492,7 @@ game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0
 level1_spawner.gd::GDScript::3714450241364899252::1785392327::0::1::::<>Node3D<><>0<>0<><>::
 player.gd::GDScript::7860289825015925474::1789381997::0::1::::<>CharacterBody3D<><>0<>0<><>::
 settings_manager.gd::GDScript::8170435877026185281::1783231002::0::1::::<>Node<><>0<>0<><>::
-::res://scripts/items/::1789381920
+::res://scripts/items/::1789386601
 axe.gd::GDScript::5823683269390956943::1782725864::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
 bat.gd::GDScript::8071771524868046774::1783234089::0::1::::Bat<>RigidBody3D<><>0<>0<><>::
 BloodSplatterEffect.gd::GDScript::5840248927589851858::1783231602::0::1::::BloodSplatterEffect<>RefCounted<><>0<>0<><>::
@@ -506,6 +506,7 @@ HealParticleEffect.gd::GDScript::2048622200550674564::1789377266::0::1::::HealPa
 health.gd::GDScript::3627290899003863034::1789376768::0::1::::<>RigidBody3D<><>0<>0<><>::
 MeleeItemSharedComponent.gd::GDScript::7278604385311045916::1783234083::0::1::::MeleeItemSharedComponent<>RefCounted<><>0<>0<><>::
 MeleeViewmodelComponent.gd::GDScript::1319044425994665230::1783154734::0::1::::MeleeViewmodelComponent<>RefCounted<><>0<>0<><>::
+PedestalSocketEffect.gd::GDScript::857880565140554988::1789386554::0::1::::PedestalSocketEffect<>RefCounted<><>0<>0<><>::
 PickupSparklesEffect.gd::GDScript::5693123946775050937::1789381938::0::1::::PickupSparklesEffect<>RefCounted<><>0<>0<><>::
 shovel.gd::GDScript::2064808360044123086::1783234092::0::1::::Shovel<>RigidBody3D<><>0<>0<><>::
 skull_key.gd::GDScript::8650844085777791775::1781608157::0::1::::<>RigidBody3D<><>0<>0<><>::
@@ -534,10 +535,10 @@ SmokeAggroComponent.gd::GDScript::3106100866719486491::1776960915::0::1::::<>Obj
 statue.gd::GDScript::998346533100298730::1785393028::0::1::::<>CharacterBody3D<><>0<>0<><>::
 ::res://scripts/rooms/::1783398804
 big_room.gd::GDScript::1491222591273790336::1777228408::0::1::::BigRoom<>DungeonRoom3D<><>0<>1<><>::
-candle_puzzle_room.gd::GDScript::8273511203469505923::1781682363::0::1::::CandlePuzzleRoom<>DungeonRoom3D<><>0<>1<><>::
+candle_puzzle_room.gd::GDScript::8273511203469505923::1789386595::0::1::::CandlePuzzleRoom<>DungeonRoom3D<><>0<>1<><>::
 chest_interact.gd::GDScript::5687805647447693754::1789381191::0::1::::<>Node3D<><>0<>0<><>::
 room_title_area.gd::GDScript::4507910189563735558::1781687377::0::1::::RoomTitleArea<>Area3D<><>0<>0<><>::
-skull_puzzle_controller.gd::GDScript::2665935180804063843::1781682370::0::1::::SkullPuzzleController<>Node3D<><>0<>0<><>::
+skull_puzzle_controller.gd::GDScript::2665935180804063843::1789386582::0::1::::SkullPuzzleController<>Node3D<><>0<>0<><>::
 ::res://scripts/ui/::1783398804
 charge_ring.gd::GDScript::7873357249255064785::1778180227::0::1::::<>Control<><>0<>0<><>::
 ::res://sounds/::1783398807

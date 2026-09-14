@@ -12,6 +12,7 @@ const SKULL_PLACE_Y_OFFSET := 1.3
 const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
+const PedestalSocketEffect = preload("res://scripts/items/PedestalSocketEffect.gd")
 
 static var player_entered_room: bool = false
 static var door_opened_static: bool = false
@@ -290,6 +291,9 @@ func _try_place_skull(area: Area3D) -> void:
 	if skull.has_method("_set_visual_layer_recursive"):
 		skull.call("_set_visual_layer_recursive", skull, 1)
 
+	# Ethereal purple cursed energy pulse at pedestal
+	PedestalSocketEffect.spawn(get_tree(), target_hex.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0), PedestalSocketEffect.PulseTheme.PURPLE)
+
 	# Mark slot filled and check puzzle
 	if area == key_area_1:
 		_key_1_placed = true
@@ -308,6 +312,10 @@ func _is_skull_key(body: Node) -> bool:
 func _on_key_1_body_entered(body: Node) -> void:
 	if _is_skull_key(body):
 		_key_1_body_count += 1
+		if not _key_1_placed:
+			var body_3d := body as Node3D
+			var pos := body_3d.global_position if body_3d else (hexagon_1.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0) if hexagon_1 else global_position)
+			PedestalSocketEffect.spawn(get_tree(), pos, PedestalSocketEffect.PulseTheme.PURPLE)
 		_check_puzzle()
 
 
@@ -319,6 +327,10 @@ func _on_key_1_body_exited(body: Node) -> void:
 func _on_key_2_body_entered(body: Node) -> void:
 	if _is_skull_key(body):
 		_key_2_body_count += 1
+		if not _key_2_placed:
+			var body_3d := body as Node3D
+			var pos := body_3d.global_position if body_3d else (hexagon_2.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0) if hexagon_2 else global_position)
+			PedestalSocketEffect.spawn(get_tree(), pos, PedestalSocketEffect.PulseTheme.PURPLE)
 		_check_puzzle()
 
 
@@ -340,6 +352,8 @@ func _check_puzzle() -> void:
 
 func _open_door() -> void:
 	SkullPuzzleController.door_opened_static = true
+	var altar_center := (hexagon_1.global_position + hexagon_2.global_position) * 0.5 if (hexagon_1 and hexagon_2) else global_position
+	PedestalSocketEffect.spawn_altar_completion(get_tree(), altar_center, PedestalSocketEffect.PulseTheme.PURPLE)
 	_play_door_sound(door.global_position if door != null else global_position)
 	var concrete_player := _play_concrete_sound(door.global_position if door != null else global_position)
 	var tween := create_tween()
