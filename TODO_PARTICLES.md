@@ -7,9 +7,9 @@ This document tracks particle FX implementations and enhancements across the gam
 ## 📋 Outstanding Tasks
 
 ### 1. Loot & Puzzle Interactions
-- [ ] **1.1 Chest Opening Burst**
-  - **Description**: Emit golden sparkling dust, gentle rays of light, and ancient dungeon dust escaping from the chest seams as the lid opens.
-  - **Files**: [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd#L106-L145) (`_open_chest()`, `_spawn_gold()`).
+- [x] **1.1 Chest Opening Burst**
+  - **Description**: Emit golden sparkling dust and ancient dungeon dust escaping from the chest seams as the lid opens.
+  - **Files**: [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd#L106-L145) (`_open_chest()`, `_spawn_gold()`), [scripts/items/ChestOpenParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChestOpenParticleEffect.gd).
   - **Priority**: High
 
 - [ ] **1.2 Gold & Key Pickup Sparkles**
@@ -88,3 +88,5 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Smoke Bomb**: Concentric expanding/dissolving shader spheres on impact ([assets/items/smoke_effect.tscn](file:///mnt/Games/Codes/Godot/Treasures-Curse/assets/items/smoke_effect.tscn)).
 - [x] **Healing Green Crosses**: 2D screen-space rising and fading green cross particles on consuming healing potions ([scripts/items/HealParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/HealParticleEffect.gd)).
 - [x] **Damage & Heal Screen Tints**: Instant pop and smooth quad ease-out red screen tint on taking damage and green screen tint on healing ([scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
+- [x] **Chest Opening Burst**: Ancient dungeon seam dust and golden sparkling dust burst upon opening chests ([scripts/items/ChestOpenParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChestOpenParticleEffect.gd), [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd)).
+
