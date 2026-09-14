@@ -79,6 +79,9 @@ const CHASE_SOUND_PATHS := [
 ]
 const CHASE_SHY_SOUND_PATH := "res://sounds/player/chase3.mp3"
 const SWING_SOUND_PATH := "res://sounds/player/swing.mp3"
+const HEARTBEAT_SOUND_PATH := "res://sounds/Interactions/heartbeat.mp3"
+const HEAVY_BREATHING_SOUND_PATH := "res://sounds/Interactions/heavybreathing.mp3"
+const LOW_HEALTH_THRESHOLD_RATIO := 0.25
 const STEP_ANIM_FPS := 30.0
 # Trigger frames for each animation (a step sound fires each time the position crosses one)
 const STEP_FRAMES: Dictionary = {
@@ -102,6 +105,9 @@ const STEP_FRAMES: Dictionary = {
 @export_range(1.0, 30.0, 0.5) var crouch_transition_speed: float = 12.0
 @export var visual_root_path: NodePath
 @export var animation_player_path: NodePath
+@export_group("Vitals Audio")
+@export_range(-40.0, 10.0, 0.5, "suffix:dB") var low_health_heartbeat_volume_db: float = 0.0
+@export_range(-40.0, 10.0, 0.5, "suffix:dB") var heavy_breathing_volume_db: float = 0.0
 #------------------------------------------------------
 var speed
 var t_bob = 0.0
@@ -176,6 +182,9 @@ var _cel_rect: ColorRect = null
 @onready var attack_hint_control: Control = $CanvasLayer/Control/Attack
 @onready var grabbed_hint_control: Control = $CanvasLayer/Control/Grabbed
 @onready var dark_adapt_light: OmniLight3D = $Head/DarkAdaptLight
+
+var _heartbeat_player: AudioStreamPlayer = null
+var _heavy_breathing_player: AudioStreamPlayer = null
 
 var _game_started: bool = false
 var cutscene_active: bool = false
@@ -340,6 +349,10 @@ func _ready():
 			chase_player.volume_db = -80.0
 		if swing_player != null:
 			swing_player.volume_db = -80.0
+		if _heartbeat_player != null:
+			_heartbeat_player.volume_db = -80.0
+		if _heavy_breathing_player != null:
+			_heavy_breathing_player.volume_db = -80.0
 		_configure_vision_area()
 		if visual_root:
 			visual_root.rotation.y = head.rotation.y + deg_to_rad(visual_yaw_offset_degrees)
@@ -370,6 +383,7 @@ func _ready():
 	_setup_health_ui()
 	_setup_damage_overlay()
 	_setup_smoke_overlay()
+	_setup_vitals_audio()
 	_setup_hotbar_ui()
 	_setup_progression_ui()
 	_setup_gold_counter_ui()
@@ -747,6 +761,7 @@ func _physics_process(delta):
 	_update_charge_ring()
 	_update_stamina_ui()
 	_update_exhaustion_effects(delta)
+	_update_vitals_audio(delta)
 #------------------------------------------------------
 #wasd direction input and other physics
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -1091,6 +1106,68 @@ func _update_exhaustion_effects(delta: float) -> void:
 		if camera != null:
 			EXHAUSTION_BREATH_SCRIPT.spawn_breath(camera)
 		EXHAUSTION_BREATH_SCRIPT.spawn_sweat_droplets(self)
+
+func _setup_vitals_audio() -> void:
+	_heartbeat_player = AudioStreamPlayer.new()
+	_heartbeat_player.name = "HeartbeatPlayer"
+	_heartbeat_player.bus = "Master"
+	var hb_stream := load(HEARTBEAT_SOUND_PATH) as AudioStreamMP3
+	if hb_stream != null:
+		var hb_loop := hb_stream.duplicate() as AudioStreamMP3
+		hb_loop.loop = true
+		_heartbeat_player.stream = hb_loop
+	_heartbeat_player.volume_db = -80.0
+	add_child(_heartbeat_player)
+
+	_heavy_breathing_player = AudioStreamPlayer.new()
+	_heavy_breathing_player.name = "HeavyBreathingPlayer"
+	_heavy_breathing_player.bus = "Master"
+	var breath_stream := load(HEAVY_BREATHING_SOUND_PATH) as AudioStreamMP3
+	if breath_stream != null:
+		var breath_loop := breath_stream.duplicate() as AudioStreamMP3
+		breath_loop.loop = true
+		_heavy_breathing_player.stream = breath_loop
+	_heavy_breathing_player.volume_db = -80.0
+	add_child(_heavy_breathing_player)
+
+func _update_vitals_audio(delta: float) -> void:
+	if not is_multiplayer_authority() or is_dead:
+		if _heartbeat_player != null and _heartbeat_player.playing:
+			_heartbeat_player.stop()
+		if _heavy_breathing_player != null and _heavy_breathing_player.playing:
+			_heavy_breathing_player.stop()
+		return
+
+	# Low Health Heartbeat audio (triggers when health falls below 25%)
+	var is_low_health: bool = health > 0.0 and (health / HEALTH_MAX) <= LOW_HEALTH_THRESHOLD_RATIO
+	if _heartbeat_player != null:
+		if is_low_health:
+			if not _heartbeat_player.playing:
+				_heartbeat_player.volume_db = -40.0
+				_heartbeat_player.play()
+			_heartbeat_player.volume_db = move_toward(_heartbeat_player.volume_db, low_health_heartbeat_volume_db, delta * 30.0)
+			# Rapid muffled heartbeat escalates slightly in pitch as player health gets critical
+			var urgency: float = clampf(1.0 - (health / (HEALTH_MAX * LOW_HEALTH_THRESHOLD_RATIO)), 0.0, 1.0)
+			_heartbeat_player.pitch_scale = lerpf(1.0, 1.15, urgency)
+		else:
+			if _heartbeat_player.playing:
+				_heartbeat_player.volume_db = move_toward(_heartbeat_player.volume_db, -80.0, delta * 40.0)
+				if _heartbeat_player.volume_db <= -79.0:
+					_heartbeat_player.stop()
+
+	# Exhaustion / Strained Heavy Breathing audio (triggers when stamina depleted / exhausted)
+	var is_exhausted: bool = stamina <= 0.0 or (stamina < STAMINA_WARNING_THRESHOLD and stamina_refill_delay_timer > 0.0)
+	if _heavy_breathing_player != null:
+		if is_exhausted:
+			if not _heavy_breathing_player.playing:
+				_heavy_breathing_player.volume_db = -30.0
+				_heavy_breathing_player.play()
+			_heavy_breathing_player.volume_db = move_toward(_heavy_breathing_player.volume_db, heavy_breathing_volume_db, delta * 30.0)
+		else:
+			if _heavy_breathing_player.playing:
+				_heavy_breathing_player.volume_db = move_toward(_heavy_breathing_player.volume_db, -80.0, delta * 35.0)
+				if _heavy_breathing_player.volume_db <= -79.0:
+					_heavy_breathing_player.stop()
 
 func _update_health_ui() -> void:
 	if health < previous_health - 0.001:
@@ -1754,6 +1831,10 @@ func _handle_player_death() -> void:
 		return
 	is_dead = true
 	velocity = Vector3.ZERO
+	if _heartbeat_player != null and _heartbeat_player.playing:
+		_heartbeat_player.stop()
+	if _heavy_breathing_player != null and _heavy_breathing_player.playing:
+		_heavy_breathing_player.stop()
 
 	# 1. Trigger the Cursed Death Eruption visual effect
 	var death_pos := global_position + Vector3(0.0, 0.9, 0.0)

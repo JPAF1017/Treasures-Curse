@@ -134,7 +134,7 @@ func _process(delta: float) -> void:
 	elif _door_hovered and Input.is_action_just_pressed("e"):
 		CandlePuzzleRoom.door_interaction_triggered = true
 		_show_warning2("I think I need to place something on the slabs to open this")
-		var door_pos := _door_area.global_position if _door_area != null else (door.global_position if door != null else global_position)
+		var door_pos := _door_area.global_position if _door_area != null else global_position
 		_play_door_interact_sound(door_pos)
 
 	# Detect if the player picked up a placed item from the table (only before door opens)
