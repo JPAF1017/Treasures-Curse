@@ -26,14 +26,13 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
     - [sounds/Interactions/openchest2.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest2.mp3)
   - **Status**: Completed (plays both `openchest.mp3` and `openchest2.mp3` simultaneously via 3D audio players).
 
-- [ ] **2.2 Gold Pickup Sound Effect**
-  - **Description**: Play a distinct, satisfying metallic coin clink / gold jingle when the player picks up gold piles or coins into their hotbar. Currently, only particle sparkles spawn without audio feedback.
+- [x] **2.2 Gold Pickup Sound Effect**
+  - **Description**: Play a distinct metallic coin clink / gold jingle ([sounds/Interactions/pickupgold.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgold.mp3)) with pitch randomization when gold is picked up.
   - **Files**:
-    - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1501-L1525) (`_pickup_item_into_hotbar()`)
-    - [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd)
-    - [sounds/Interactions/](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/)
-  - **Priority**: High
-  - **Implementation Notes**: Add random pitch shifting (e.g. ±5-10% via `AudioStreamRandomizer` or playback pitch offset) so collecting multiple coins in quick succession sounds dynamic and punchy.
+    - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1530-L1540) (`_pickup_item_into_hotbar()`, `_play_pickup_sound_for_item()`, `_sync_item_removed()`)
+    - [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd#L90-L105) (`play_pickup_sound()`)
+    - [sounds/Interactions/pickupgold.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgold.mp3)
+  - **Status**: Completed (plays `pickupgold.mp3` with random pitch variation ±8% upon pickup and peer sync).
 
 - [ ] **2.3 Gem & Key Pickup Sound Effect**
   - **Description**: Play a resonant arcane crystal chime / mystical shimmer sound when picking up gem keys (GemKey 1-4) or skull keys. Differentiates rare key treasures from standard gold pickups.
@@ -74,6 +73,7 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
 
 ## 🔊 Existing Sound FX Reference
 - **Chest Open**: Wooden lid creaking open ([sounds/Interactions/openchest.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest.mp3)) layered with secondary open audio ([sounds/Interactions/openchest2.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest2.mp3)).
+- **Gold Pickup**: Dynamic metallic coin clink with pitch modulation ([sounds/Interactions/pickupgold.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgold.mp3)).
 - **Weapon Swing**: Light whoosh sound on swinging melee weapons ([sounds/player/swing.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/swing.mp3)).
 - **Combat Impacts**: Blunt, sharp, and solid impact audio cues ([sounds/Interactions/hit_blunt.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/hit_blunt.mp3), `hit_sharp.mp3`, `hit_solid.mp3`).
 - **Player Damage & Death**: Death sound cue ([sounds/player/death_sound.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/death_sound.mp3)).

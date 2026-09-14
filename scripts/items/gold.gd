@@ -87,6 +87,24 @@ static func spawn_pickup_sparkles(scene_tree: SceneTree, world_position: Vector3
 	PickupSparklesEffect.spawn(scene_tree, world_position, PickupSparklesEffect.SparkleTheme.GOLD)
 
 
+const PICKUP_SOUND: AudioStream = preload("res://sounds/Interactions/pickupgold.mp3")
+
+## Plays the gold pickup sound effect with random pitch modulation at the target position.
+static func play_pickup_sound(scene_tree: SceneTree, world_position: Vector3) -> void:
+	if scene_tree == null:
+		return
+	var root := scene_tree.current_scene
+	if root == null:
+		return
+	var audio_player := AudioStreamPlayer3D.new()
+	audio_player.stream = PICKUP_SOUND
+	audio_player.pitch_scale = randf_range(0.92, 1.08)
+	root.add_child(audio_player)
+	audio_player.global_position = world_position
+	audio_player.finished.connect(audio_player.queue_free)
+	audio_player.play()
+
+
 static func is_equip_input_just_pressed() -> bool:
 	var equip_input: Dictionary = melee_shared.read_equip_input(get_equip_action_name(), equip_key_was_down)
 	equip_key_was_down = bool(equip_input.get("is_down", equip_key_was_down))
