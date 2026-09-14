@@ -1,10 +1,9 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1789388205
-AGENTS.md::TextFile::-1::1789388212::0::1::::<><><>0<>0<><>::
+::res://::1789399522
+AGENTS.md::TextFile::-1::1789399529::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1779345796::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1777213248::1777213249::1::::<><><>0<>0<>cae14fdf34577903ea8282ebd52773bb<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1772239639::0::1::::<><><>0<>0<><>::
-TODO_PARTICLES.md::TextFile::-1::1789398657::0::1::::<><><>0<>0<><>::
 TODO_SOUNDS.md::TextFile::-1::1789388205::0::1::::<><><>0<>0<><>::
 ::res://addons/::1785392700
 ::res://addons/godot-rapier3d/::1785392703
@@ -491,9 +490,9 @@ table_item_spawn.gd::GDScript::8351178420905279132::1781249381::0::1::::TableIte
 dungeon_optimizer.gd::GDScript::9157797051449046666::1779008384::0::1::::<>Node<><>0<>0<><>::
 game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0<><>::
 level1_spawner.gd::GDScript::3714450241364899252::1785392327::0::1::::<>Node3D<><>0<>0<><>::
-player.gd::GDScript::7860289825015925474::1789389466::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1789399707::0::1::::<>CharacterBody3D<><>0<>0<><>::
 settings_manager.gd::GDScript::8170435877026185281::1783231002::0::1::::<>Node<><>0<>0<><>::
-::res://scripts/items/::1789398826
+::res://scripts/items/::1789399492
 axe.gd::GDScript::5823683269390956943::1789391042::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
 bat.gd::GDScript::8071771524868046774::1789391963::0::1::::Bat<>RigidBody3D<><>0<>0<><>::
 BloodSplatterEffect.gd::GDScript::5840248927589851858::1783231602::0::1::::BloodSplatterEffect<>RefCounted<><>0<>0<><>::
@@ -516,6 +515,7 @@ MeleeSwingTrailEffect.gd::GDScript::2182305289768061734::1789390784::0::1::::Mel
 MeleeViewmodelComponent.gd::GDScript::1319044425994665230::1789391028::0::1::::MeleeViewmodelComponent<>RefCounted<><>0<>0<><>::
 PedestalSocketEffect.gd::GDScript::857880565140554988::1789386554::0::1::::PedestalSocketEffect<>RefCounted<><>0<>0<><>::
 PickupSparklesEffect.gd::GDScript::5693123946775050937::1789381938::0::1::::PickupSparklesEffect<>RefCounted<><>0<>0<><>::
+PlayerDeathEruptionEffect.gd::GDScript::4751776250635357167::1789399506::0::1::::PlayerDeathEruptionEffect<>RefCounted<><>0<>0<><>::
 shovel.gd::GDScript::2064808360044123086::1789391972::0::1::::Shovel<>RigidBody3D<><>0<>0<><>::
 skull_key.gd::GDScript::8650844085777791775::1781608157::0::1::::<>RigidBody3D<><>0<>0<><>::
 smoke.gd::GDScript::1877742696911816596::1778210946::0::1::::<>RigidBody3D<><>0<>0<><>::

@@ -66,6 +66,7 @@ const GEM_KEY4_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key4.gd")
 const PICKUP_SPARKLES_SCRIPT: Script = preload("res://scripts/items/PickupSparklesEffect.gd")
 const LANDING_DUST_SCRIPT: Script = preload("res://scripts/items/LandingDustEffect.gd")
 const EXHAUSTION_BREATH_SCRIPT: Script = preload("res://scripts/items/ExhaustionBreathEffect.gd")
+const PLAYER_DEATH_ERUPTION_SCRIPT: Script = preload("res://scripts/items/PlayerDeathEruptionEffect.gd")
 const STEP_SOUND_PATHS := [
 	"res://sounds/player/step1.mp3",
 	"res://sounds/player/step2.mp3",
@@ -1712,15 +1713,70 @@ func _sync_item_dropped(scene_path: String, drop_pos: Vector3, drop_vel: Vector3
 func apply_damage(amount: float) -> void:
 	if amount <= 0.0:
 		return
+	if is_dead:
+		return
 	health = maxf(health - amount, 0.0)
 	_prog_damaged = true
 	_update_health_ui()
 	_apply_damage_camera_tilt()
 	if health <= 0.0:
-		if multiplayer.has_multiplayer_peer() and is_multiplayer_authority():
-			_enter_death_state_multiplayer()
-		else:
-			get_tree().change_scene_to_file("res://menus/death_menu.tscn")
+		_handle_player_death()
+
+func _handle_player_death() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	velocity = Vector3.ZERO
+
+	# 1. Trigger the Cursed Death Eruption visual effect
+	var death_pos := global_position + Vector3(0.0, 0.9, 0.0)
+	if multiplayer.has_multiplayer_peer():
+		rpc("_rpc_player_death_eruption", death_pos)
+	else:
+		PLAYER_DEATH_ERUPTION_SCRIPT.spawn(get_tree(), death_pos)
+
+	# 2. Disable physical player collisions immediately
+	if stand_collision:
+		stand_collision.disabled = true
+	if crouch_collision:
+		crouch_collision.disabled = true
+
+	# 3. Dramatic camera collapse / death tilt
+	_trigger_death_camera_collapse()
+
+	# 4. Transition to spectator or death menu after death eruption plays
+	if multiplayer.has_multiplayer_peer() and is_multiplayer_authority():
+		_enter_death_state_multiplayer()
+	elif not multiplayer.has_multiplayer_peer():
+		_enter_death_state_singleplayer()
+
+@rpc("any_peer", "call_local", "reliable")
+func _rpc_player_death_eruption(death_pos: Vector3) -> void:
+	PLAYER_DEATH_ERUPTION_SCRIPT.spawn(get_tree(), death_pos)
+
+func _trigger_death_camera_collapse() -> void:
+	if camera == null:
+		return
+	if damage_tilt_tween:
+		damage_tilt_tween.kill()
+	var collapse_tween := create_tween()
+	collapse_tween.set_parallel(true)
+	collapse_tween.tween_property(camera, "position:y", -0.9, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	var tilt_roll := deg_to_rad(24.0 * (1.0 if randf() < 0.5 else -1.0))
+	var pitch_down := deg_to_rad(-16.0)
+	collapse_tween.tween_property(camera, "rotation:z", tilt_roll, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	collapse_tween.tween_property(camera, "rotation:x", pitch_down, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if damage_tint_rect != null:
+		if damage_tint_tween:
+			damage_tint_tween.kill()
+		damage_tint_rect.color = Color(0.3, 0.02, 0.05, 0.75)
+		damage_tint_tween = create_tween()
+		damage_tint_tween.tween_property(damage_tint_rect, "color", Color(0.06, 0.01, 0.02, 0.95), 1.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+func _enter_death_state_singleplayer() -> void:
+	get_tree().create_timer(1.5).timeout.connect(func() -> void:
+		get_tree().change_scene_to_file("res://menus/death_menu.tscn")
+	)
 
 func show_escape_warning() -> void:
 	if escape_warning_control == null:
@@ -2385,14 +2441,18 @@ func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
 
 func _enter_death_state_multiplayer() -> void:
 	is_dead = true
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	if player_canvas_layer:
-		player_canvas_layer.visible = false
 	if stand_collision:
 		stand_collision.disabled = true
 	if crouch_collision:
 		crouch_collision.disabled = true
-	_build_death_overlay()
+	get_tree().create_timer(1.2).timeout.connect(func() -> void:
+		if not is_instance_valid(self) or not is_inside_tree():
+			return
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		if player_canvas_layer:
+			player_canvas_layer.visible = false
+		_build_death_overlay()
+	)
 
 
 func _build_death_overlay() -> void:
