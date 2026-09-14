@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
+const StatueCrumbleEffect := preload("res://scripts/items/StatueCrumbleEffect.gd")
 
 # Movement constants
 const WALK_SPEED = 10.0
@@ -50,6 +51,9 @@ var los_state_initialized: bool = false
 var previous_has_line_of_sight: bool = false
 var attack_timer: float = 0.0
 var has_been_seen: bool = false   # statue cannot attack until a player has looked at it once
+var was_frozen: bool = true
+var awakening_cooldown_timer: float = 0.0
+const AWAKENING_COOLDOWN: float = 0.5
 
 # Bone sounds
 var bones_sounds: Array[AudioStreamPlayer3D] = []
@@ -188,10 +192,12 @@ func _update_bone_sounds() -> void:
 	if pos >= SOUND_FRAME_1_TIME and not sound_triggered_frame1:
 		_play_random_bones_sound()
 		sound_triggered_frame1 = true
+		StatueCrumbleEffect.spawn_step_crumble(get_tree(), global_position)
 
 	if pos >= SOUND_FRAME_51_TIME and not sound_triggered_frame51:
 		_play_random_bones_sound()
 		sound_triggered_frame51 = true
+		StatueCrumbleEffect.spawn_step_crumble(get_tree(), global_position)
 
 	prev_anim_position = pos
 
@@ -284,6 +290,7 @@ func _physics_process(delta):
 	bump_step_timer = max(bump_step_timer - delta, 0.0)
 	trail_sample_timer = max(trail_sample_timer - delta, 0.0)
 	memory_log_timer = max(memory_log_timer - delta, 0.0)
+	awakening_cooldown_timer = max(awakening_cooldown_timer - delta, 0.0)
 
 	# Apply gravity
 	EnemyLocomotion.apply_gravity(self, GRAVITY, delta)
@@ -420,6 +427,14 @@ func _physics_process(delta):
 		velocity.z = 0
 		_set_idle_pose()
 		is_moving = false
+
+	# Handle awakening crumble when transitioning from frozen stone to active movement
+	if is_moving and was_frozen and awakening_cooldown_timer <= 0.0:
+		StatueCrumbleEffect.spawn_awakening(get_tree(), global_position, -global_transform.basis.z)
+		was_frozen = false
+		awakening_cooldown_timer = AWAKENING_COOLDOWN
+	elif not is_moving:
+		was_frozen = true
 
 	# Step up tiny bumps while moving so statue keeps advancing on uneven ground.
 	bump_step_timer = EnemyLocomotion.try_bump_step(self, bump_step_timer, BUMP_STEP_VELOCITY, BUMP_STEP_COOLDOWN)

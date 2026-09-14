@@ -61,9 +61,9 @@ This document tracks particle FX implementations and enhancements across the gam
   - **Files**: [scripts/npc/charger.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/charger.gd), [scripts/items/ChargerWallImpactEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChargerWallImpactEffect.gd).
   - **Priority**: Medium
 
-- [ ] **4.2 Statue Awakening / Movement Crumble**
+- [x] **4.2 Statue Awakening / Movement Crumble**
   - **Description**: Small stone pebbles and dust crumbling off the statue whenever it transitions from frozen stone to active pursuit in the dark.
-  - **Files**: [scripts/npc/statue.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/statue.gd).
+  - **Files**: [scripts/npc/statue.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/statue.gd), [scripts/items/StatueCrumbleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/StatueCrumbleEffect.gd).
   - **Priority**: Low
 
 - [x] **4.3 Knight Sword Wall & Player Collisions**
@@ -95,6 +95,8 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Exhaustion / Heavy Breathing (Low Stamina)**: Rhythmic condensation cold breath mist puffs in front of the first-person camera, subtle screen-space sweat droplets sliding along viewport edges, and flashing fatigue UI pulse when stamina reaches zero or recovers from depletion ([scripts/items/ExhaustionBreathEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ExhaustionBreathEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
 - [x] **Charger Wall Collision**: Shower of tumbled stone masonry chips, expanding pulverized stone dust cloud, radial shockwave dust ring, bright stone friction sparks, sound FX, recoil bounce, and stun reaction when the Charger misses a charge/lunge and slams into a dungeon wall or pillar ([scripts/items/ChargerWallImpactEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChargerWallImpactEffect.gd), [scripts/npc/charger.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/charger.gd)).
 - [x] **Knight Sword Wall & Player Impacts**: Directional crimson blood burst, cutting sparks, and shockwaves on striking players, plus heavy deflected friction sparks, chipped masonry fragments, stone dust, and metallic clash audio on colliding with dungeon walls, pillars, or flagstones ([scripts/items/KnightSwordImpactEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/KnightSwordImpactEffect.gd), [scripts/npc/knight.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/knight.gd)).
+- [x] **Statue Awakening / Movement Crumble**: Tumbling stone flakes and ancient mortar dust cascading down the statue body upon breaking out of stone freeze into active pursuit in the dark, plus subtle stone chips and ground dust puffs during heavy footfalls ([scripts/items/StatueCrumbleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/StatueCrumbleEffect.gd), [scripts/npc/statue.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/statue.gd)).
+
 
 
 
