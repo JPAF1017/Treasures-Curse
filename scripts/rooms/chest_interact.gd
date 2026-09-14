@@ -11,6 +11,10 @@ const OPEN_CHEST_SOUND2 := preload("res://sounds/Interactions/openchest2.mp3")
 
 
 
+@export_group("Audio")
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var chest_open_volume_db: float = 0.0
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var chest_open2_volume_db: float = -3.1 # 30% decrease (~70% volume)
+
 @onready var chest_area: Area3D = $Chest/Area3D
 @onready var chest_lid: Node3D = $Chest/Cube_085
 @onready var spawn_area: Area3D = $Chest/Spawn
@@ -122,12 +126,14 @@ func _open_chest() -> void:
 
 	var sound_player := AudioStreamPlayer3D.new()
 	sound_player.stream = OPEN_CHEST_SOUND
+	sound_player.volume_db = chest_open_volume_db
 	add_child(sound_player)
 	sound_player.play()
 	sound_player.finished.connect(sound_player.queue_free)
 
 	var sound_player2 := AudioStreamPlayer3D.new()
 	sound_player2.stream = OPEN_CHEST_SOUND2
+	sound_player2.volume_db = chest_open2_volume_db
 	add_child(sound_player2)
 	sound_player2.play()
 	sound_player2.finished.connect(sound_player2.queue_free)

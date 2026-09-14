@@ -1,20 +1,20 @@
 extends RigidBody3D
 
-const gem_key4_SCENE_PATH := "res://assets/items/Gem_key4.tscn"
-const gem_key4_ITEM_ICON: Texture2D = preload("res://assets/ui/gem4.png")
-const gem_key4_MODEL_SCENE: PackedScene = preload("res://assets/items assets/red_gem.glb")
+const GEM_KEY4_SCENE_PATH := "res://assets/items/Gem_key4.tscn"
+const GEM_KEY4_ITEM_ICON: Texture2D = preload("res://assets/ui/gem4.png")
+const GEM_KEY4_MODEL_SCENE: PackedScene = preload("res://assets/items assets/red_gem.glb")
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
 const ITEM_DROP_DOWN_OFFSET := -0.25
 const ITEM_DROP_FORWARD_SPEED := 2.0
 const ITEM_DROP_UPWARD_SPEED := 0.5
-const gem_key4_PHYSICS_COLLISION_LAYER := 3
-const gem_key4_PHYSICS_COLLISION_MASK := 3
-const gem_key4_PHYSICS_MASS := 0.1
-const gem_key4_PHYSICS_LINEAR_DAMP := 0.2
-const gem_key4_PHYSICS_ANGULAR_DAMP := 0.4
-const gem_key4_ATTACHMENT_NODE_NAME := "RightHandGemKey4Attachment"
+const GEM_KEY4_PHYSICS_COLLISION_LAYER := 3
+const GEM_KEY4_PHYSICS_COLLISION_MASK := 3
+const GEM_KEY4_PHYSICS_MASS := 0.1
+const GEM_KEY4_PHYSICS_LINEAR_DAMP := 0.2
+const GEM_KEY4_PHYSICS_ANGULAR_DAMP := 0.4
+const GEM_KEY4_ATTACHMENT_NODE_NAME := "RightHandGemKey4Attachment"
 
 const VIEWMODEL_BOB_FREQ := 2.0
 const VIEWMODEL_BOB_AMP_Y := 0.012
@@ -30,6 +30,9 @@ static var equip_key_was_down: bool = false
 @export var viewmodel_position: Vector3 = Vector3(-0.15, -0.15, -0.35)
 @export var viewmodel_rotation_degrees: Vector3 = Vector3(0.0, 15.0, 0.0)
 @export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.06
+
+@export_group("Audio")
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var pickup_volume_db: float = 0.0
 
 var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
@@ -50,19 +53,38 @@ static func get_equip_action_name() -> StringName:
 
 
 static func get_scene_path() -> String:
-	return gem_key4_SCENE_PATH
+	return GEM_KEY4_SCENE_PATH
 
 
 static func get_item_icon() -> Texture2D:
-	return gem_key4_ITEM_ICON
+	return GEM_KEY4_ITEM_ICON
 
 
 static func is_gem_key4_node(node: Node) -> bool:
-	return melee_shared.is_item_node(node, gem_key4_SCENE_PATH, "GemKey4")
+	return melee_shared.is_item_node(node, GEM_KEY4_SCENE_PATH, "GemKey4")
 
 
 static func find_gem_key4_rigidbody_from_node(node: Node) -> RigidBody3D:
-	return melee_shared.find_item_rigidbody_from_node(node, gem_key4_SCENE_PATH, "GemKey4")
+	return melee_shared.find_item_rigidbody_from_node(node, GEM_KEY4_SCENE_PATH, "GemKey4")
+
+
+const PICKUP_SOUND: AudioStream = preload("res://sounds/Interactions/pickupgem.mp3")
+
+## Plays the gem key pickup sound effect with random pitch modulation at the target position.
+static func play_pickup_sound(scene_tree: SceneTree, world_position: Vector3, volume_db: float = 0.0, pitch: float = 1.0) -> void:
+	if scene_tree == null:
+		return
+	var root := scene_tree.current_scene
+	if root == null:
+		return
+	var audio_player := AudioStreamPlayer3D.new()
+	audio_player.stream = PICKUP_SOUND
+	audio_player.volume_db = volume_db
+	audio_player.pitch_scale = pitch * randf_range(0.96, 1.04)
+	root.add_child(audio_player)
+	audio_player.global_position = world_position
+	audio_player.finished.connect(audio_player.queue_free)
+	audio_player.play()
 
 
 static func is_equip_input_just_pressed() -> bool:
@@ -72,7 +94,7 @@ static func is_equip_input_just_pressed() -> bool:
 
 
 func get_hotbar_icon_texture() -> Texture2D:
-	return gem_key4_ITEM_ICON
+	return GEM_KEY4_ITEM_ICON
 
 
 func get_hotbar_icon_modulate(alpha: float) -> Color:
@@ -182,14 +204,14 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinti
 
 
 func _configure_item_physics() -> void:
-	mass = gem_key4_PHYSICS_MASS
-	linear_damp = gem_key4_PHYSICS_LINEAR_DAMP
-	angular_damp = gem_key4_PHYSICS_ANGULAR_DAMP
+	mass = GEM_KEY4_PHYSICS_MASS
+	linear_damp = GEM_KEY4_PHYSICS_LINEAR_DAMP
+	angular_damp = GEM_KEY4_PHYSICS_ANGULAR_DAMP
 	can_sleep = true
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:
-	melee_shared.set_item_physics_enabled(self, enabled, gem_key4_PHYSICS_COLLISION_LAYER, gem_key4_PHYSICS_COLLISION_MASK, gem_key4_PHYSICS_MASS, gem_key4_PHYSICS_LINEAR_DAMP, gem_key4_PHYSICS_ANGULAR_DAMP)
+	melee_shared.set_item_physics_enabled(self, enabled, GEM_KEY4_PHYSICS_COLLISION_LAYER, GEM_KEY4_PHYSICS_COLLISION_MASK, GEM_KEY4_PHYSICS_MASS, GEM_KEY4_PHYSICS_LINEAR_DAMP, GEM_KEY4_PHYSICS_ANGULAR_DAMP)
 
 
 func _set_item_visuals_visible(visibility: bool) -> void:
@@ -260,7 +282,7 @@ func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
 	if skeleton == null:
 		return null
 
-	var existing := skeleton.get_node_or_null(gem_key4_ATTACHMENT_NODE_NAME) as BoneAttachment3D
+	var existing := skeleton.get_node_or_null(GEM_KEY4_ATTACHMENT_NODE_NAME) as BoneAttachment3D
 	if existing:
 		right_hand_attachment = existing
 		return right_hand_attachment
@@ -270,7 +292,7 @@ func _get_or_create_right_hand_attachment(player: Node) -> BoneAttachment3D:
 		return null
 
 	var attachment := BoneAttachment3D.new()
-	attachment.name = gem_key4_ATTACHMENT_NODE_NAME
+	attachment.name = GEM_KEY4_ATTACHMENT_NODE_NAME
 	attachment.bone_name = resolved_bone_name
 	skeleton.add_child(attachment)
 	right_hand_attachment = attachment
@@ -329,7 +351,7 @@ func _show_viewmodel(player: Node) -> void:
 	if camera == null:
 		return
 
-	viewmodel_instance = gem_key4_MODEL_SCENE.instantiate() as Node3D
+	viewmodel_instance = GEM_KEY4_MODEL_SCENE.instantiate() as Node3D
 	viewmodel_instance.name = "GemKey4Viewmodel"
 	camera.add_child(viewmodel_instance)
 

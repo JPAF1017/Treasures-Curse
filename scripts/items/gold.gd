@@ -39,6 +39,9 @@ static var equip_key_was_down: bool = false
 @export var viewmodel_rotation_degrees: Vector3 = Vector3(0.0, 15.0, 0.0)
 @export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.06
 
+@export_group("Audio")
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var pickup_volume_db: float = 0.0
+
 var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
 var viewmodel_instance: Node3D = null
@@ -90,7 +93,7 @@ static func spawn_pickup_sparkles(scene_tree: SceneTree, world_position: Vector3
 const PICKUP_SOUND: AudioStream = preload("res://sounds/Interactions/pickupgold.mp3")
 
 ## Plays the gold pickup sound effect with random pitch modulation at the target position.
-static func play_pickup_sound(scene_tree: SceneTree, world_position: Vector3) -> void:
+static func play_pickup_sound(scene_tree: SceneTree, world_position: Vector3, volume_db: float = 0.0) -> void:
 	if scene_tree == null:
 		return
 	var root := scene_tree.current_scene
@@ -98,6 +101,7 @@ static func play_pickup_sound(scene_tree: SceneTree, world_position: Vector3) ->
 		return
 	var audio_player := AudioStreamPlayer3D.new()
 	audio_player.stream = PICKUP_SOUND
+	audio_player.volume_db = volume_db
 	audio_player.pitch_scale = randf_range(0.92, 1.08)
 	root.add_child(audio_player)
 	audio_player.global_position = world_position

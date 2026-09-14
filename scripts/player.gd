@@ -1422,8 +1422,27 @@ func _spawn_pickup_sparkles_for_item(item: Node, pos: Vector3) -> void:
 func _play_pickup_sound_for_item(item: Node, pos: Vector3) -> void:
 	if item == null:
 		return
+	var vol: float = float(item.get("pickup_volume_db")) if item.get("pickup_volume_db") != null else 0.0
 	if _is_gold_item_model(item):
-		GOLD_ITEM_SCRIPT.call("play_pickup_sound", get_tree(), pos)
+		GOLD_ITEM_SCRIPT.call("play_pickup_sound", get_tree(), pos, vol)
+	elif _is_skull_key_item_model(item):
+		SKULL_KEY_ITEM_SCRIPT.call("play_pickup_sound", get_tree(), pos, vol)
+	elif _is_gem_key_item_model(item):
+		var gem_pitch := 1.0
+		var s: Variant = item.get_script()
+		if s == GEM_KEY1_ITEM_SCRIPT:
+			gem_pitch = 1.0
+		elif s == GEM_KEY2_ITEM_SCRIPT:
+			gem_pitch = 1.05
+		elif s == GEM_KEY3_ITEM_SCRIPT:
+			gem_pitch = 1.10
+		elif s == GEM_KEY4_ITEM_SCRIPT:
+			gem_pitch = 0.95
+		var script_obj := s as Script
+		if script_obj:
+			script_obj.call("play_pickup_sound", get_tree(), pos, vol, gem_pitch)
+		else:
+			GEM_KEY1_ITEM_SCRIPT.call("play_pickup_sound", get_tree(), pos, vol, gem_pitch)
 
 func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()

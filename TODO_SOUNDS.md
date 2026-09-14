@@ -34,15 +34,15 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
     - [sounds/Interactions/pickupgold.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgold.mp3)
   - **Status**: Completed (plays `pickupgold.mp3` with random pitch variation ±8% upon pickup and peer sync).
 
-- [ ] **2.3 Gem & Key Pickup Sound Effect**
-  - **Description**: Play a resonant arcane crystal chime / mystical shimmer sound when picking up gem keys (GemKey 1-4) or skull keys. Differentiates rare key treasures from standard gold pickups.
+- [x] **2.3 Gem & Key Pickup Sound Effect**
+  - **Description**: Play resonant crystal chime ([sounds/Interactions/pickupgem.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgem.mp3)) when picking up Gem Keys (1-4) with pitch tints per gem, and skull pickup audio ([sounds/Interactions/pickupskull.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupskull.mp3)) when picking up the Skull Key.
   - **Files**:
-    - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1483-L1510) (`_pickup_item_into_hotbar()`)
-    - [scripts/items/gem_key1.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gem_key1.gd), `gem_key2.gd`, `gem_key3.gd`, `gem_key4.gd`
-    - [scripts/items/skull_key.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/skull_key.gd)
-    - [sounds/Interactions/](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/)
-  - **Priority**: High
-  - **Implementation Notes**: Can share or modulate base crystal chime tones with distinct pitch tints matching the gem color/type.
+    - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1422-L1445) (`_play_pickup_sound_for_item()`)
+    - [scripts/items/gem_key1.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gem_key1.gd), `gem_key2.gd`, `gem_key3.gd`, `gem_key4.gd` (`play_pickup_sound()`)
+    - [scripts/items/skull_key.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/skull_key.gd#L70-L88) (`play_pickup_sound()`)
+    - [sounds/Interactions/pickupgem.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgem.mp3)
+    - [sounds/Interactions/pickupskull.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupskull.mp3)
+  - **Status**: Completed (plays `pickupgem.mp3` with distinct color pitch shifts for Gem Keys and `pickupskull.mp3` for Skull Key upon pickup and peer sync).
 
 ---
 
@@ -74,6 +74,8 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
 ## 🔊 Existing Sound FX Reference
 - **Chest Open**: Wooden lid creaking open ([sounds/Interactions/openchest.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest.mp3)) layered with secondary open audio ([sounds/Interactions/openchest2.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest2.mp3)).
 - **Gold Pickup**: Dynamic metallic coin clink with pitch modulation ([sounds/Interactions/pickupgold.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgold.mp3)).
+- **Gem Key Pickup**: Resonant arcane crystal chime with pitch tints per gem ([sounds/Interactions/pickupgem.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgem.mp3)).
+- **Skull Key Pickup**: Arcane skull pickup sound ([sounds/Interactions/pickupskull.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupskull.mp3)).
 - **Weapon Swing**: Light whoosh sound on swinging melee weapons ([sounds/player/swing.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/swing.mp3)).
 - **Combat Impacts**: Blunt, sharp, and solid impact audio cues ([sounds/Interactions/hit_blunt.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/hit_blunt.mp3), `hit_sharp.mp3`, `hit_solid.mp3`).
 - **Player Damage & Death**: Death sound cue ([sounds/player/death_sound.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/death_sound.mp3)).
