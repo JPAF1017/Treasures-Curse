@@ -47,18 +47,23 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
 ---
 
 ### 3. Puzzles & Dungeon Interactions
-- [ ] **3.1 Puzzle Pedestal & Altar Socketing Audio**
-  - **Description**: Play a heavy stone click or ethereal arcane hum when placing a skull or gem key into a puzzle pedestal or completing an altar challenge.
+- [x] **3.1 Puzzle Pedestal & Altar Socketing Audio**
+  - **Description**: Play heavy stone placement / key socketing sound ([sounds/Interactions/placekey.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/placekey.mp3)) when placing a skull key or gem key onto a puzzle pedestal.
   - **Files**:
-    - [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd)
-    - [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd)
-  - **Priority**: Medium
+    - [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd#L295-L345) (`_play_place_key_sound()`)
+    - [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd#L330-L460) (`_play_place_key_sound()`)
+    - [sounds/Interactions/placekey.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/placekey.mp3)
+  - **Status**: Completed (plays `placekey.mp3` with pitch variation on placing skull and gem keys).
 
-- [ ] **3.2 Door & Gate Unlock / Open Audio**
-  - **Description**: Heavy dungeon door unlatching, stone grinding, or metal gate sliding audio when unlocking key doors.
+- [x] **3.2 Door & Gate Unlock / Open Audio**
+  - **Description**: Door interaction audio ([sounds/Interactions/interact.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/interact.mp3)), dungeon door unlatching, and stone sliding audio ([sounds/Interactions/opening.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/opening.mp3) and [sounds/Interactions/concrete.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/concrete.mp3)) when interacting with or unlocking key doors.
   - **Files**:
-    - [scripts/rooms/](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/)
-  - **Priority**: Medium
+    - [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd#L370-L435) (`_play_door_interact_sound()`, `_play_door_sound()`, `_play_concrete_sound()`)
+    - [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd#L410-L480) (`_play_door_interact_sound()`, `_play_door_sound()`, `_play_concrete_sound()`)
+    - [sounds/Interactions/interact.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/interact.mp3)
+    - [sounds/Interactions/opening.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/opening.mp3)
+    - [sounds/Interactions/concrete.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/concrete.mp3)
+  - **Status**: Completed (plays `interact.mp3` upon interacting with doors; door open/unlatch audio already implemented).
 
 ---
 
@@ -76,6 +81,8 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
 - **Gold Pickup**: Dynamic metallic coin clink with pitch modulation ([sounds/Interactions/pickupgold.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgold.mp3)).
 - **Gem Key Pickup**: Resonant arcane crystal chime with pitch tints per gem ([sounds/Interactions/pickupgem.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupgem.mp3)).
 - **Skull Key Pickup**: Arcane skull pickup sound ([sounds/Interactions/pickupskull.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/pickupskull.mp3)).
+- **Key & Skull Pedestal Socketing**: Stone click and key socketing audio ([sounds/Interactions/placekey.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/placekey.mp3)) when placing gem or skull keys onto puzzle pedestals.
+- **Door & Gate Interaction & Opening**: Door interaction audio ([sounds/Interactions/interact.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/interact.mp3)), dungeon door unlatching, and stone sliding audio ([sounds/Interactions/opening.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/opening.mp3) and [sounds/Interactions/concrete.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/concrete.mp3)).
 - **Weapon Swing**: Light whoosh sound on swinging melee weapons ([sounds/player/swing.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/swing.mp3)).
 - **Combat Impacts**: Blunt, sharp, and solid impact audio cues ([sounds/Interactions/hit_blunt.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/hit_blunt.mp3), `hit_sharp.mp3`, `hit_solid.mp3`).
 - **Player Damage & Death**: Death sound cue ([sounds/player/death_sound.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/death_sound.mp3)).

@@ -12,7 +12,13 @@ const SKULL_PLACE_Y_OFFSET := 1.3
 const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
+const PLACE_KEY_SOUND_PATH := "res://sounds/Interactions/placekey.mp3"
+const DOOR_INTERACT_SOUND_PATH := "res://sounds/Interactions/interact.mp3"
 const PedestalSocketEffect = preload("res://scripts/items/PedestalSocketEffect.gd")
+
+@export_group("Audio")
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var place_key_volume_db: float = 0.0
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var door_interact_volume_db: float = 0.0
 
 static var player_entered_room: bool = false
 static var door_opened_static: bool = false
@@ -119,6 +125,8 @@ func _process(delta: float) -> void:
 		elif _door_hovered:
 			SkullPuzzleController.door_interaction_triggered = true
 			_show_warning2("I think I need to place something on the slabs to open this")
+			var door_pos := _door_area.global_position if _door_area != null else (door.global_position if door != null else global_position)
+			_play_door_interact_sound(door_pos)
 
 
 func _find_player_if_needed() -> void:
@@ -293,6 +301,7 @@ func _try_place_skull(area: Area3D) -> void:
 
 	# Ethereal purple cursed energy pulse at pedestal
 	PedestalSocketEffect.spawn(get_tree(), target_hex.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0), PedestalSocketEffect.PulseTheme.PURPLE)
+	_play_place_key_sound(target_hex.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0))
 
 	# Mark slot filled and check puzzle
 	if area == key_area_1:
@@ -316,6 +325,7 @@ func _on_key_1_body_entered(body: Node) -> void:
 			var body_3d := body as Node3D
 			var pos := body_3d.global_position if body_3d else (hexagon_1.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0) if hexagon_1 else global_position)
 			PedestalSocketEffect.spawn(get_tree(), pos, PedestalSocketEffect.PulseTheme.PURPLE)
+			_play_place_key_sound(pos)
 		_check_puzzle()
 
 
@@ -331,6 +341,7 @@ func _on_key_2_body_entered(body: Node) -> void:
 			var body_3d := body as Node3D
 			var pos := body_3d.global_position if body_3d else (hexagon_2.global_position + Vector3(0.0, SKULL_PLACE_Y_OFFSET, 0.0) if hexagon_2 else global_position)
 			PedestalSocketEffect.spawn(get_tree(), pos, PedestalSocketEffect.PulseTheme.PURPLE)
+			_play_place_key_sound(pos)
 		_check_puzzle()
 
 
@@ -397,6 +408,32 @@ func _play_invalid_sound(pos: Vector3) -> void:
 		scene_root.add_child(sound_player)
 		sound_player.stream = load("res://sounds/Interactions/invalid.mp3")
 		sound_player.volume_db = linear_to_db(0.4)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
+
+
+func _play_place_key_sound(pos: Vector3) -> void:
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(PLACE_KEY_SOUND_PATH)
+		sound_player.volume_db = place_key_volume_db
+		sound_player.pitch_scale = randf_range(0.95, 1.05)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
+
+
+func _play_door_interact_sound(pos: Vector3) -> void:
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(DOOR_INTERACT_SOUND_PATH)
+		sound_player.volume_db = door_interact_volume_db
+		sound_player.pitch_scale = randf_range(0.96, 1.04)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)
 		sound_player.play()

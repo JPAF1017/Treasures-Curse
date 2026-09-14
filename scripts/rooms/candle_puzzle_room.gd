@@ -15,7 +15,13 @@ const WARNING2_DISPLAY_TIME := 3.0
 const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
+const PLACE_KEY_SOUND_PATH := "res://sounds/Interactions/placekey.mp3"
+const DOOR_INTERACT_SOUND_PATH := "res://sounds/Interactions/interact.mp3"
 const PedestalSocketEffect = preload("res://scripts/items/PedestalSocketEffect.gd")
+
+@export_group("Audio")
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var place_key_volume_db: float = 0.0
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var door_interact_volume_db: float = 0.0
 
 # Maps table item scene path → expected item script path (mirrors item_hold_check.gd)
 const _SCENE_TO_SCRIPT: Dictionary = {
@@ -128,6 +134,8 @@ func _process(delta: float) -> void:
 	elif _door_hovered and Input.is_action_just_pressed("e"):
 		CandlePuzzleRoom.door_interaction_triggered = true
 		_show_warning2("I think I need to place something on the slabs to open this")
+		var door_pos := _door_area.global_position if _door_area != null else (door.global_position if door != null else global_position)
+		_play_door_interact_sound(door_pos)
 
 	# Detect if the player picked up a placed item from the table (only before door opens)
 	if not _door_opened:
@@ -331,6 +339,7 @@ func _try_place_item(hold_index: int) -> void:
 
 	# Ethereal cyan cursed energy pulse at pedestal
 	PedestalSocketEffect.spawn(get_tree(), target_pos, PedestalSocketEffect.PulseTheme.CYAN)
+	_play_place_key_sound(target_pos)
 
 	# Mark slot occupied, track placed item, clear prompt
 	_slot_occupied[hold_index] = true
@@ -443,6 +452,36 @@ func _play_invalid_sound(pos: Vector3) -> void:
 		scene_root.add_child(sound_player)
 		sound_player.stream = load("res://sounds/Interactions/invalid.mp3")
 		sound_player.volume_db = linear_to_db(0.4)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
+
+
+func _play_place_key_sound(pos: Vector3) -> void:
+	if Engine.is_editor_hint():
+		return
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(PLACE_KEY_SOUND_PATH)
+		sound_player.volume_db = place_key_volume_db
+		sound_player.pitch_scale = randf_range(0.95, 1.05)
+		sound_player.global_position = pos
+		sound_player.finished.connect(sound_player.queue_free)
+		sound_player.play()
+
+
+func _play_door_interact_sound(pos: Vector3) -> void:
+	if Engine.is_editor_hint():
+		return
+	var sound_player := AudioStreamPlayer3D.new()
+	var scene_root := get_tree().current_scene
+	if scene_root:
+		scene_root.add_child(sound_player)
+		sound_player.stream = load(DOOR_INTERACT_SOUND_PATH)
+		sound_player.volume_db = door_interact_volume_db
+		sound_player.pitch_scale = randf_range(0.96, 1.04)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)
 		sound_player.play()
