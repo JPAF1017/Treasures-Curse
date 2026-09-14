@@ -125,11 +125,14 @@ var stamina_color_low: Color = Color(1.0, 0.3, 0.3, 1.0)
 var health_color_normal: Color = Color(1.0, 1.0, 1.0, 1.0)
 var stun_timer: float = 0.0
 var _landing_impact_offset: float = 0.0
+var _sprint_dust_interval_timer: float = 0.0
+var _sprint_dust_left_foot: bool = false
+const SPRINT_DUST_INTERVAL: float = 0.32
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
 #------------------------------------------------------
-@onready var head = $Head
+@onready var head: Node3D = $Head
 @onready var stand_collision: CollisionShape3D = $Stand
 @onready var crouch_collision: CollisionShape3D = $Crouch
 @onready var camera = $Head/playerCamera
@@ -871,6 +874,7 @@ func _physics_process(delta):
 	_update_dark_adapt(delta)
 	_update_torch_arrow(delta)
 	_update_footsteps()
+	_update_sprint_dust(delta)
 	_update_chase_sound(delta)
 	_update_progression_ui(delta)
 	_update_gold_counter_ui(delta)
@@ -1936,10 +1940,14 @@ func _update_footsteps() -> void:
 		# Forward crossing
 		if prev_frame < f and f <= cur_frame:
 			_play_random_step()
+			if is_sprinting:
+				_spawn_sprint_dust()
 			break
 		# Backward crossing (walk_backwards via play_backwards)
 		if cur_frame < f and f <= prev_frame:
 			_play_random_step()
+			if is_sprinting:
+				_spawn_sprint_dust()
 			break
 	_prev_anim_pos = cur_pos
 
@@ -1983,6 +1991,42 @@ func _play_landing_sound(is_hard: bool) -> void:
 	var stream: AudioStream = _step_sounds[randi() % _step_sounds.size()]
 	var vol_offset := 4.5 if is_hard else 0.0
 	playback.play_stream(stream, 0.0, footstep_player.volume_db + vol_offset)
+
+func _update_sprint_dust(delta: float) -> void:
+	if not is_sprinting or not is_on_floor():
+		_sprint_dust_interval_timer = 0.0
+		return
+
+	var horiz_vel := Vector2(velocity.x, velocity.z).length()
+	if horiz_vel < 3.0:
+		return
+
+	# If animation is running, footstep frame trigger handles dust sync
+	if animation_player != null and animation_player.current_animation == "run":
+		return
+
+	# Fallback timer when other animations (e.g. attack swing) override the run anim
+	_sprint_dust_interval_timer -= delta
+	if _sprint_dust_interval_timer <= 0.0:
+		_sprint_dust_interval_timer = SPRINT_DUST_INTERVAL
+		_spawn_sprint_dust()
+
+func _spawn_sprint_dust() -> void:
+	if not is_on_floor():
+		return
+	var feet_pos := _get_feet_position()
+	# Alternating foot offset
+	var lateral_axis: Vector3 = head.global_transform.basis.x.normalized()
+	var foot_side: float = -1.0 if _sprint_dust_left_foot else 1.0
+	_sprint_dust_left_foot = not _sprint_dust_left_foot
+	feet_pos += lateral_axis * (foot_side * 0.16)
+
+	var move_dir := Vector3(velocity.x, 0.0, velocity.z)
+	if move_dir.length_squared() < 0.1:
+		move_dir = -head.global_transform.basis.z
+		move_dir.y = 0.0
+
+	LANDING_DUST_SCRIPT.spawn_sprint(get_tree(), feet_pos, move_dir)
 
 func _update_swing_sound(swing_active: bool) -> void:
 	var item := _get_selected_primary_item()

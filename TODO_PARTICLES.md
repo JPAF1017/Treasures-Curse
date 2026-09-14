@@ -25,8 +25,8 @@ This document tracks particle FX implementations and enhancements across the gam
 ---
 
 ### 2. Player Movement & Locomotion
-- [x] **2.1 Hard Landing & Jump Dust**
-  - **Description**: Radial ring of stone dust puffing outward at the player's feet upon landing on the floor after a fall or jump.
+- [x] **2.1 Hard Landing, Jump & Sprint Dust**
+  - **Description**: Radial ring of stone dust puffing outward at the player's feet upon landing on the floor after a fall or jump, plus backward dust kick-ups while sprinting.
   - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L670-L685) (`_physics_process()`), [scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd).
   - **Priority**: High
 
@@ -91,6 +91,6 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Chest Opening Burst**: Ancient dungeon seam dust and golden sparkling dust burst upon opening chests ([scripts/items/ChestOpenParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChestOpenParticleEffect.gd), [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd)).
 - [x] **Gold & Key Pickup Sparkles**: 3D burst of twinkling radiant star particles and floating fairy dust sparks themed per item on picking up gold, gem keys, or skull keys ([scripts/items/PickupSparklesEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PickupSparklesEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd)).
 - [x] **Puzzle Pedestal Socketing & Altar Pulse**: Ethereal cyan and purple arcane rune flashes, expanding horizontal mist rings, and drifting soul embers on socketing skulls/gem keys and completing altar puzzles ([scripts/items/PedestalSocketEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PedestalSocketEffect.gd), [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd), [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd)).
-- [x] **Hard Landing & Jump Dust**: Radial expanding ring of dungeon stone dust, central ground puff, and tumbling 3D stone debris chips dynamically scaling between jump takeoff, soft landings, and high-velocity hard landings with camera impact recovery and landing sound ([scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
+- [x] **Hard Landing, Jump & Sprint Dust**: Radial expanding ring of dungeon stone dust, central ground puff, and tumbling 3D stone debris chips dynamically scaling between jump takeoff, soft landings, and high-velocity hard landings, plus alternating backward-kicking dust puffs and pebbles while sprinting ([scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
 
 

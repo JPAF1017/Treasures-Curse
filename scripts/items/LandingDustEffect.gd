@@ -46,6 +46,42 @@ static func spawn_landing(scene_tree: SceneTree, origin: Vector3, is_hard: bool 
 	_spawn_effect(scene_tree, origin, true, is_hard, intensity)
 
 
+## Spawns a dust puff kicked backwards when sprinting.
+## [param scene_tree] - SceneTree reference (get_tree())
+## [param origin] - 3D position at the player's feet
+## [param move_direction] - Movement direction vector
+static func spawn_sprint(scene_tree: SceneTree, origin: Vector3, move_direction: Vector3 = Vector3.ZERO) -> void:
+	if scene_tree == null:
+		return
+
+	var root := scene_tree.current_scene
+	if root == null:
+		return
+
+	var container := Node3D.new()
+	container.name = "SprintDustFX"
+	root.add_child(container)
+	container.global_position = origin + Vector3(0.0, 0.04, 0.0)
+
+	# Calculate kickback direction (opposite to movement with slight upward tilt)
+	var kick_dir := -move_direction.normalized()
+	kick_dir.y = 0.35
+	if kick_dir.length_squared() < 0.01:
+		kick_dir = Vector3(0.0, 0.35, 0.0)
+	else:
+		kick_dir = kick_dir.normalized()
+
+	# 1. Trailing dust puff kicked backwards
+	_spawn_sprint_puff(container, kick_dir)
+
+	# 2. Backward stone debris chips
+	_spawn_sprint_debris(container, kick_dir)
+
+	# Cleanup
+	_schedule_cleanup(scene_tree, container)
+
+
+
 static func _spawn_effect(scene_tree: SceneTree, origin: Vector3, is_landing: bool, is_hard: bool, intensity: float) -> void:
 	if scene_tree == null:
 		return
@@ -275,6 +311,116 @@ static func _spawn_stone_debris(parent: Node3D, is_landing: bool, is_hard: bool)
 	# Tiny 3D box chip mesh
 	var box := BoxMesh.new()
 	box.size = Vector3(0.032, 0.032, 0.032)
+
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	mat.albedo_color = Color(0.55, 0.50, 0.44)
+	mat.roughness = 0.9
+	mat.vertex_color_use_as_albedo = true
+	box.material = mat
+	debris.mesh = box
+
+	parent.add_child(debris)
+	debris.position = Vector3.ZERO
+	debris.restart()
+	debris.emitting = true
+
+
+# ── 4. Sprint Dust Puff & Debris ──────────────────────────────────────────────
+
+static func _spawn_sprint_puff(parent: Node3D, kick_dir: Vector3) -> void:
+	var puff := CPUParticles3D.new()
+	puff.name = "SprintPuff"
+	puff.emitting = false
+	puff.one_shot = true
+	puff.amount = 9
+	puff.lifetime = 0.4
+	puff.explosiveness = 0.88
+	puff.lifetime_randomness = 0.3
+
+	puff.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	puff.emission_sphere_radius = 0.12
+
+	puff.direction = kick_dir
+	puff.spread = 45.0
+	puff.initial_velocity_min = 1.0
+	puff.initial_velocity_max = 2.4
+	puff.damping_min = 2.0
+	puff.damping_max = 3.5
+	puff.gravity = Vector3(0.0, 0.15, 0.0)
+
+	var scale_curve := Curve.new()
+	scale_curve.add_point(Vector2(0.0, 0.3))
+	scale_curve.add_point(Vector2(0.25, 1.1))
+	scale_curve.add_point(Vector2(1.0, 1.5))
+	puff.scale_amount_curve = scale_curve
+	puff.scale_amount_min = 0.4
+	puff.scale_amount_max = 0.85
+
+	puff.color_ramp = _get_dust_gradient(false)
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.45, 0.45)
+
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+
+	var tex: Texture2D = load(SMOKE_TEXTURE_PATH)
+	if tex != null:
+		mat.albedo_texture = tex
+	quad.material = mat
+	puff.mesh = quad
+
+	parent.add_child(puff)
+	puff.position = Vector3.ZERO
+	puff.restart()
+	puff.emitting = true
+
+
+static func _spawn_sprint_debris(parent: Node3D, kick_dir: Vector3) -> void:
+	var debris := CPUParticles3D.new()
+	debris.name = "SprintDebris"
+	debris.emitting = false
+	debris.one_shot = true
+	debris.amount = 4
+	debris.lifetime = 0.36
+	debris.explosiveness = 0.95
+	debris.lifetime_randomness = 0.35
+
+	debris.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	debris.emission_sphere_radius = 0.08
+
+	debris.direction = kick_dir
+	debris.spread = 35.0
+	debris.initial_velocity_min = 1.4
+	debris.initial_velocity_max = 2.8
+	debris.damping_min = 1.5
+	debris.damping_max = 2.5
+	debris.gravity = Vector3(0.0, -14.0, 0.0)
+
+	var scale_curve := Curve.new()
+	scale_curve.add_point(Vector2(0.0, 1.0))
+	scale_curve.add_point(Vector2(0.7, 1.0))
+	scale_curve.add_point(Vector2(1.0, 0.0))
+	debris.scale_amount_curve = scale_curve
+	debris.scale_amount_min = 0.4
+	debris.scale_amount_max = 0.9
+
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.8, 1.0])
+	grad.colors = PackedColorArray([
+		Color(0.52, 0.48, 0.42, 1.0),
+		Color(0.40, 0.36, 0.32, 1.0),
+		Color(0.28, 0.25, 0.22, 0.0),
+	])
+	debris.color_ramp = grad
+
+	var box := BoxMesh.new()
+	box.size = Vector3(0.024, 0.024, 0.024)
 
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
