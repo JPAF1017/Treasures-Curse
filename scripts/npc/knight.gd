@@ -5,6 +5,8 @@ signal died
 const EnemyDeathLinger := preload("res://scripts/npc/EnemyDeathLingerComponent.gd")
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
+const KnightSwordImpactEffect := preload("res://scripts/items/KnightSwordImpactEffect.gd")
+const BloodSplatterEffect := preload("res://scripts/items/BloodSplatterEffect.gd")
 
 const GRAVITY = 20.0
 const WALK_SPEED = 4.0
@@ -90,6 +92,8 @@ var vert_slash_area: Area3D = null
 var kick_area: Area3D = null
 var heavy_smash_area: Area3D = null
 var players_in_attacks_activation: Array[Node3D] = []
+var has_hit_wall_this_attack: bool = false
+var has_hit_wall_this_slide: bool = false
 
 # Pathfinding / perception
 var space_state: PhysicsDirectSpaceState3D = null
@@ -856,6 +860,7 @@ func _start_slide_attack() -> void:
 	is_slide_attacking = true
 	slide_attack_timer = SLIDE_ATTACK_DURATION
 	has_dealt_slide_damage = false
+	has_hit_wall_this_slide = false
 	slide_attack_sound_played = false
 	slide_slash_sound_played = false
 	is_idle = false
@@ -884,6 +889,8 @@ func _update_slide_attack(delta: float) -> void:
 	# Try to deal damage
 	if not has_dealt_slide_damage:
 		_try_apply_slide_damage()
+	if not has_hit_wall_this_slide:
+		_try_apply_slide_wall_collision()
 	_try_play_slide_grinding_sound()
 	_try_play_slide_attack_sound()
 	_try_play_slide_slash_sound()
@@ -949,6 +956,8 @@ func _try_apply_slide_damage() -> void:
 			if body.has_method("apply_knockback"):
 				var knock_dir := (body.global_position - global_position).normalized()
 				body.call("apply_knockback", knock_dir, SLIDE_ATTACK_KNOCKBACK)
+			var hit_dir := (body.global_position - global_position).normalized()
+			KnightSwordImpactEffect.spawn_player_impact(get_tree(), body.global_position, hit_dir, false)
 			has_dealt_slide_damage = true
 			return
 
@@ -986,6 +995,7 @@ func _can_start_melee_attack() -> bool:
 func _start_melee_attack(delta: float) -> void:
 	is_attacking = true
 	has_dealt_damage_this_attack = false
+	has_hit_wall_this_attack = false
 	attack_sound_played_this_attack = false
 	slash_sound_played_this_attack = false
 	smash_sound_played_this_attack = false
@@ -1041,6 +1051,8 @@ func _update_attack_state(_delta: float) -> void:
 	# Try to deal damage during active frames
 	if not has_dealt_damage_this_attack:
 		_try_apply_melee_damage()
+	if not has_hit_wall_this_attack:
+		_try_apply_melee_wall_collision()
 	_try_play_attack_sound()
 	_try_play_melee_slash_sound()
 	_try_play_smash_sound()
@@ -1140,6 +1152,7 @@ func _try_apply_melee_damage() -> void:
 			return
 
 func _apply_melee_effect(target: CharacterBody3D) -> void:
+	var hit_dir := (target.global_position - global_position).normalized()
 	match current_attack_type:
 		1: # Kick: 10 damage + knockback
 			if target.has_method("apply_damage"):
@@ -1148,11 +1161,106 @@ func _apply_melee_effect(target: CharacterBody3D) -> void:
 			if target.has_method("apply_knockback"):
 				var knock_dir := (target.global_position - global_position).normalized()
 				target.call("apply_knockback", knock_dir, KICK_KNOCKBACK_STRENGTH)
+			KnightSwordImpactEffect.spawn_player_impact(get_tree(), target.global_position, hit_dir, false)
 		2: # VertSlash: 20 damage
 			if target.has_method("apply_damage"):
 				target.call("apply_damage", VERT_SLASH_DAMAGE)
 				_log_attack("vertSlash hit player damage=%.1f" % VERT_SLASH_DAMAGE)
+			KnightSwordImpactEffect.spawn_player_impact(get_tree(), target.global_position, hit_dir, false)
 		3: # HeavySmash: 50 damage
 			if target.has_method("apply_damage"):
 				target.call("apply_damage", HEAVY_SMASH_DAMAGE)
 				_log_attack("heavySmash hit player damage=%.1f" % HEAVY_SMASH_DAMAGE)
+			KnightSwordImpactEffect.spawn_player_impact(get_tree(), target.global_position, hit_dir, true)
+
+func _try_apply_slide_wall_collision() -> void:
+	if not _is_in_slide_active_frames():
+		return
+	if space_state == null:
+		space_state = get_world_3d().direct_space_state
+	if space_state == null:
+		return
+
+	var origin := global_position + Vector3(0.0, 1.6, 0.0)
+	var forward := -global_transform.basis.z.normalized()
+	var right := global_transform.basis.x.normalized()
+
+	var targets: Array[Vector3] = [
+		origin + forward * 4.4,
+		origin + (forward * 3.8 + right * 2.0),
+		origin + (forward * 3.8 - right * 2.0),
+	]
+
+	for target_pos in targets:
+		var query := PhysicsRayQueryParameters3D.create(origin, target_pos)
+		query.exclude = [get_rid()]
+		query.collision_mask = 1
+		query.collide_with_bodies = true
+		query.collide_with_areas = false
+
+		var hit := space_state.intersect_ray(query)
+		if hit.has("position"):
+			var collider = hit.get("collider")
+			if collider is Node and (collider.is_in_group("player") or collider.is_in_group("enemy") or collider.is_in_group("npc")):
+				continue
+			var hit_pos: Vector3 = hit["position"]
+			var hit_normal: Vector3 = hit["normal"]
+			KnightSwordImpactEffect.spawn_wall_impact(get_tree(), hit_pos, hit_normal, false)
+			has_hit_wall_this_slide = true
+			_log_attack("slide_attack sword struck wall at (%.1f, %.1f, %.1f)" % [hit_pos.x, hit_pos.y, hit_pos.z])
+			return
+
+func _try_apply_melee_wall_collision() -> void:
+	# Only sword attacks (2=vertSlash, 3=heavySmash) can strike walls
+	if current_attack_type not in [2, 3]:
+		return
+	if not _is_in_melee_active_frames():
+		return
+	if space_state == null:
+		space_state = get_world_3d().direct_space_state
+	if space_state == null:
+		return
+
+	var is_heavy := (current_attack_type == 3)
+	var forward := -global_transform.basis.z.normalized()
+	var right := global_transform.basis.x.normalized()
+	var up := Vector3.UP
+
+	var origin: Vector3
+	var targets: Array[Vector3] = []
+
+	if is_heavy: # HeavySmash (overhead slam into wall or flagstone floor)
+		origin = global_position + Vector3(0.0, 3.2, 0.0)
+		targets = [
+			origin + forward * 4.4,
+			origin + (forward * 3.6 - up * 3.0),
+			origin + (forward * 2.6 - up * 3.0),
+			origin + (forward * 3.8 + right * 1.2 - up * 2.0),
+		]
+	else: # VertSlash (overhead slash downwards)
+		origin = global_position + Vector3(0.0, 2.8, 0.0)
+		targets = [
+			origin + forward * 4.2,
+			origin + (forward * 3.6 - up * 2.2),
+			origin + (forward * 3.8 + right * 1.0 - up * 1.2),
+			origin + (forward * 3.8 - right * 1.0 - up * 1.2),
+		]
+
+	for target_pos in targets:
+		var query := PhysicsRayQueryParameters3D.create(origin, target_pos)
+		query.exclude = [get_rid()]
+		query.collision_mask = 1
+		query.collide_with_bodies = true
+		query.collide_with_areas = false
+
+		var hit := space_state.intersect_ray(query)
+		if hit.has("position"):
+			var collider = hit.get("collider")
+			if collider is Node and (collider.is_in_group("player") or collider.is_in_group("enemy") or collider.is_in_group("npc")):
+				continue
+			var hit_pos: Vector3 = hit["position"]
+			var hit_normal: Vector3 = hit["normal"]
+			KnightSwordImpactEffect.spawn_wall_impact(get_tree(), hit_pos, hit_normal, is_heavy)
+			has_hit_wall_this_attack = true
+			_log_attack("melee sword struck wall type=%d at (%.1f, %.1f, %.1f)" % [current_attack_type, hit_pos.x, hit_pos.y, hit_pos.z])
+			return
