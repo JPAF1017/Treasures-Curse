@@ -23,6 +23,11 @@ var _swing_counter: int = 0  # tracks which swing to use next
 # ── Base rotation (set via _apply_transform, remembered for additive blending) ──
 var _base_rotation: Vector3 = Vector3.ZERO
 
+# ── Swing trail effect ──
+const MeleeSwingTrailEffectScript = preload("res://scripts/items/MeleeSwingTrailEffect.gd")
+var _trail: Node3D = null
+var _trail_config: Dictionary = {}
+
 # ── Swing timing ──
 const SWING_DURATION := 0.18          # fast forward strike
 const SWING_RETURN_DURATION := 0.55   # slower recovery
@@ -67,13 +72,21 @@ func _init(model_scene: PackedScene, viewmodel_name: String) -> void:
 	_viewmodel_name = viewmodel_name
 
 
+func set_trail_config(config: Dictionary) -> void:
+	_trail_config = config
+	if _trail and is_instance_valid(_trail):
+		_trail.set_trail_config(config)
+
+
 func show(player: Node, vm_position: Vector3, vm_rotation_degrees: Vector3, vm_scale: float) -> void:
+	var camera := _get_player_camera(player)
 	if _instance and is_instance_valid(_instance):
 		_instance.visible = true
 		_apply_transform(vm_position, vm_rotation_degrees, vm_scale)
+		if _trail and is_instance_valid(_trail):
+			_trail.visible = true
 		return
 
-	var camera := _get_player_camera(player)
 	if camera == null:
 		return
 
@@ -81,6 +94,12 @@ func show(player: Node, vm_position: Vector3, vm_rotation_degrees: Vector3, vm_s
 	_instance.name = _viewmodel_name
 	camera.add_child(_instance)
 	_apply_transform(vm_position, vm_rotation_degrees, vm_scale)
+
+	if _trail == null or not is_instance_valid(_trail):
+		_trail = MeleeSwingTrailEffectScript.new()
+		_trail.name = _viewmodel_name + "Trail"
+		camera.add_child(_trail)
+		_trail.setup(true, 1, _trail_config)
 
 
 func _apply_transform(vm_position: Vector3, vm_rotation_degrees: Vector3, vm_scale: float) -> void:
@@ -98,6 +117,10 @@ func hide() -> void:
 	if _instance and is_instance_valid(_instance):
 		_instance.queue_free()
 		_instance = null
+	if _trail and is_instance_valid(_trail):
+		_trail.clear()
+		_trail.queue_free()
+		_trail = null
 	_bob_time = 0.0
 
 
@@ -168,12 +191,21 @@ func update_bob(player: Node, delta: float, base_position: Vector3) -> void:
 	if twist_angle != 0.0:
 		_instance.rotate_object_local(Vector3.UP, twist_angle)
 
+	# ── Update swing trail ──
+	if _trail and is_instance_valid(_trail):
+		var is_striking := _swing_active and _swing_time < SWING_DURATION
+		var tip_pos: Vector3 = _instance.transform * _trail.tip_offset
+		var base_pos: Vector3 = _instance.transform * _trail.base_offset
+		_trail.update_trail(delta, is_striking, tip_pos, base_pos)
+
 
 func start_swing() -> void:
 	_swing_active = true
 	_swing_time = 0.0
 	_swing_type = _swing_counter % 3
 	_swing_counter += 1
+	if _trail and is_instance_valid(_trail):
+		_trail.start_swing()
 
 
 func is_active() -> bool:

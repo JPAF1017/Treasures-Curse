@@ -38,9 +38,9 @@ This document tracks particle FX implementations and enhancements across the gam
 ---
 
 ### 3. Combat & Weapons
-- [ ] **3.1 Melee Weapon Swing Trail**
+- [x] **3.1 Melee Weapon Swing Trail**
   - **Description**: A translucent swoosh ribbon / wind slash arc following the blade or bat tip during attacks.
-  - **Files**: [scripts/items/MeleeItemSharedComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeItemSharedComponent.gd), [scripts/items/sword.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/sword.gd), [scripts/items/bat.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/bat.gd), [scripts/items/axe.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/axe.gd), [scripts/items/shovel.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/shovel.gd).
+  - **Files**: [scripts/items/MeleeSwingTrailEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeSwingTrailEffect.gd), [scripts/items/MeleeViewmodelComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeViewmodelComponent.gd), [scripts/items/MeleeItemSharedComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeItemSharedComponent.gd), [scripts/items/sword.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/sword.gd), [scripts/items/bat.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/bat.gd), [scripts/items/axe.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/axe.gd), [scripts/items/shovel.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/shovel.gd).
   - **Priority**: High
 
 - [ ] **3.2 Enemy Defeat & Dissolution**

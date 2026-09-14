@@ -194,3 +194,68 @@ func check_and_apply_environment_hit(item_node: Node, player: Node, reach: float
 			play_sound_at_pos(player.get_tree(), "res://sounds/Interactions/hit_solid.mp3", hit_pos)
 			return true
 	return false
+
+
+# ── Weapon Swing Trail Configuration Presets ──
+const TRAIL_PRESETS: Dictionary = {
+	"sword": {
+		"color": Color(0.85, 0.95, 1.0, 0.75),
+		"edge_color": Color(1.0, 1.0, 1.0, 0.95),
+		"base_color": Color(0.65, 0.85, 1.0, 0.25),
+		"lifetime": 0.18,
+		"tip_offset": Vector3(0.0, 1.2, 0.0),
+		"base_offset": Vector3(0.0, 0.25, 0.0),
+	},
+	"bat": {
+		"color": Color(0.9, 0.92, 0.96, 0.55),
+		"edge_color": Color(1.0, 1.0, 1.0, 0.85),
+		"base_color": Color(0.7, 0.75, 0.85, 0.18),
+		"lifetime": 0.16,
+		"tip_offset": Vector3(0.0, 1.0, 0.0),
+		"base_offset": Vector3(0.0, 0.25, 0.0),
+	},
+	"axe": {
+		"color": Color(1.0, 0.92, 0.8, 0.65),
+		"edge_color": Color(1.0, 0.98, 0.9, 0.9),
+		"base_color": Color(0.9, 0.7, 0.5, 0.2),
+		"lifetime": 0.18,
+		"tip_offset": Vector3(0.0, 1.0, 0.0),
+		"base_offset": Vector3(0.0, 0.25, 0.0),
+	},
+	"shovel": {
+		"color": Color(0.88, 0.92, 0.9, 0.55),
+		"edge_color": Color(0.98, 1.0, 0.98, 0.85),
+		"base_color": Color(0.7, 0.78, 0.75, 0.18),
+		"lifetime": 0.17,
+		"tip_offset": Vector3(0.0, 1.05, 0.0),
+		"base_offset": Vector3(0.0, 0.25, 0.0),
+	},
+}
+
+
+const MeleeSwingTrailEffectScript = preload("res://scripts/items/MeleeSwingTrailEffect.gd")
+
+
+func get_trail_preset(weapon_type: String) -> Dictionary:
+	var key := weapon_type.to_lower()
+	if TRAIL_PRESETS.has(key):
+		return (TRAIL_PRESETS[key] as Dictionary).duplicate()
+	return (TRAIL_PRESETS["sword"] as Dictionary).duplicate()
+
+
+func create_held_weapon_trail(weapon_node: Node3D, config: Dictionary) -> Node3D:
+	if weapon_node == null or not is_instance_valid(weapon_node):
+		return null
+	var trail = MeleeSwingTrailEffectScript.new()
+	trail.name = weapon_node.name + "HeldTrail"
+	weapon_node.add_child(trail)
+	trail.setup(false, 2, config)
+	return trail
+
+
+func update_held_weapon_trail(trail: Node3D, weapon_node: Node3D, delta: float, is_striking: bool) -> void:
+	if trail == null or not is_instance_valid(trail) or weapon_node == null or not is_instance_valid(weapon_node):
+		return
+	var tip_world: Vector3 = weapon_node.global_transform * trail.tip_offset
+	var base_world: Vector3 = weapon_node.global_transform * trail.base_offset
+	trail.update_trail(delta, is_striking, tip_world, base_world)

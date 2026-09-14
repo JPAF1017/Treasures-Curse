@@ -73,11 +73,13 @@ var swing_damaged_targets: Dictionary = {}
 var swing_hit_environment: bool = false
 var item_windup_color_start: Color = Color(1.0, 0.3, 0.3, 1.0)
 var item_windup_color_end: Color = Color(0.3, 1.0, 0.3, 1.0)
+var _held_trail: Node3D = null
 
 
 func _ready() -> void:
 	_configure_item_physics()
 	_setup_item_windup_palette_colors()
+	_viewmodel.set_trail_config(melee_shared.get_trail_preset("axe"))
 
 
 static func get_pickup_max_distance() -> float:
@@ -217,6 +219,9 @@ func update_primary_action(player: Node, _delta: float) -> bool:
 	if swing_damage_ready and animation_player.current_animation_position < _swing_frame_to_time(SWING_STOP_FRAME):
 		_apply_attack_damage(player, current_swing_damage)
 
+	var is_striking := swing_damage_ready and animation_player.current_animation_position < _swing_frame_to_time(SWING_STOP_FRAME)
+	melee_shared.update_held_weapon_trail(_held_trail, self, _delta, is_striking)
+
 	var stop_time := minf(_swing_frame_to_time(SWING_STOP_FRAME), swing_animation.length)
 	if animation_player.current_animation_position >= stop_time:
 		animation_player.seek(stop_time, true)
@@ -281,6 +286,11 @@ func drop_from_hotbar(player: Node) -> bool:
 		return false
 
 	_reset_swing_state(player)
+
+	if _held_trail and is_instance_valid(_held_trail):
+		_held_trail.clear()
+		_held_trail.queue_free()
+		_held_trail = null
 
 	_viewmodel.hide()
 
@@ -446,6 +456,11 @@ func _attack_area_has_hurtbox(player: Node) -> bool:
 
 
 func _detach_from_hand(player: Node) -> void:
+	if _held_trail and is_instance_valid(_held_trail):
+		_held_trail.clear()
+		_held_trail.queue_free()
+		_held_trail = null
+
 	if player == null:
 		return
 
@@ -483,6 +498,9 @@ func _equip_to_right_hand(player: Node) -> void:
 	_set_item_physics_enabled(false)
 	_set_item_visuals_visible(true)
 	ViewmodelComponent.set_visual_layer_recursive(self, 2)
+
+	if _held_trail == null or not is_instance_valid(_held_trail):
+		_held_trail = melee_shared.create_held_weapon_trail(self, melee_shared.get_trail_preset("axe"))
 
 	position = held_item_position
 	rotation = Vector3(
@@ -648,6 +666,8 @@ func _reset_swing_state(player: Node) -> void:
 	swing_damaged_targets.clear()
 	swing_hit_environment = false
 	current_swing_damage = SWING_DAMAGE_INCOMPLETE
+	if _held_trail and is_instance_valid(_held_trail):
+		_held_trail.stop_swing()
 	if player and player.has_method("set_movement_locked_by"):
 		player.call("set_movement_locked_by", self, false)
 	var animation_player := _get_player_animation_player(player)
