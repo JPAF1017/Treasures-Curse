@@ -22,6 +22,7 @@ static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.
 const SHOVEL_ITEM_ICON: Texture2D = preload("res://assets/ui/mace.png")
 const SHOVEL_MODEL_SCENE: PackedScene = preload("res://assets/items assets/mace.glb")
 const ViewmodelComponent = preload("res://scripts/items/MeleeViewmodelComponent.gd")
+const KnockbackShockwaveEffectScript = preload("res://scripts/items/KnockbackShockwaveEffect.gd")
 var _viewmodel = ViewmodelComponent.new(SHOVEL_MODEL_SCENE, "ShovelViewmodel")
 const STAMINA_PALETTE_PATH := "res://assets/ui/dungeon-pal.png"
 const ITEM_DURABILITY_COLOR_START_INDEX := 17
@@ -404,13 +405,16 @@ func _apply_attack_damage(player: Node, amount: float, stun_duration: float) -> 
 			_apply_npc_stun(target, player, stun_duration)
 			swing_damaged_targets[target.get_instance_id()] = true
 			dealt_damage = true
-			# Spawn blood splatter at the target's position
+			# Spawn blood splatter and heavy knockback shockwave at the target's position
 			if target is Node3D:
 				var hit_dir := Vector3.ZERO
 				var player_node := player as Node3D
 				if player_node:
 					hit_dir = ((target as Node3D).global_position - player_node.global_position).normalized()
+				var hit_pos: Vector3 = (target as Node3D).global_position + Vector3(0.0, 0.6, 0.0)
 				BloodSplatterEffect.spawn(target.get_tree(), (target as Node3D).global_position, hit_dir)
+				var shock_scale := 1.25 if stun_duration >= SWING_STUN_DURATION_FULL * 0.8 else 0.85
+				KnockbackShockwaveEffectScript.spawn(target.get_tree(), hit_pos, hit_dir, shock_scale)
 				melee_shared.play_sound_at_pos(target.get_tree(), "res://sounds/Interactions/hit_blunt.mp3", (target as Node3D).global_position)
 
 	if not swing_hit_environment:

@@ -48,9 +48,9 @@ This document tracks particle FX implementations and enhancements across the gam
   - **Files**: [scripts/items/EnemyDissolutionEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/EnemyDissolutionEffect.gd), [scripts/npc/EnemyDeathLingerComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/EnemyDeathLingerComponent.gd), NPC scripts (`charger.gd`, `statue.gd`, `knight.gd`, etc.).
   - **Priority**: High
 
-- [ ] **3.3 Heavy Knockback Shockwave**
+- [x] **3.3 Heavy Knockback Shockwave**
   - **Description**: A brief radial shockwave distortion ring at the contact point when landing high-knockback strikes (bat, shovel).
-  - **Files**: [scripts/npc/NPCKnockbackComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/NPCKnockbackComponent.gd).
+  - **Files**: [scripts/items/KnockbackShockwaveEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/KnockbackShockwaveEffect.gd), [scripts/npc/NPCKnockbackComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/NPCKnockbackComponent.gd), [scripts/items/bat.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/bat.gd), [scripts/items/shovel.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/shovel.gd).
   - **Priority**: Medium
 
 ---
