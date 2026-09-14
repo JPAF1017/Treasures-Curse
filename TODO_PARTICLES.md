@@ -43,9 +43,9 @@ This document tracks particle FX implementations and enhancements across the gam
   - **Files**: [scripts/items/MeleeSwingTrailEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeSwingTrailEffect.gd), [scripts/items/MeleeViewmodelComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeViewmodelComponent.gd), [scripts/items/MeleeItemSharedComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/MeleeItemSharedComponent.gd), [scripts/items/sword.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/sword.gd), [scripts/items/bat.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/bat.gd), [scripts/items/axe.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/axe.gd), [scripts/items/shovel.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/shovel.gd).
   - **Priority**: High
 
-- [ ] **3.2 Enemy Defeat & Dissolution**
+- [x] **3.2 Enemy Defeat & Dissolution**
   - **Description**: A burst of dark cursed shadow miasma or dissolving soul embers when an NPC reaches 0 health.
-  - **Files**: [scripts/npc/EnemyDeathLingerComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/EnemyDeathLingerComponent.gd), NPC scripts (`charger.gd`, `statue.gd`, `knight.gd`, etc.).
+  - **Files**: [scripts/items/EnemyDissolutionEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/EnemyDissolutionEffect.gd), [scripts/npc/EnemyDeathLingerComponent.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/npc/EnemyDeathLingerComponent.gd), NPC scripts (`charger.gd`, `statue.gd`, `knight.gd`, etc.).
   - **Priority**: High
 
 - [ ] **3.3 Heavy Knockback Shockwave**
