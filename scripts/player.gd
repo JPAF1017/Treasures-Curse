@@ -61,6 +61,7 @@ const GEM_KEY1_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key1.gd")
 const GEM_KEY2_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key2.gd")
 const GEM_KEY3_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key3.gd")
 const GEM_KEY4_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key4.gd")
+const PICKUP_SPARKLES_SCRIPT: Script = preload("res://scripts/items/PickupSparklesEffect.gd")
 const STEP_SOUND_PATHS := [
 	"res://sounds/player/step1.mp3",
 	"res://sounds/player/step2.mp3",
@@ -1356,6 +1357,29 @@ func _is_gem_key_item_model(item_model: Node) -> bool:
 	var s: Variant = item_model.get_script()
 	return s == GEM_KEY1_ITEM_SCRIPT or s == GEM_KEY2_ITEM_SCRIPT or s == GEM_KEY3_ITEM_SCRIPT or s == GEM_KEY4_ITEM_SCRIPT
 
+func _get_item_sparkle_theme(item_model: Node) -> int:
+	if item_model == null:
+		return 0 # SparkleTheme.GOLD
+	if _is_skull_key_item_model(item_model):
+		return 5 # SparkleTheme.SKULL_KEY
+	var s: Variant = item_model.get_script()
+	if s == GEM_KEY1_ITEM_SCRIPT:
+		return 1 # SparkleTheme.BLUE_GEM
+	elif s == GEM_KEY2_ITEM_SCRIPT:
+		return 2 # SparkleTheme.GREEN_GEM
+	elif s == GEM_KEY3_ITEM_SCRIPT:
+		return 3 # SparkleTheme.YELLOW_GEM
+	elif s == GEM_KEY4_ITEM_SCRIPT:
+		return 4 # SparkleTheme.RED_GEM
+	return 0 # SparkleTheme.GOLD
+
+func _spawn_pickup_sparkles_for_item(item: Node, pos: Vector3) -> void:
+	if item == null:
+		return
+	if _is_gold_item_model(item) or _is_skull_key_item_model(item) or _is_gem_key_item_model(item):
+		var theme := _get_item_sparkle_theme(item)
+		PICKUP_SPARKLES_SCRIPT.call("spawn", get_tree(), pos, theme)
+
 func _get_selected_primary_item() -> Node:
 	var selected_item := _get_selected_hotbar_item()
 	if _is_primary_item_model(selected_item):
@@ -1461,7 +1485,10 @@ func _pickup_item_into_hotbar(item_body: Node3D) -> void:
 		var is_spawner_managed: bool = item_body.get_meta("spawner_managed", false)
 		if is_spawner_managed:
 			item_body.remove_meta("spawner_managed")
+		var pickup_pos := item_body.global_position
+		var item_for_effect := item_body
 		if bool(item_body.call("pick_up_into_hotbar", self, slot_index)):
+			_spawn_pickup_sparkles_for_item(item_for_effect, pickup_pos)
 			if multiplayer.has_multiplayer_peer() and not is_spawner_managed:
 				rpc("_sync_item_removed", item_world_path)
 			_set_hotbar_item(slot_index, item_body, item_body.call("get_hotbar_icon_texture"))
@@ -1595,6 +1622,9 @@ func _has_any_primary_item_in_hotbar() -> bool:
 func _sync_item_removed(item_path: String) -> void:
 	var item := get_node_or_null(NodePath(item_path))
 	if item != null:
+		var item_3d := item as Node3D
+		if item_3d != null:
+			_spawn_pickup_sparkles_for_item(item, item_3d.global_position)
 		item.queue_free()
 
 

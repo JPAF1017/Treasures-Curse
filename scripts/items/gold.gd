@@ -8,6 +8,7 @@ const GOLD_MODEL_SCENES: Array = [
 	preload("res://assets/items assets/gold3.glb"),
 	preload("res://assets/items assets/gold4.glb"),
 ]
+const PickupSparklesEffect = preload("res://scripts/items/PickupSparklesEffect.gd")
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
 static var _spawn_counter: int = 0
@@ -79,6 +80,11 @@ static func is_gold_node(node: Node) -> bool:
 
 static func find_gold_rigidbody_from_node(node: Node) -> RigidBody3D:
 	return melee_shared.find_item_rigidbody_from_node(node, GOLD_SCENE_PATH, "gold")
+
+
+## Spawns the golden pickup sparkle particle burst in world space.
+static func spawn_pickup_sparkles(scene_tree: SceneTree, world_position: Vector3) -> void:
+	PickupSparklesEffect.spawn(scene_tree, world_position, PickupSparklesEffect.SparkleTheme.GOLD)
 
 
 static func is_equip_input_just_pressed() -> bool:

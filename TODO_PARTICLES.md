@@ -12,9 +12,9 @@ This document tracks particle FX implementations and enhancements across the gam
   - **Files**: [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd#L106-L145) (`_open_chest()`, `_spawn_gold()`), [scripts/items/ChestOpenParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChestOpenParticleEffect.gd).
   - **Priority**: High
 
-- [ ] **1.2 Gold & Key Pickup Sparkles**
+- [x] **1.2 Gold & Key Pickup Sparkles**
   - **Description**: A 3D burst of twinkling golden stars/sparks when picking up coins, gem keys, or skull keys.
-  - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1450-L1480) (`pick_up_into_hotbar()`), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd).
+  - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1450-L1480) (`pick_up_into_hotbar()`), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd), [scripts/items/PickupSparklesEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PickupSparklesEffect.gd).
   - **Priority**: Medium
 
 - [ ] **1.3 Puzzle Pedestal Socketing (Cursed Energy Pulse)**
@@ -89,4 +89,5 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Healing Green Crosses**: 2D screen-space rising and fading green cross particles on consuming healing potions ([scripts/items/HealParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/HealParticleEffect.gd)).
 - [x] **Damage & Heal Screen Tints**: Instant pop and smooth quad ease-out red screen tint on taking damage and green screen tint on healing ([scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
 - [x] **Chest Opening Burst**: Ancient dungeon seam dust and golden sparkling dust burst upon opening chests ([scripts/items/ChestOpenParticleEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ChestOpenParticleEffect.gd), [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd)).
+- [x] **Gold & Key Pickup Sparkles**: 3D burst of twinkling radiant star particles and floating fairy dust sparks themed per item on picking up gold, gem keys, or skull keys ([scripts/items/PickupSparklesEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PickupSparklesEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd)).
 
