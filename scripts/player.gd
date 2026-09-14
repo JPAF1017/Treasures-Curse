@@ -14,10 +14,15 @@ const STAMINA_PALETTE_PATH = "res://assets/ui/dungeon-pal.png"
 const BLOOD_OVERLAY_PATH = "res://assets/ui/BloodOverlay.png"
 const DAMAGE_OVERLAY_MAX_ALPHA = 0.7
 const DAMAGE_OVERLAY_FADE_TIME = 0.35
+const DAMAGE_TINT_COLOR := Color(0.85, 0.05, 0.05, 0.32)
+const DAMAGE_TINT_FADE_TIME := 0.45
+const HEAL_TINT_COLOR := Color(0.12, 0.85, 0.28, 0.28)
+const HEAL_TINT_FADE_TIME := 0.65
 const SMOKE_OVERLAY_COLOR := Color(0.75, 0.75, 0.75, 0.55)
 const SMOKE_OVERLAY_FADE_SPEED := 3.0
 const SMOKE_OVERLAY_TEXTURE_PATH := "res://assets/items assets/smoke.jpeg"
 const SMOKE_EFFECT_SCRIPT: Script = preload("res://scripts/items/smoke_effect.gd")
+const HealParticleEffect: Script = preload("res://scripts/items/HealParticleEffect.gd")
 const DAMAGE_TILT_ANGLE_DEG = 20.5
 const DAMAGE_TILT_DURATION = 0.35
 const JUMP_STAMINA_COST = 20.0
@@ -279,6 +284,10 @@ var stamina_bar_initial_scale: Vector2 = Vector2.ONE
 var health_bar_initial_scale: Vector2 = Vector2.ONE
 var damage_overlay: TextureRect = null
 var damage_overlay_tween: Tween = null
+var damage_tint_rect: ColorRect = null
+var damage_tint_tween: Tween = null
+var heal_tint_rect: ColorRect = null
+var heal_tint_tween: Tween = null
 var damage_tilt_tween: Tween = null
 var smoke_overlay: TextureRect = null
 var hotbar_slots: Array[NinePatchRect] = []
@@ -1046,6 +1055,8 @@ func _update_stamina_ui() -> void:
 func _update_health_ui() -> void:
 	if health < previous_health - 0.001:
 		_show_damage_overlay()
+	elif health > previous_health + 0.001:
+		_show_heal_tint()
 
 	var health_points: int = int(round(clampf(health, 0.0, HEALTH_MAX)))
 
@@ -1103,6 +1114,24 @@ func _setup_damage_overlay() -> void:
 	if player_canvas_layer == null:
 		return
 
+	# Red damage screen tint (pops red and fades out on hit)
+	damage_tint_rect = ColorRect.new()
+	damage_tint_rect.name = "DamageTint"
+	damage_tint_rect.color = Color(DAMAGE_TINT_COLOR.r, DAMAGE_TINT_COLOR.g, DAMAGE_TINT_COLOR.b, 0.0)
+	damage_tint_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	damage_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	damage_tint_rect.z_index = 90
+	player_canvas_layer.add_child(damage_tint_rect)
+
+	# Green heal screen tint (pops green and fades out on heal)
+	heal_tint_rect = ColorRect.new()
+	heal_tint_rect.name = "HealTint"
+	heal_tint_rect.color = Color(HEAL_TINT_COLOR.r, HEAL_TINT_COLOR.g, HEAL_TINT_COLOR.b, 0.0)
+	heal_tint_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	heal_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	heal_tint_rect.z_index = 90
+	player_canvas_layer.add_child(heal_tint_rect)
+
 	var blood_texture := load(BLOOD_OVERLAY_PATH) as Texture2D
 	if blood_texture == null:
 		push_warning("Blood overlay texture not found at: %s" % BLOOD_OVERLAY_PATH)
@@ -1119,18 +1148,45 @@ func _setup_damage_overlay() -> void:
 	player_canvas_layer.add_child(damage_overlay)
 
 func _show_damage_overlay() -> void:
-	if damage_overlay == null:
+	if damage_overlay != null:
+		if damage_overlay_tween:
+			damage_overlay_tween.kill()
+
+		var color := damage_overlay.modulate
+		color.a = DAMAGE_OVERLAY_MAX_ALPHA
+		damage_overlay.modulate = color
+
+		damage_overlay_tween = create_tween()
+		damage_overlay_tween.tween_property(damage_overlay, "modulate:a", 0.0, DAMAGE_OVERLAY_FADE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	if damage_tint_rect != null:
+		if damage_tint_tween:
+			damage_tint_tween.kill()
+
+		var tint_color := damage_tint_rect.color
+		tint_color.a = DAMAGE_TINT_COLOR.a
+		damage_tint_rect.color = tint_color
+
+		damage_tint_tween = create_tween()
+		damage_tint_tween.tween_property(damage_tint_rect, "color:a", 0.0, DAMAGE_TINT_FADE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func _show_heal_tint() -> void:
+	if heal_tint_rect == null:
 		return
 
-	if damage_overlay_tween:
-		damage_overlay_tween.kill()
+	if heal_tint_tween:
+		heal_tint_tween.kill()
 
-	var color := damage_overlay.modulate
-	color.a = DAMAGE_OVERLAY_MAX_ALPHA
-	damage_overlay.modulate = color
+	var tint_color := heal_tint_rect.color
+	tint_color.a = HEAL_TINT_COLOR.a
+	heal_tint_rect.color = tint_color
 
-	damage_overlay_tween = create_tween()
-	damage_overlay_tween.tween_property(damage_overlay, "modulate:a", 0.0, DAMAGE_OVERLAY_FADE_TIME)
+	heal_tint_tween = create_tween()
+	heal_tint_tween.tween_property(heal_tint_rect, "color:a", 0.0, HEAL_TINT_FADE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func trigger_heal_effect() -> void:
+	HealParticleEffect.spawn(self)
+	_show_heal_tint()
 
 func _setup_hotbar_ui() -> void:
 	hotbar_font = load(HOTBAR_ITEM_LABEL_FONT_PATH) as FontFile

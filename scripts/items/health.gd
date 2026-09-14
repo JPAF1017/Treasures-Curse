@@ -4,6 +4,7 @@ const HEALTH_SCENE_PATH := "res://assets/items/health.tscn"
 const HEALTH_ITEM_ICON: Texture2D = preload("res://assets/ui/health.png")
 const HEALTH_MODEL_SCENE: PackedScene = preload("res://assets/items assets/health.glb")
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
+const HealParticleEffect = preload("res://scripts/items/HealParticleEffect.gd")
 
 const HEALTH_RESTORE_AMOUNT := 30.0
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
@@ -99,6 +100,11 @@ func begin_primary_action(player: Node) -> bool:
 	player.set("health", new_health)
 	if player.has_method("_update_health_ui"):
 		player.call("_update_health_ui")
+
+	if player.has_method("trigger_heal_effect"):
+		player.call("trigger_heal_effect")
+	else:
+		HealParticleEffect.spawn(player)
 
 	_hide_viewmodel()
 

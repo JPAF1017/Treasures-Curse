@@ -375,7 +375,7 @@ RichTextRotatingDegrade.gd::GDScript::6062875001882979931::1780913525::0::1::::R
 RichTextScaling.gd::GDScript::3955088548867317123::1780913525::0::1::::RichTextScaling<>RichTextEffect<><>0<>1<><>::
 RichTextScannerDegrade.gd::GDScript::4936059026873927584::1780913525::0::1::::RichTextScannerDegrade<>RichTextEffect<><>0<>1<><>::
 RichTextUpsideDown.gd::GDScript::2299567901240550898::1780913525::0::1::::RichTextUpsideDown<>RichTextEffect<><>0<>1<><>::
-::res://assets/ui/::1783398802
+::res://assets/ui/::1789375975
 1.png::CompressedTexture2D::1691206516382164578::1777102490::1777102490::1::::<><><>0<>0<>cebb2d4168668baeaf21db16c012b9bb<>res://.godot/imported/1.png-8d02d90a1a4eb17fb1c6d7c4de3d1bf5.ctex::
 2.png::CompressedTexture2D::4611185184810312016::1777102490::1777102490::1::::<><><>0<>0<>02009ce5ebd4e9a2ba7a684da2c59cdc<>res://.godot/imported/2.png-23d81c3e1bb82fa85167acda3b731647.ctex::
 3.png::CompressedTexture2D::3554775730671166152::1777102490::1777102490::1::::<><><>0<>0<>d6dc5c4666279925d715f44c5211a807<>res://.godot/imported/3.png-7a60549c1a588c78b055e158edbf7ceb.ctex::
@@ -404,6 +404,7 @@ gem3.png::CompressedTexture2D::3426354547389048663::1778208110::1778208111::1:::
 gem4.png::CompressedTexture2D::630411876702055214::1778208110::1778208111::1::::<><><>0<>0<>4bdfa51f33b2a9678ec17b77d9a3d56d<>res://.godot/imported/gem4.png-938c223104f732e8b8bb7cb266ee8f1b.ctex::
 gem.png::CompressedTexture2D::3255713764904800602::1778172047::1778172047::1::::<><><>0<>0<>26d48acc552b654a16a99b056fdd8aca<>res://.godot/imported/gem.png-82b34a7328b0f89fdabfe1e2009a1125.ctex::
 gold.png::CompressedTexture2D::493971505714710285::1778172047::1778172047::1::::<><><>0<>0<>b33c569aca88d75cef68430a65cd12e3<>res://.godot/imported/gold.png-1ca726bb798e97d1a15f6410a9aa925d.ctex::
+green_cross.png::CompressedTexture2D::8724067389608849562::1789375975::1789376808::1::::<><><>0<>0<>821e5a5140286fa18972f0b73b7e291c<>res://.godot/imported/green_cross.png-a632a4b9fc5718df35b4e76c61bbbcc9.ctex::
 health.png::CompressedTexture2D::7097527378469180605::1778172047::1778172047::1::::<><><>0<>0<>f7c7660710660fe7b9b5b3c14f308e31<>res://.godot/imported/health.png-c8e310077151d1ced46604f8ee9121ae.ctex::
 left.png::CompressedTexture2D::1452467935047412174::1777104599::1777104600::1::::<><><>0<>0<>2c2cca89045bb1bd9aec20b027b0d01f<>res://.godot/imported/left.png-ec0ec7d67b9256e8bbc167524c46fb3a.ctex::
 mace.png::CompressedTexture2D::4651767445221510344::1778172046::1778172047::1::::<><><>0<>0<>8bab8adb13e7317d02675098e18ced39<>res://.godot/imported/mace.png-ec03f83ad7f8e30c7e9827e7ec7a6cfb.ctex::
@@ -487,9 +488,9 @@ table_item_spawn.gd::GDScript::8351178420905279132::1781249381::0::1::::TableIte
 dungeon_optimizer.gd::GDScript::9157797051449046666::1779008384::0::1::::<>Node<><>0<>0<><>::
 game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0<><>::
 level1_spawner.gd::GDScript::3714450241364899252::1785392327::0::1::::<>Node3D<><>0<>0<><>::
-player.gd::GDScript::7860289825015925474::1785393028::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1789376762::0::1::::<>CharacterBody3D<><>0<>0<><>::
 settings_manager.gd::GDScript::8170435877026185281::1783231002::0::1::::<>Node<><>0<>0<><>::
-::res://scripts/items/::1783398803
+::res://scripts/items/::1789376004
 axe.gd::GDScript::5823683269390956943::1782725864::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
 bat.gd::GDScript::8071771524868046774::1783234089::0::1::::Bat<>RigidBody3D<><>0<>0<><>::
 BloodSplatterEffect.gd::GDScript::5840248927589851858::1783231602::0::1::::BloodSplatterEffect<>RefCounted<><>0<>0<><>::
@@ -498,7 +499,8 @@ gem_key2.gd::GDScript::1657245528602067803::1781608157::0::1::::<>RigidBody3D<><
 gem_key3.gd::GDScript::9008575190787565617::1781608157::0::1::::<>RigidBody3D<><>0<>0<><>::
 gem_key4.gd::GDScript::7136531522426990971::1781608157::0::1::::<>RigidBody3D<><>0<>0<><>::
 gold.gd::GDScript::6046706385117355963::1781608157::0::1::::<>RigidBody3D<><>0<>0<><>::
-health.gd::GDScript::3627290899003863034::1781608157::0::1::::<>RigidBody3D<><>0<>0<><>::
+HealParticleEffect.gd::GDScript::2048622200550674564::1789376435::0::1::::HealParticleEffect<>RefCounted<><>0<>0<><>::
+health.gd::GDScript::3627290899003863034::1789376768::0::1::::<>RigidBody3D<><>0<>0<><>::
 MeleeItemSharedComponent.gd::GDScript::7278604385311045916::1783234083::0::1::::MeleeItemSharedComponent<>RefCounted<><>0<>0<><>::
 MeleeViewmodelComponent.gd::GDScript::1319044425994665230::1783154734::0::1::::MeleeViewmodelComponent<>RefCounted<><>0<>0<><>::
 shovel.gd::GDScript::2064808360044123086::1783234092::0::1::::Shovel<>RigidBody3D<><>0<>0<><>::
