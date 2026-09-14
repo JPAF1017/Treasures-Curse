@@ -6,6 +6,8 @@ const LID_OPEN_DURATION := 1.0
 const GOLD_SCENE: PackedScene = preload("res://assets/items/gold.tscn")
 const GOLD_POP_SPEED := 3.0
 const ChestOpenParticleEffect = preload("res://scripts/items/ChestOpenParticleEffect.gd")
+const OPEN_CHEST_SOUND := preload("res://sounds/Interactions/openchest.mp3")
+const OPEN_CHEST_SOUND2 := preload("res://sounds/Interactions/openchest2.mp3")
 
 
 
@@ -119,10 +121,16 @@ func _open_chest() -> void:
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	var sound_player := AudioStreamPlayer3D.new()
-	sound_player.stream = load("res://sounds/Interactions/openchest.mp3")
+	sound_player.stream = OPEN_CHEST_SOUND
 	add_child(sound_player)
 	sound_player.play()
 	sound_player.finished.connect(sound_player.queue_free)
+
+	var sound_player2 := AudioStreamPlayer3D.new()
+	sound_player2.stream = OPEN_CHEST_SOUND2
+	add_child(sound_player2)
+	sound_player2.play()
+	sound_player2.finished.connect(sound_player2.queue_free)
 
 	var interior_pos: Vector3 = spawn_area.global_position if spawn_area else global_position + Vector3(0.0, 0.5, 0.0)
 	var seam_pos: Vector3 = Vector3(interior_pos.x, chest_lid.global_position.y, interior_pos.z) if chest_lid else interior_pos

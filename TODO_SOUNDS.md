@@ -7,26 +7,24 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
 ## 📋 Outstanding Tasks
 
 ### 1. Core Player Audio & Fixes
-- [ ] **1.1 Replace Walking Sound FX (Static Noise Fix)**
-  - **Description**: Replace the existing footstep audio files (`step1.mp3` through `step5.mp3`) with clean, static-free dungeon stone footstep sound effects. The current clips have audible background static/hiss when triggered during movement and landings.
+- [x] **1.1 Walking Sound FX Static Noise Fix**
+  - **Description**: Walking footstep audio static/hiss has been fixed and no longer requires replacing footstep audio assets.
   - **Files**:
     - [sounds/player/](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/) (`step1.mp3`, `step2.mp3`, `step3.mp3`, `step4.mp3`, `step5.mp3`)
     - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L68-L74) (`STEP_SOUND_PATHS`)
     - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1921-L1954) (`_update_footsteps()`, `_play_random_step()`)
     - [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1977-L1986) (`_play_landing_sound()`)
-  - **Priority**: High
-  - **Implementation Notes**: Ensure new audio samples have trimmed zero-crossings, consistent normalized volume levels, no white noise floor, and varied pitch/weight for natural footsteps.
+  - **Status**: Completed (noise fixed, replacement no longer needed).
 
 ---
 
 ### 2. Loot & Pickup Audio
-- [ ] **2.1 Secondary Chest Opening Sound Effect**
-  - **Description**: Add a secondary audio layer when opening dungeon chests. Currently, only the wooden lid creak ([openchest.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest.mp3)) plays. Layer in an additional sound effect such as a magical treasure shimmer, unlocking latch click, or an ancient treasure chime as the lid swings open and gold spawns.
+- [x] **2.1 Secondary Chest Opening Sound Effect**
+  - **Description**: Added secondary audio layer (`openchest2.mp3`) playing concurrently with the primary lid opening sound (`openchest.mp3`) when the chest is opened.
   - **Files**:
-    - [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd#L107-L133) (`_open_chest()`)
-    - [sounds/Interactions/](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/)
-  - **Priority**: High
-  - **Implementation Notes**: Can trigger concurrently or slightly staggered with `openchest.mp3` via `AudioStreamPlayer3D` positioned at the chest center or interior spawn point.
+    - [scripts/rooms/chest_interact.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/chest_interact.gd#L107-L135) (`_open_chest()`)
+    - [sounds/Interactions/openchest2.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest2.mp3)
+  - **Status**: Completed (plays both `openchest.mp3` and `openchest2.mp3` simultaneously via 3D audio players).
 
 - [ ] **2.2 Gold Pickup Sound Effect**
   - **Description**: Play a distinct, satisfying metallic coin clink / gold jingle when the player picks up gold piles or coins into their hotbar. Currently, only particle sparkles spawn without audio feedback.
@@ -75,7 +73,7 @@ This document tracks sound FX implementations, audio cleanups, and sound design 
 ---
 
 ## 🔊 Existing Sound FX Reference
-- **Chest Open (Base)**: Wooden lid creaking open ([sounds/Interactions/openchest.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest.mp3)).
+- **Chest Open**: Wooden lid creaking open ([sounds/Interactions/openchest.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest.mp3)) layered with secondary open audio ([sounds/Interactions/openchest2.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/openchest2.mp3)).
 - **Weapon Swing**: Light whoosh sound on swinging melee weapons ([sounds/player/swing.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/swing.mp3)).
 - **Combat Impacts**: Blunt, sharp, and solid impact audio cues ([sounds/Interactions/hit_blunt.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/Interactions/hit_blunt.mp3), `hit_sharp.mp3`, `hit_solid.mp3`).
 - **Player Damage & Death**: Death sound cue ([sounds/player/death_sound.mp3](file:///mnt/Games/Codes/Godot/Treasures-Curse/sounds/player/death_sound.mp3)).
