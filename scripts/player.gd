@@ -65,6 +65,7 @@ const GEM_KEY3_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key3.gd")
 const GEM_KEY4_ITEM_SCRIPT: Script = preload("res://scripts/items/gem_key4.gd")
 const PICKUP_SPARKLES_SCRIPT: Script = preload("res://scripts/items/PickupSparklesEffect.gd")
 const LANDING_DUST_SCRIPT: Script = preload("res://scripts/items/LandingDustEffect.gd")
+const EXHAUSTION_BREATH_SCRIPT: Script = preload("res://scripts/items/ExhaustionBreathEffect.gd")
 const STEP_SOUND_PATHS := [
 	"res://sounds/player/step1.mp3",
 	"res://sounds/player/step2.mp3",
@@ -128,6 +129,8 @@ var _landing_impact_offset: float = 0.0
 var _sprint_dust_interval_timer: float = 0.0
 var _sprint_dust_left_foot: bool = false
 const SPRINT_DUST_INTERVAL: float = 0.32
+var _exhaustion_breath_timer: float = 0.0
+const EXHAUSTION_BREATH_CYCLE_INTERVAL: float = 1.15
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
@@ -742,6 +745,7 @@ func _physics_process(delta):
 	_update_hotbar_windup_indicator()
 	_update_charge_ring()
 	_update_stamina_ui()
+	_update_exhaustion_effects(delta)
 #------------------------------------------------------
 #wasd direction input and other physics
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -1059,6 +1063,10 @@ func _update_stamina_ui() -> void:
 	var stamina_points: int = int(round(clampf(stamina, 0.0, STAMINA_MAX)))
 	var active_color: Color = stamina_color_normal if stamina_points >= int(STAMINA_WARNING_THRESHOLD) else stamina_color_low
 
+	if stamina_points <= 0:
+		var pulse: float = 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.012)
+		active_color = stamina_color_low.lerp(Color(1.0, 0.1, 0.1, 0.35), pulse)
+
 	if stamina_label_digit != null:
 		stamina_label_digit.text = str(stamina_points)
 		stamina_label_digit.modulate = active_color
@@ -1069,6 +1077,19 @@ func _update_stamina_ui() -> void:
 	var stamina_ratio: float = clampf(stamina / STAMINA_MAX, 0.0, 1.0)
 	stamina_bar_fill.scale = Vector2(stamina_bar_initial_scale.x * stamina_ratio, stamina_bar_initial_scale.y)
 	stamina_bar_fill.modulate = active_color
+
+func _update_exhaustion_effects(delta: float) -> void:
+	var is_exhausted: bool = stamina <= 0.0 or (stamina < STAMINA_WARNING_THRESHOLD and stamina_refill_delay_timer > 0.0)
+	if not is_exhausted:
+		_exhaustion_breath_timer = 0.0
+		return
+
+	_exhaustion_breath_timer -= delta
+	if _exhaustion_breath_timer <= 0.0:
+		_exhaustion_breath_timer = EXHAUSTION_BREATH_CYCLE_INTERVAL
+		if camera != null:
+			EXHAUSTION_BREATH_SCRIPT.spawn_breath(camera)
+		EXHAUSTION_BREATH_SCRIPT.spawn_sweat_droplets(self)
 
 func _update_health_ui() -> void:
 	if health < previous_health - 0.001:

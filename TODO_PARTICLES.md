@@ -30,15 +30,10 @@ This document tracks particle FX implementations and enhancements across the gam
   - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L670-L685) (`_physics_process()`), [scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd).
   - **Priority**: High
 
-- [ ] **2.2 Exhaustion / Heavy Breathing (Low Stamina)**
+- [x] **2.2 Exhaustion / Heavy Breathing (Low Stamina)**
   - **Description**: Cold breath / condensation puff in front of the camera and subtle sweat/fatigue indicators when stamina hits 0.
-  - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L1031-L1045) (`_update_stamina_ui()`).
+  - **Files**: [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd#L740-L750) (`_physics_process()`, `_update_stamina_ui()`), [scripts/items/ExhaustionBreathEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ExhaustionBreathEffect.gd).
   - **Priority**: Low
-
-- [ ] **2.3 Torch Embers Trail**
-  - **Description**: Small drifting orange embers trailing backward in world space when sprinting while holding a burning torch.
-  - **Files**: [scripts/items/torch.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/torch.gd), [assets/room assets/fire_particle.tscn](file:///mnt/Games/Codes/Godot/Treasures-Curse/assets/room%20assets/fire_particle.tscn).
-  - **Priority**: Medium
 
 ---
 
@@ -92,5 +87,7 @@ This document tracks particle FX implementations and enhancements across the gam
 - [x] **Gold & Key Pickup Sparkles**: 3D burst of twinkling radiant star particles and floating fairy dust sparks themed per item on picking up gold, gem keys, or skull keys ([scripts/items/PickupSparklesEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PickupSparklesEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd), [scripts/items/gold.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/gold.gd)).
 - [x] **Puzzle Pedestal Socketing & Altar Pulse**: Ethereal cyan and purple arcane rune flashes, expanding horizontal mist rings, and drifting soul embers on socketing skulls/gem keys and completing altar puzzles ([scripts/items/PedestalSocketEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/PedestalSocketEffect.gd), [scripts/rooms/skull_puzzle_controller.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/skull_puzzle_controller.gd), [scripts/rooms/candle_puzzle_room.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/rooms/candle_puzzle_room.gd)).
 - [x] **Hard Landing, Jump & Sprint Dust**: Radial expanding ring of dungeon stone dust, central ground puff, and tumbling 3D stone debris chips dynamically scaling between jump takeoff, soft landings, and high-velocity hard landings, plus alternating backward-kicking dust puffs and pebbles while sprinting ([scripts/items/LandingDustEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/LandingDustEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
+- [x] **Exhaustion / Heavy Breathing (Low Stamina)**: Rhythmic condensation cold breath mist puffs in front of the first-person camera, subtle screen-space sweat droplets sliding along viewport edges, and flashing fatigue UI pulse when stamina reaches zero or recovers from depletion ([scripts/items/ExhaustionBreathEffect.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/items/ExhaustionBreathEffect.gd), [scripts/player.gd](file:///mnt/Games/Codes/Godot/Treasures-Curse/scripts/player.gd)).
+
 
 

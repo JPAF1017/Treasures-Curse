@@ -21,7 +21,9 @@ config/icon="res://icon.svg"
 
 [audio]
 
-driver/enable_input=true
+driver/enable_input=false
+driver/mix_rate=48000
+driver/output_latency=30
 
 [autoload]
 
