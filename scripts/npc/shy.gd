@@ -73,6 +73,9 @@ var previous_has_line_of_sight: bool = false
 var last_run_frame: int = -1
 var triggered_step_frames: Array[int] = []
 
+var _skeleton: Skeleton3D = null
+var _head_bone_idx: int = -1
+
 const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
 
 func _ready() -> void:
@@ -81,6 +84,9 @@ func _ready() -> void:
 	randomize()
 	floor_snap_length = 0.7
 	animation_player = _find_animation_player(self)
+	_skeleton = _find_skeleton(self)
+	if _skeleton:
+		_head_bone_idx = _skeleton.find_bone("mixamorig_Head")
 	scream_sound = get_node_or_null("Sounds/ScreamSound")
 	chase_sound = get_node_or_null("Sounds/ChaseSound")
 	for i in range(1, 5):
@@ -411,11 +417,29 @@ func _start_screaming() -> void:
 			scream_timer = scream_animation.length
 		else:
 			scream_timer = 0.0
+		if target_player and is_instance_valid(target_player):
+			if target_player.has_method("trigger_shy_scare"):
+				if multiplayer.has_multiplayer_peer():
+					target_player.rpc("trigger_shy_scare", get_path(), scream_timer)
+				else:
+					target_player.call("trigger_shy_scare", get_path(), scream_timer)
 	else:
 		scream_timer = 0.0
 		_start_chasing()
 
+func _exit_tree() -> void:
+	_notify_target_scare_ended()
+
+func _notify_target_scare_ended() -> void:
+	if target_player and is_instance_valid(target_player):
+		if target_player.has_method("end_shy_scare"):
+			if multiplayer.has_multiplayer_peer():
+				target_player.rpc("end_shy_scare", get_path())
+			else:
+				target_player.call("end_shy_scare", get_path())
+
 func _start_chasing() -> void:
+	_notify_target_scare_ended()
 	if target_player == null or not is_instance_valid(target_player):
 		los_state_initialized = false
 		current_state = State.WANDER
@@ -440,6 +464,7 @@ func _start_attacking() -> void:
 
 func _on_animation_finished(anim_name: StringName) -> void:
 	if current_state == State.SCREAMING and anim_name == "scream":
+		_notify_target_scare_ended()
 		if should_wander_after_scream:
 			should_wander_after_scream = false
 			_finish_wandering()
@@ -576,6 +601,22 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 			return result
 
 	return null
+
+func _find_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node
+
+	for child in node.get_children():
+		var result := _find_skeleton(child)
+		if result:
+			return result
+
+	return null
+
+func get_face_global_position() -> Vector3:
+	if _skeleton and _head_bone_idx >= 0:
+		return _skeleton.global_transform * _skeleton.get_bone_global_pose(_head_bone_idx).origin
+	return global_position + Vector3(0.0, 3.2, 0.0)
 
 func _format_vec3(v: Vector3) -> String:
 	return "(%.2f, %.2f, %.2f)" % [v.x, v.y, v.z]

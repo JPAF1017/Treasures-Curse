@@ -23,6 +23,13 @@ const SMOKE_OVERLAY_FADE_SPEED := 3.0
 const SMOKE_OVERLAY_TEXTURE_PATH := "res://assets/items assets/smoke.jpeg"
 const SMOKE_EFFECT_SCRIPT: Script = preload("res://scripts/items/smoke_effect.gd")
 const HealParticleEffect: Script = preload("res://scripts/items/HealParticleEffect.gd")
+const VIGNETTE_SHADER: Shader = preload("res://assets/shaders/vignette.gdshader")
+const SHY_SCARE_ZOOM_MAX: float = 18.0
+const SHY_SCARE_ZOOM_IN_TIME: float = 0.25
+const SHY_SCARE_ZOOM_OUT_TIME: float = 0.45
+const SHY_SCARE_VIGNETTE_MAX: float = 1.3
+const SHY_SCARE_VIGNETTE_FADE_IN_TIME: float = 0.25
+const SHY_SCARE_VIGNETTE_FADE_OUT_TIME: float = 0.45
 const DAMAGE_TILT_ANGLE_DEG = 20.5
 const DAMAGE_TILT_DURATION = 0.35
 const JUMP_STAMINA_COST = 20.0
@@ -138,6 +145,17 @@ var _sprint_dust_left_foot: bool = false
 const SPRINT_DUST_INTERVAL: float = 0.32
 var _exhaustion_breath_timer: float = 0.0
 const EXHAUSTION_BREATH_CYCLE_INTERVAL: float = 1.15
+
+var _vignette_rect: ColorRect = null
+var _vignette_material: ShaderMaterial = null
+var _shy_scare_active: bool = false
+var _shy_scare_source: Node = null
+var _shy_scare_timer: float = 0.0
+var _shy_scare_zoom: float = 0.0
+var _shy_scare_shake_time: float = 0.0
+var _shy_vignette_intensity: float = 0.0
+var _shy_zoom_tween: Tween = null
+var _shy_vignette_tween: Tween = null
 
 const JUMP_PHASE_NONE = 0
 const JUMP_PHASE_ACTIVE = 1
@@ -383,6 +401,7 @@ func _ready():
 	_setup_health_ui()
 	_setup_damage_overlay()
 	_setup_smoke_overlay()
+	_setup_vignette_overlay()
 	_setup_vitals_audio()
 	_setup_hotbar_ui()
 	_setup_progression_ui()
@@ -514,6 +533,8 @@ func _unhandled_input(event):
 		if _is_spectating and event is InputEventMouseButton \
 				and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_cycle_spectate_target()
+		return
+	if _shy_scare_active:
 		return
 	if event is InputEventMouseMotion:
 		var sens := SENSITIVITY * STUN_SENSITIVITY_MULTIPLIER if stun_timer > 0.0 else SENSITIVITY
@@ -864,10 +885,41 @@ func _physics_process(delta):
 	if _landing_impact_offset > 0.0:
 		_landing_impact_offset = move_toward(_landing_impact_offset, 0.0, delta * 0.9)
 	camera.transform.origin = _headbob(t_bob) + Vector3(0.0, -_landing_impact_offset, 0.0)
+
+	# Shy entity jumpscare face tracking and screen shake
+	if _shy_scare_active:
+		_shy_scare_timer -= delta
+		if _shy_scare_timer <= 0.0 or _shy_scare_source == null or not is_instance_valid(_shy_scare_source):
+			end_shy_scare()
+		else:
+			var face_pos: Vector3 = Vector3.ZERO
+			if _shy_scare_source.has_method("get_face_global_position"):
+				face_pos = _shy_scare_source.call("get_face_global_position")
+			else:
+				face_pos = _shy_scare_source.global_position + Vector3(0.0, 3.2, 0.0)
+
+			var to_face := face_pos - head.global_position
+			var horiz_dist := Vector2(to_face.x, to_face.z).length()
+			if horiz_dist > 0.001:
+				var target_yaw := atan2(-to_face.x, -to_face.z) - global_rotation.y
+				var target_pitch := clampf(atan2(to_face.y, horiz_dist), deg_to_rad(-85.0), deg_to_rad(90.0))
+				head.rotation.y = lerp_angle(head.rotation.y, target_yaw, delta * 16.0)
+				camera.rotation.x = lerp_angle(camera.rotation.x, target_pitch, delta * 16.0)
+				_sync_visual_rotation_to_head()
+
+			_shy_scare_shake_time += delta
+			var shake_amp := 0.055
+			camera.h_offset = sin(_shy_scare_shake_time * 44.0) * shake_amp + sin(_shy_scare_shake_time * 19.0) * (shake_amp * 0.4)
+			camera.v_offset = cos(_shy_scare_shake_time * 52.0) * (shake_amp * 0.8) + cos(_shy_scare_shake_time * 27.0) * (shake_amp * 0.3)
+			camera.rotation.z = deg_to_rad(sin(_shy_scare_shake_time * 33.0) * 1.5)
+	else:
+		if camera.h_offset != 0.0 or camera.v_offset != 0.0:
+			camera.h_offset = move_toward(camera.h_offset, 0.0, delta * 0.5)
+			camera.v_offset = move_toward(camera.v_offset, 0.0, delta * 0.5)
 #------------------------------------------------------
 #fov changing
 	var velocity_clamped = clamp(velocity.length(), 0.5, SPRINT_SPEED * 2)
-	var target_fov = BASE_FOV + FOV_CHANGE * velocity_clamped
+	var target_fov = BASE_FOV - _shy_scare_zoom + FOV_CHANGE * velocity_clamped
 	camera.fov = lerp(camera.fov, target_fov, delta * 8.0)
 	
 	_sync_visual_rotation_to_head()
@@ -1263,6 +1315,28 @@ func _setup_damage_overlay() -> void:
 	damage_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	damage_overlay.z_index = 100
 	player_canvas_layer.add_child(damage_overlay)
+
+func _setup_vignette_overlay() -> void:
+	if player_canvas_layer == null:
+		return
+	_vignette_rect = ColorRect.new()
+	_vignette_rect.name = "VignetteOverlay"
+	_vignette_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_vignette_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette_rect.z_index = 95
+	_vignette_material = ShaderMaterial.new()
+	_vignette_material.shader = VIGNETTE_SHADER
+	_vignette_material.set_shader_parameter("intensity", 0.0)
+	_vignette_material.set_shader_parameter("vignette_color", Color(0.0, 0.0, 0.0, 1.0))
+	_vignette_material.set_shader_parameter("radius", 0.38)
+	_vignette_material.set_shader_parameter("softness", 0.45)
+	_vignette_rect.material = _vignette_material
+	player_canvas_layer.add_child(_vignette_rect)
+
+func _set_vignette_intensity(val: float) -> void:
+	_shy_vignette_intensity = val
+	if _vignette_material:
+		_vignette_material.set_shader_parameter("intensity", val)
 
 func _show_damage_overlay() -> void:
 	if damage_overlay != null:
@@ -1830,6 +1904,7 @@ func _handle_player_death() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	end_shy_scare()
 	velocity = Vector3.ZERO
 	if _heartbeat_player != null and _heartbeat_player.playing:
 		_heartbeat_player.stop()
@@ -2317,6 +2392,61 @@ func apply_knockback(direction: Vector3, strength: float) -> void:
 	velocity.x += knock_dir.x * strength
 	velocity.z += knock_dir.z * strength
 	velocity.y = maxf(velocity.y, strength * 0.3)
+
+@rpc("any_peer", "call_local", "reliable")
+func trigger_shy_scare(shy_path: NodePath, duration: float) -> void:
+	if not is_multiplayer_authority():
+		return
+	if is_dead:
+		return
+	_game_started = true
+	var shy_node: Node = get_node_or_null(shy_path)
+	_shy_scare_source = shy_node
+	_shy_scare_active = true
+	_shy_scare_timer = maxf(duration, 1.8)
+	_shy_scare_shake_time = 0.0
+
+	if shy_node != null:
+		set_movement_locked_by(shy_node, true)
+
+	if _shy_zoom_tween and _shy_zoom_tween.is_valid():
+		_shy_zoom_tween.kill()
+	_shy_zoom_tween = create_tween()
+	_shy_zoom_tween.tween_property(self, "_shy_scare_zoom", SHY_SCARE_ZOOM_MAX, SHY_SCARE_ZOOM_IN_TIME).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+	if _shy_vignette_tween and _shy_vignette_tween.is_valid():
+		_shy_vignette_tween.kill()
+	_shy_vignette_tween = create_tween()
+	_shy_vignette_tween.tween_method(_set_vignette_intensity, _shy_vignette_intensity, SHY_SCARE_VIGNETTE_MAX, SHY_SCARE_VIGNETTE_FADE_IN_TIME).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+@rpc("any_peer", "call_local", "reliable")
+func end_shy_scare(shy_path: NodePath = ^"") -> void:
+	if not is_multiplayer_authority():
+		return
+	if not _shy_scare_active and _shy_scare_source == null and _shy_scare_zoom == 0.0 and _shy_vignette_intensity == 0.0:
+		return
+
+	_shy_scare_active = false
+	_shy_scare_timer = 0.0
+
+	if _shy_scare_source != null and is_instance_valid(_shy_scare_source):
+		set_movement_locked_by(_shy_scare_source, false)
+	_shy_scare_source = null
+
+	if _shy_zoom_tween and _shy_zoom_tween.is_valid():
+		_shy_zoom_tween.kill()
+	_shy_zoom_tween = create_tween()
+	_shy_zoom_tween.tween_property(self, "_shy_scare_zoom", 0.0, SHY_SCARE_ZOOM_OUT_TIME).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+
+	if _shy_vignette_tween and _shy_vignette_tween.is_valid():
+		_shy_vignette_tween.kill()
+	_shy_vignette_tween = create_tween()
+	_shy_vignette_tween.tween_method(_set_vignette_intensity, _shy_vignette_intensity, 0.0, SHY_SCARE_VIGNETTE_FADE_OUT_TIME).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+
+	if camera:
+		camera.h_offset = 0.0
+		camera.v_offset = 0.0
+		camera.rotation.z = 0.0
 
 func _setup_stamina_palette_colors() -> void:
 	var palette_texture := load(STAMINA_PALETTE_PATH) as Texture2D
