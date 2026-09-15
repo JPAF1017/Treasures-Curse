@@ -16,12 +16,14 @@ const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
 const PLACE_KEY_SOUND_PATH := "res://sounds/Interactions/placekey.mp3"
-const DOOR_INTERACT_SOUND_PATH := "res://sounds/Interactions/interact.mp3"
+const INTERACT_SOUND_PATH := "res://sounds/Interactions/interact.mp3"
+const DOOR_INTERACT_SOUND_PATH := INTERACT_SOUND_PATH
 const PedestalSocketEffect = preload("res://scripts/items/PedestalSocketEffect.gd")
 
 @export_group("Audio")
 @export_range(-80.0, 24.0, 0.5, "suffix:dB") var place_key_volume_db: float = 0.0
 @export_range(-80.0, 24.0, 0.5, "suffix:dB") var door_interact_volume_db: float = 0.0
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var interact_volume_db: float = 0.0
 
 # Maps table item scene path → expected item script path (mirrors item_hold_check.gd)
 const _SCENE_TO_SCRIPT: Dictionary = {
@@ -306,6 +308,7 @@ func _try_place_item(hold_index: int) -> void:
 	if not item.get_meta("puzzle_item", false):
 		_set_place_item_visible(false)
 		_show_warning2("I can't place this here...")
+		_play_interact_sound(_hold_areas[hold_index].global_position)
 		_play_invalid_sound(_hold_areas[hold_index].global_position)
 		return
 
@@ -374,6 +377,7 @@ func _check_slot_correct(hold_index: int, item: Node) -> void:
 	else:
 		print("[Puzzle]   WRONG gem for this slot")
 		_show_warning2("The candles could show me how to solve this")
+		_play_interact_sound(_hold_areas[hold_index].global_position)
 		_play_invalid_sound(_hold_areas[hold_index].global_position)
 
 
@@ -473,14 +477,18 @@ func _play_place_key_sound(pos: Vector3) -> void:
 
 
 func _play_door_interact_sound(pos: Vector3) -> void:
+	_play_interact_sound(pos, door_interact_volume_db)
+
+
+func _play_interact_sound(pos: Vector3, vol_db: float = 0.0) -> void:
 	if Engine.is_editor_hint():
 		return
 	var sound_player := AudioStreamPlayer3D.new()
 	var scene_root := get_tree().current_scene
 	if scene_root:
 		scene_root.add_child(sound_player)
-		sound_player.stream = load(DOOR_INTERACT_SOUND_PATH)
-		sound_player.volume_db = door_interact_volume_db
+		sound_player.stream = load(INTERACT_SOUND_PATH)
+		sound_player.volume_db = vol_db if vol_db != 0.0 else interact_volume_db
 		sound_player.pitch_scale = randf_range(0.96, 1.04)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)

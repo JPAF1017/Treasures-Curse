@@ -13,12 +13,14 @@ const INTERACT_RANGE := 35.0
 const DOOR_OPEN_SOUND_PATH := "res://sounds/Interactions/opening.mp3"
 const CONCRETE_SOUND_PATH := "res://sounds/Interactions/concrete.mp3"
 const PLACE_KEY_SOUND_PATH := "res://sounds/Interactions/placekey.mp3"
-const DOOR_INTERACT_SOUND_PATH := "res://sounds/Interactions/interact.mp3"
+const INTERACT_SOUND_PATH := "res://sounds/Interactions/interact.mp3"
+const DOOR_INTERACT_SOUND_PATH := INTERACT_SOUND_PATH
 const PedestalSocketEffect = preload("res://scripts/items/PedestalSocketEffect.gd")
 
 @export_group("Audio")
 @export_range(-80.0, 24.0, 0.5, "suffix:dB") var place_key_volume_db: float = 0.0
 @export_range(-80.0, 24.0, 0.5, "suffix:dB") var door_interact_volume_db: float = 0.0
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var interact_volume_db: float = 0.0
 
 static var player_entered_room: bool = false
 static var door_opened_static: bool = false
@@ -119,6 +121,7 @@ func _process(delta: float) -> void:
 			else:
 				if _get_selected_item() != null:
 					_show_warning2("I can't place this here")
+					_play_interact_sound(_hovered_area.global_position)
 					_play_invalid_sound(_hovered_area.global_position)
 				else:
 					_show_warning2("I could place something here but what?")
@@ -427,12 +430,16 @@ func _play_place_key_sound(pos: Vector3) -> void:
 
 
 func _play_door_interact_sound(pos: Vector3) -> void:
+	_play_interact_sound(pos, door_interact_volume_db)
+
+
+func _play_interact_sound(pos: Vector3, vol_db: float = 0.0) -> void:
 	var sound_player := AudioStreamPlayer3D.new()
 	var scene_root := get_tree().current_scene
 	if scene_root:
 		scene_root.add_child(sound_player)
-		sound_player.stream = load(DOOR_INTERACT_SOUND_PATH)
-		sound_player.volume_db = door_interact_volume_db
+		sound_player.stream = load(INTERACT_SOUND_PATH)
+		sound_player.volume_db = vol_db if vol_db != 0.0 else interact_volume_db
 		sound_player.pitch_scale = randf_range(0.96, 1.04)
 		sound_player.global_position = pos
 		sound_player.finished.connect(sound_player.queue_free)

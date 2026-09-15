@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1789422141
+::res://::1789452326
 AGENTS.md::TextFile::-1::1789421533::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1779345796::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1777213248::1777213249::1::::<><><>0<>0<>cae14fdf34577903ea8282ebd52773bb<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
@@ -364,7 +364,7 @@ start_room.tscn::PackedScene::5432136815540194699::1776877254::0::1::::<><><>0<>
 treasure_room.tscn::PackedScene::5153706401391388839::1777199960::0::1::::<><><>0<>0<><>::uid://c801ki3oghumx::::res://addons/SimpleDungeons/DungeonRoom3D.gd<>uid://chedh0vevmtjy::::res://assets/room assets/floor_tiles.tscn<>uid://tml4ayda8oy6::::res://assets/room assets/chest.tscn<>uid://dp6j0b5dhrjx8::::res://assets/room assets/block_half.tscn<>uid://drc5sh8egqajx::::res://assets/room assets/stairs.tscn<>uid://b73y1fuhewrxj::::res://assets/room assets/pillar.tscn<>uid://covmwn16vmv06::::res://assets/room assets/door_frame_02.tscn<>uid://defgp8i1a5vem::::res://assets/room assets/arch_roof.tscn<>uid://d2wnqnpsexqi1::::res://assets/room assets/arch.tscn<>uid://maopr6lanado::::res://assets/room assets/block.tscn<>uid://d1e1ffdtkokq8::::res://assets/room assets/torch.tscn<>uid://c5tachymoo3s2::::res://assets/room assets/wall_01.tscn<>uid://cnbhlfgj2c6gs::::res://scripts/rooms/chest_interact.gd
 ::res://assets/scene_entity/::1783398802
 charger.tscn::PackedScene::8995800778055222439::1775102901::0::1::::<><><>0<>0<><>::uid://crxg8ido3i1el::::res://assets/entities/Dog.glb
-::res://assets/shaders/::1789452146
+::res://assets/shaders/::1789452245
 vignette.gdshader::Shader::5104304618900013438::1789452146::0::1::::<><><>0<>0<><>::
 ::res://assets/TextEffects GDScript/::1783398802
 RichTextDegrade.gd::GDScript::6684844309778414074::1780913525::0::1::::RichTextDegrade<>RichTextEffect<><>0<>1<><>::
@@ -491,7 +491,7 @@ table_item_spawn.gd::GDScript::8351178420905279132::1781249381::0::1::::TableIte
 dungeon_optimizer.gd::GDScript::9157797051449046666::1779008384::0::1::::<>Node<><>0<>0<><>::
 game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0<><>::
 level1_spawner.gd::GDScript::3714450241364899252::1785392327::0::1::::<>Node3D<><>0<>0<><>::
-player.gd::GDScript::7860289825015925474::1789452239::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1789452298::0::1::::<>CharacterBody3D<><>0<>0<><>::
 settings_manager.gd::GDScript::8170435877026185281::1783231002::0::1::::<>Node<><>0<>0<><>::
 ::res://scripts/items/::1789399492
 axe.gd::GDScript::5823683269390956943::1789391042::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
@@ -545,10 +545,10 @@ SmokeAggroComponent.gd::GDScript::3106100866719486491::1776960915::0::1::::<>Obj
 statue.gd::GDScript::998346533100298730::1789398884::0::1::::<>CharacterBody3D<><>0<>0<><>::
 ::res://scripts/rooms/::1783398804
 big_room.gd::GDScript::1491222591273790336::1777228408::0::1::::BigRoom<>DungeonRoom3D<><>0<>1<><>::
-candle_puzzle_room.gd::GDScript::8273511203469505923::1789421481::0::1::::CandlePuzzleRoom<>DungeonRoom3D<><>0<>1<><>::
+candle_puzzle_room.gd::GDScript::8273511203469505923::1789480318::0::1::::CandlePuzzleRoom<>DungeonRoom3D<><>0<>1<><>::
 chest_interact.gd::GDScript::5687805647447693754::1789408078::0::1::::<>Node3D<><>0<>0<><>::
 room_title_area.gd::GDScript::4507910189563735558::1781687377::0::1::::RoomTitleArea<>Area3D<><>0<>0<><>::
-skull_puzzle_controller.gd::GDScript::2665935180804063843::1789420962::0::1::::SkullPuzzleController<>Node3D<><>0<>0<><>::
+skull_puzzle_controller.gd::GDScript::2665935180804063843::1789480147::0::1::::SkullPuzzleController<>Node3D<><>0<>0<><>::
 ::res://scripts/ui/::1783398804
 charge_ring.gd::GDScript::7873357249255064785::1778180227::0::1::::<>Control<><>0<>0<><>::
 ::res://sounds/::1783398807
