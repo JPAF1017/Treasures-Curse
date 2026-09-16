@@ -82,6 +82,10 @@ var _statue_seen: bool = false             # has any player spotted the statue?
 var _statue_seen_timer: float = 0.0        # 1-min countdown after first sighting
 var _despawn_check_timer: float = 0.0      # poll interval while waiting for no-look moment
 var _statue_intro_triggered: bool = false  # true once a player has entered the IntroStatue room
+var _statue_door: Node3D = null
+var _statue_door_opened: bool = false
+var _statue_look_timer: float = 0.0
+const STATUE_DOOR_LOOK_DURATION: float = 3.0
 
 # Enemies that must stay inside their intro room.
 # Each entry: { "enemy": Node3D, "center": Vector3, "half_xz": float }
@@ -170,10 +174,16 @@ func _on_dungeon_failed(generator: Node) -> void:
 		# Reset the stored seed so remote_generate's duplicate-guard doesn't block the retry.
 		_generation_seed = 0
 		_table_registry = {}
+		_statue_door = null
+		_statue_door_opened = false
+		_statue_look_timer = 0.0
 		rpc("remote_generate", randi())
 	# Clients reset their seed too so they accept the incoming retry broadcast.
 	else:
 		_generation_seed = 0
+		_statue_door = null
+		_statue_door_opened = false
+		_statue_look_timer = 0.0
 
 
 func _find_dungeon_generator(node: Node) -> Node:
@@ -702,6 +712,9 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# when a player first walks in, starting the despawn/respawn cycle.
 	var intro_statue_room := generator.find_child("IntroStatue", true, false) as Node3D
 	if intro_statue_room:
+		_statue_door = intro_statue_room.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
+		_statue_door_opened = false
+		_statue_look_timer = 0.0
 		var room_title := intro_statue_room.get_node_or_null("RoomTitle") as Area3D
 		if room_title:
 			room_title.body_entered.connect(_on_intro_statue_body_entered)
@@ -844,8 +857,24 @@ func _process(delta: float) -> void:
 
 	# --- Active-statue lifecycle: sighting detection → 1-min → despawn ---
 	if _statue_node != null and is_instance_valid(_statue_node):
+		var statue_seen_now := _is_statue_seen_by_any_player()
+
+		# Check 3-second gaze to open the IntroStatue door
+		if not _statue_door_opened and is_instance_valid(_statue_door):
+			if statue_seen_now:
+				_statue_look_timer += delta
+				if _statue_look_timer >= STATUE_DOOR_LOOK_DURATION:
+					_statue_door_opened = true
+					print("[StatueSpawn] Player looked at statue for 3 seconds — opening IntroStatue door.")
+					if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+						rpc("rpc_open_or_delete_door", _statue_door.get_path(), false, 60.0)
+					else:
+						rpc_open_or_delete_door(_statue_door.get_path(), false, 60.0)
+			else:
+				_statue_look_timer = maxf(_statue_look_timer - delta * 2.0, 0.0)
+
 		if not _statue_seen:
-			if _is_statue_seen_by_any_player():
+			if statue_seen_now:
 				_statue_seen = true
 				_statue_seen_timer = STATUE_SEEN_DESPAWN_TIME
 				print("[StatueSpawn] Statue spotted — 1-min despawn countdown started.")

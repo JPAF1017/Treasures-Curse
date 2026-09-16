@@ -114,7 +114,7 @@ const STEP_FRAMES: Dictionary = {
 @export var animation_player_path: NodePath
 @export_group("Vitals Audio")
 @export_range(-40.0, 10.0, 0.5, "suffix:dB") var low_health_heartbeat_volume_db: float = 0.0
-@export_range(-40.0, 10.0, 0.5, "suffix:dB") var heavy_breathing_volume_db: float = 0.0
+@export_range(-40.0, 10.0, 0.1, "suffix:dB") var heavy_breathing_volume_db: float = -15.1
 #------------------------------------------------------
 var speed
 var t_bob = 0.0

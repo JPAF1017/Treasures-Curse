@@ -3,6 +3,7 @@ extends RigidBody3D
 const TORCH_SCENE_PATH := "res://assets/items/torch.tscn"
 const TORCH_ITEM_ICON: Texture2D = preload("res://assets/ui/torch.png")
 const TORCH_MODEL_SCENE: PackedScene = preload("res://assets/base assets/ps1psx_wooden_torch.glb")
+const TORCH_VIEWMODEL_SCENE: PackedScene = preload("res://assets/items/torch_viewmodel.tscn")
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
@@ -19,6 +20,17 @@ const TORCH_ATTACHMENT_NODE_NAME := "RightHandTorchAttachment"
 const VIEWMODEL_BOB_FREQ := 2.0
 const VIEWMODEL_BOB_AMP_Y := 0.012
 const VIEWMODEL_BOB_AMP_X := 0.006
+
+const BASE_FIRE_GRAVITY := Vector3(0.0, 0.9, 0.0)
+const BASE_SMOKE_GRAVITY := Vector3(0.0, 1.1, 0.0)
+
+const DRAFT_MOVE_Z_FACTOR := 2.4
+const DRAFT_MOVE_X_FACTOR := 2.4
+const DRAFT_MOVE_Y_FACTOR := 1.2
+const DRAFT_CAM_YAW_FACTOR := 4.0
+const DRAFT_CAM_PITCH_FACTOR := 3.5
+const DRAFT_ATTACK_SPEED := 24.0
+const DRAFT_DECAY_SPEED := 16.0
 
 const TORCH_LIGHT_ENERGY := 12.0
 const TORCH_LIGHT_COLOR := Color(0.855485, 0.46624, 0.0)
@@ -47,9 +59,9 @@ static var equip_key_was_down: bool = false
 @export var held_item_rotation_degrees: Vector3 = Vector3(92.0, 300.0, 276.0)
 @export_range(0.01, 2.0, 0.01) var held_item_scale: float = 0.2
 
-@export var viewmodel_position: Vector3 = Vector3(-0.25, -0.18, -0.35)
-@export var viewmodel_rotation_degrees: Vector3 = Vector3(0.0, 15.0, 0.0)
-@export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.06
+@export var viewmodel_position: Vector3 = Vector3(-0.44, -0.38, -0.45)
+@export var viewmodel_rotation_degrees: Vector3 = Vector3(-10.0, 25.0, -14.0)
+@export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.75
 
 var inventory_slot_index: int = -1
 var right_hand_attachment: BoneAttachment3D = null
@@ -57,9 +69,17 @@ var viewmodel_instance: Node3D = null
 const TORCH_SOUND_PATH := "res://sounds/torch/torch.mp3"
 
 var viewmodel_bob_time: float = 0.0
+var _current_fire_gravity: Vector3 = BASE_FIRE_GRAVITY
+var _current_smoke_gravity: Vector3 = BASE_SMOKE_GRAVITY
 var _carried_omni: OmniLight3D = null
 var _held_sound: AudioStreamPlayer = null
 var _torch_lit_state: bool = false
+
+var _current_player: Node = null
+var _current_camera: Camera3D = null
+var _prev_camera_basis := Basis.IDENTITY
+var _has_prev_camera_transform := false
+var _current_tilt_rad := Vector3.ZERO
 
 @onready var _fire_particle: Node3D = $fire_particle
 @onready var _dropped_light: OmniLight3D = get_node_or_null("OmniLight3D")
@@ -105,11 +125,20 @@ func _get_palette_color(palette_image: Image, one_based_index: int, fallback: Co
 
 const DROPPED_LIGHT_HEIGHT_OFFSET := 1.2
 
+func _exit_tree() -> void:
+	_hide_viewmodel()
+
+
 func _process(delta: float) -> void:
 	if is_burning and not SettingsManager.unlimited_torch:
 		usable_time_left -= delta
 		if usable_time_left <= 0.0:
 			_delete_torch()
+			return
+
+	if viewmodel_instance and is_instance_valid(viewmodel_instance) and viewmodel_instance.visible:
+		_update_viewmodel_dynamics(delta)
+
 
 func _physics_process(_delta: float) -> void:
 	# Keep the dropped light at a fixed world-space height above the torch
@@ -117,7 +146,12 @@ func _physics_process(_delta: float) -> void:
 	if _dropped_light and _dropped_light.visible and _dropped_light.top_level:
 		_dropped_light.global_position = global_position + Vector3(0.0, DROPPED_LIGHT_HEIGHT_OFFSET, 0.0)
 
+
 func _delete_torch() -> void:
+	_hide_viewmodel()
+	if right_hand_attachment and is_instance_valid(right_hand_attachment) and get_parent() == right_hand_attachment:
+		right_hand_attachment.remove_child(self)
+
 	if inventory_slot_index >= 0:
 		var parent := get_parent()
 		var player: Node = null
@@ -201,8 +235,7 @@ func release_primary_action(_player: Node) -> void:
 	pass
 
 
-func update_primary_action(player: Node, delta: float) -> bool:
-	_update_viewmodel_bob(player, delta)
+func update_primary_action(_player: Node, _delta: float) -> bool:
 	return false
 
 
@@ -245,6 +278,7 @@ func drop_from_hotbar(player: Node) -> bool:
 
 	_hide_viewmodel()
 	_apply_torch_light(player, false)
+	_detach_from_hand(player)
 
 	var world_root: Node = null
 	if player.has_method("get_tree"):
@@ -305,8 +339,35 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinti
 	else:
 		_detach_from_hand(player)
 		_hide_viewmodel()
-		_apply_torch_light(player, false)
-		is_burning = false
+		var is_solo := _is_single_player_active(player)
+		var is_primary := _is_primary_passive_torch(player)
+		var keep_passive: bool = is_solo and is_primary
+		_apply_torch_light(player, keep_passive)
+		is_burning = keep_passive
+
+
+func _is_single_player_active(player: Node) -> bool:
+	if player == null:
+		return true
+	var tree := player.get_tree() if player.has_method("get_tree") else null
+	if tree == null:
+		return true
+	var active_count := 0
+	for p in tree.get_nodes_in_group("player"):
+		if is_instance_valid(p) and not p.get("is_dead") and not p.get("_is_spectating"):
+			active_count += 1
+	return active_count <= 1
+
+
+func _is_primary_passive_torch(player: Node) -> bool:
+	if player == null:
+		return true
+	var models = player.get("hotbar_item_models")
+	if models is Array:
+		for model in models:
+			if model != null and is_instance_valid(model) and model.get_script() == get_script():
+				return model == self
+	return true
 
 
 func _configure_item_physics() -> void:
@@ -458,12 +519,53 @@ func _get_player_camera(player: Node) -> Camera3D:
 	return player.get("camera") as Camera3D
 
 
-func _show_viewmodel(_player: Node) -> void:
-	pass
+func _show_viewmodel(player: Node) -> void:
+	if viewmodel_instance and is_instance_valid(viewmodel_instance):
+		viewmodel_instance.visible = true
+		return
+
+	var camera := _get_player_camera(player)
+	if camera == null:
+		return
+
+	viewmodel_instance = TORCH_VIEWMODEL_SCENE.instantiate() as Node3D
+	viewmodel_instance.name = "TorchViewmodel"
+	camera.add_child(viewmodel_instance)
+
+	var vm_sound := viewmodel_instance.find_child("TorchSound", true, false)
+	if vm_sound:
+		vm_sound.queue_free()
+
+	viewmodel_instance.position = viewmodel_position
+	viewmodel_instance.rotation = Vector3(
+		deg_to_rad(viewmodel_rotation_degrees.x),
+		deg_to_rad(viewmodel_rotation_degrees.y),
+		deg_to_rad(viewmodel_rotation_degrees.z)
+	)
+	viewmodel_instance.scale = Vector3.ONE * viewmodel_scale
+
+	# Align fire particle basis with camera so the flame rises vertically upwards from the camera
+	var fire_p := viewmodel_instance.get_node_or_null("fire_particle") as Node3D
+	if fire_p:
+		fire_p.position = Vector3(-0.02, 0.42, 0.0)
+		fire_p.transform.basis = viewmodel_instance.transform.basis.inverse()
+		var fire_gpu := fire_p.get_node_or_null("Fire") as GPUParticles3D
+		if fire_gpu and fire_gpu.process_material is ParticleProcessMaterial:
+			fire_gpu.process_material = fire_gpu.process_material.duplicate()
+		var smoke_gpu := fire_p.get_node_or_null("Smoke") as GPUParticles3D
+		if smoke_gpu and smoke_gpu.process_material is ParticleProcessMaterial:
+			smoke_gpu.process_material = smoke_gpu.process_material.duplicate()
+
+	_current_player = player
+	_current_camera = camera
+	_has_prev_camera_transform = false
+	_current_tilt_rad = Vector3.ZERO
+	_current_fire_gravity = BASE_FIRE_GRAVITY
+	_current_smoke_gravity = BASE_SMOKE_GRAVITY
 
 
 func _apply_torch_light(player: Node, torch_on: bool) -> void:
-	if torch_on == _torch_lit_state and _carried_omni != null and is_instance_valid(_carried_omni):
+	if torch_on == _torch_lit_state and (not torch_on or (_carried_omni != null and is_instance_valid(_carried_omni))):
 		return
 	_torch_lit_state = torch_on
 	var camera := _get_player_camera(player)
@@ -516,13 +618,25 @@ func _hide_viewmodel() -> void:
 		viewmodel_instance.queue_free()
 		viewmodel_instance = null
 	viewmodel_bob_time = 0.0
+	_current_player = null
+	_current_camera = null
+	_has_prev_camera_transform = false
+	_current_tilt_rad = Vector3.ZERO
+	_current_fire_gravity = BASE_FIRE_GRAVITY
+	_current_smoke_gravity = BASE_SMOKE_GRAVITY
+
+
+func _update_viewmodel_dynamics(delta: float) -> void:
+	_update_viewmodel_bob(_current_player, delta)
+	_update_fire_movement_draft(_current_player, delta)
 
 
 func _update_viewmodel_bob(player: Node, delta: float) -> void:
 	if viewmodel_instance == null or not is_instance_valid(viewmodel_instance):
 		return
 
-	var player_body := player as CharacterBody3D
+	var target_player := player if player else _current_player
+	var player_body := target_player as CharacterBody3D
 	if player_body == null:
 		return
 
@@ -537,3 +651,92 @@ func _update_viewmodel_bob(player: Node, delta: float) -> void:
 	var bob_y := sin(viewmodel_bob_time * VIEWMODEL_BOB_FREQ) * VIEWMODEL_BOB_AMP_Y
 	var bob_x := cos(viewmodel_bob_time * VIEWMODEL_BOB_FREQ * 0.5) * VIEWMODEL_BOB_AMP_X
 	viewmodel_instance.position = viewmodel_position + Vector3(bob_x, bob_y, 0.0)
+
+
+func _update_fire_movement_draft(player: Node, delta: float) -> void:
+	if viewmodel_instance == null or not is_instance_valid(viewmodel_instance):
+		return
+	if delta <= 0.0:
+		return
+
+	var fire_p := viewmodel_instance.get_node_or_null("fire_particle") as Node3D
+	if fire_p == null:
+		return
+
+	var fire_gpu := fire_p.get_node_or_null("Fire") as GPUParticles3D
+	var smoke_gpu := fire_p.get_node_or_null("Smoke") as GPUParticles3D
+	if fire_gpu == null and smoke_gpu == null:
+		return
+
+	var camera := _current_camera
+	if camera == null or not is_instance_valid(camera):
+		camera = _get_player_camera(player if player else _current_player)
+		_current_camera = camera
+	if camera == null:
+		return
+
+	# 1. Linear player movement in camera space
+	var target_player := player if player else _current_player
+	var player_body := target_player as CharacterBody3D
+	var world_vel := player_body.velocity if player_body else Vector3.ZERO
+	var cam_space_vel := camera.global_transform.basis.inverse() * world_vel
+
+	# 2. Camera angular velocity (mouse-look / head rotation)
+	var curr_cam_basis := camera.global_transform.basis
+	var yaw_speed := 0.0
+	var pitch_speed := 0.0
+
+	if _has_prev_camera_transform:
+		var rel_basis := curr_cam_basis.inverse() * _prev_camera_basis
+		var prev_fwd := -rel_basis.z
+		# Angular difference between current forward (0,0,-1) and previous forward
+		var yaw_delta := -atan2(prev_fwd.x, -prev_fwd.z)
+		var pitch_delta := -atan2(prev_fwd.y, -prev_fwd.z)
+		yaw_speed = clampf(yaw_delta / delta, -25.0, 25.0)
+		pitch_speed = clampf(pitch_delta / delta, -25.0, 25.0)
+	else:
+		_has_prev_camera_transform = true
+
+	_prev_camera_basis = curr_cam_basis
+
+	# 3. Calculate target tilt angles in radians:
+	# - Walking forward (cam_space_vel.z < 0) pushes flame backward (+X)
+	# - Looking UP (pitch_speed > 0) tilts flame downward/backward (+X)
+	# - Looking DOWN (pitch_speed < 0) tilts flame forward (-X)
+	# - Strafing right (cam_space_vel.x > 0) or turning right (yaw_speed > 0) tilts flame left (+Z in Euler)
+	# - Strafing left (cam_space_vel.x < 0) or turning left (yaw_speed < 0) tilts flame right (-Z in Euler)
+	var target_tilt_x := deg_to_rad(-cam_space_vel.z * DRAFT_MOVE_Z_FACTOR + pitch_speed * DRAFT_CAM_PITCH_FACTOR)
+	var target_tilt_z := deg_to_rad(cam_space_vel.x * DRAFT_MOVE_X_FACTOR + yaw_speed * DRAFT_CAM_YAW_FACTOR)
+
+	# Jumping / vertical movement tilt
+	target_tilt_x -= deg_to_rad(cam_space_vel.y * DRAFT_MOVE_Y_FACTOR)
+
+	# Clamp to prevent unnatural inversion
+	target_tilt_x = clampf(target_tilt_x, deg_to_rad(-22.0), deg_to_rad(36.0))
+	target_tilt_z = clampf(target_tilt_z, deg_to_rad(-32.0), deg_to_rad(32.0))
+
+	# Responsive smoothing: fast attack when accelerating/turning, smooth snapback
+	var is_active := (absf(target_tilt_x) > 0.001 or absf(target_tilt_z) > 0.001)
+	var smooth_rate := DRAFT_ATTACK_SPEED if is_active else DRAFT_DECAY_SPEED
+	_current_tilt_rad.x = lerpf(_current_tilt_rad.x, target_tilt_x, clampf(delta * smooth_rate, 0.0, 1.0))
+	_current_tilt_rad.z = lerpf(_current_tilt_rad.z, target_tilt_z, clampf(delta * smooth_rate, 0.0, 1.0))
+
+	# 4. Apply flame tilt directly to fire_particle basis
+	# Basis counter-rotation keeps fire upright in camera view;
+	# multiplying by r_draft tilts it instantaneously according to draft
+	var r_draft := Basis.from_euler(Vector3(_current_tilt_rad.x, 0.0, _current_tilt_rad.z))
+	fire_p.transform.basis = viewmodel_instance.transform.basis.inverse() * r_draft
+
+	# 5. Dynamic gravity adjustment for the trailing smoke and flame curvature
+	var wind_drag := Vector3(-_current_tilt_rad.z * 0.7, 0.0, _current_tilt_rad.x * 0.8)
+	var target_fire_gravity := BASE_FIRE_GRAVITY + wind_drag
+	var target_smoke_gravity := BASE_SMOKE_GRAVITY + (wind_drag * 1.3)
+
+	_current_fire_gravity = _current_fire_gravity.lerp(target_fire_gravity, clampf(delta * 18.0, 0.0, 1.0))
+	_current_smoke_gravity = _current_smoke_gravity.lerp(target_smoke_gravity, clampf(delta * 18.0, 0.0, 1.0))
+
+	if fire_gpu and fire_gpu.process_material is ParticleProcessMaterial:
+		(fire_gpu.process_material as ParticleProcessMaterial).gravity = _current_fire_gravity
+
+	if smoke_gpu and smoke_gpu.process_material is ParticleProcessMaterial:
+		(smoke_gpu.process_material as ParticleProcessMaterial).gravity = _current_smoke_gravity

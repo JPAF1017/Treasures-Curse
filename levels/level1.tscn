@@ -20,6 +20,9 @@
 [ext_resource type="PackedScene" uid="uid://bb7t286mgbkan" path="res://assets/rooms/intro_gnomes.tscn" id="18_2nn5w"]
 [ext_resource type="PackedScene" uid="uid://u15v5fgy1pf3" path="res://assets/rooms/intro_shy.tscn" id="19_shy"]
 [ext_resource type="PackedScene" uid="uid://cq5nv7x75cfpq" path="res://assets/rooms/skull_puzzle.tscn" id="20_53hnx"]
+[ext_resource type="PackedScene" uid="uid://b5spt3a8nlsd4" path="res://assets/rooms/intro_shambler.tscn" id="20_mxqdg"]
+[ext_resource type="PackedScene" uid="uid://ddjp7vqffqqty" path="res://assets/rooms/intro_knight.tscn" id="21_tv7bq"]
+[ext_resource type="PackedScene" uid="uid://cbfkejbruqlei" path="res://assets/rooms/intro_statue.tscn" id="22_wieee"]
 [ext_resource type="Script" uid="uid://d3qdtx4l53w0a" path="res://scripts/dungeon_optimizer.gd" id="98_optimizer"]
 [ext_resource type="Script" uid="uid://bs6kpnol8ky17" path="res://scripts/level1_spawner.gd" id="99_spawner"]
 [ext_resource type="Script" uid="uid://pnceodedcutd" path="res://scripts/multiplayer/player_spawner.gd" id="100_playerspawner"]
@@ -145,6 +148,15 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 10, 
 
 [node name="IntroShy" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=111075602 instance=ExtResource("19_shy")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 50, -20, 30)
+
+[node name="IntroShambler" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=2015801601 instance=ExtResource("20_mxqdg")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 70, -20, -9.999996)
+
+[node name="IntroKnight" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1863103769 instance=ExtResource("21_tv7bq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 40, -20, -40)
+
+[node name="IntroStatue" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1572761109 instance=ExtResource("22_wieee")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, -20, -40)
 
 [node name="SkullPuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1594414824 instance=ExtResource("20_53hnx")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -70, -25, 45)

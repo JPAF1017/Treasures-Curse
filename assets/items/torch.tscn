@@ -11,7 +11,9 @@ height = 3.128662
 [node name="Torch" type="RigidBody3D" unique_id=2074645289]
 script = ExtResource("1_torch")
 held_item_scale = 0.6
-viewmodel_scale = 0.1
+viewmodel_position = Vector3(-0.44, -0.38, -0.45)
+viewmodel_rotation_degrees = Vector3(-10, 25, -14)
+viewmodel_scale = 0.75
 
 [node name="torch" parent="." unique_id=352546870 instance=ExtResource("2_hr5o3")]
 transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)
