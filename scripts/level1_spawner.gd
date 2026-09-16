@@ -84,6 +84,7 @@ var _despawn_check_timer: float = 0.0      # poll interval while waiting for no-
 var _statue_intro_triggered: bool = false  # true once a player has entered the IntroStatue room
 var _statue_door: Node3D = null
 var _statue_door_opened: bool = false
+var _statue_room_pos: Vector3 = Vector3.ZERO
 var _statue_look_timer: float = 0.0
 const STATUE_DOOR_LOOK_DURATION: float = 3.0
 
@@ -96,6 +97,12 @@ const TORCH_SPAWN_DESPAWN_TIME := 15.0
 const TORCH_SPAWN_COOLDOWN_TIME := 15.0
 # Key: player (Node3D), Value: Dictionary with {"torch": Node3D, "timer": float, "cooldown": float}
 var _player_spawned_torches: Dictionary = {}
+
+
+func _enter_tree() -> void:
+	var generator := _find_dungeon_generator(self)
+	if generator:
+		generator.set("custom_get_rooms_function", _custom_get_rooms.bind(generator))
 
 
 func _ready() -> void:
@@ -122,8 +129,48 @@ func _ready() -> void:
 
 	var generator := _find_dungeon_generator(self)
 	if generator:
+		generator.set("custom_get_rooms_function", _custom_get_rooms.bind(generator))
 		generator.done_generating.connect(_on_dungeon_ready.bind(generator))
 		generator.generating_failed.connect(_on_dungeon_failed.bind(generator))
+
+
+## Custom room placement function for DungeonGenerator3D.
+## Restricts procedural rooms to floor 2 and above (Grid Y >= 2) so the bottom
+## two floors contain ONLY pre-placed rooms connected by corridors.
+func _custom_get_rooms(room_instances: Array, rng_seeded: RandomNumberGenerator, generator: Node) -> Array[DungeonRoom3D]:
+	var result: Array[DungeonRoom3D] = []
+	var dungeon_size: Vector3i = generator.get("dungeon_size")
+
+	# Exclude stair rooms — SimpleDungeons handles stairs in the PLACE_STAIRS stage.
+	var placeable_rooms: Array = []
+	for r in room_instances:
+		if r is DungeonRoom3D and not r.is_stair_room:
+			placeable_rooms.append(r)
+
+	if placeable_rooms.is_empty():
+		return result
+
+	# Floor 0 (Y=0) and Floor 1 (Y=1) are reserved exclusively for pre-placed rooms and corridors.
+	const MIN_PROCEDURAL_FLOOR_Y := 2
+
+	for r: DungeonRoom3D in placeable_rooms:
+		var target_count: int = rng_seeded.randi_range(maxi(1, r.min_count), maxi(1, r.max_count))
+		for i in target_count:
+			var clone: DungeonRoom3D = r.create_clone_and_make_virtual_unless_visualizing()
+			clone.room_rotations = rng_seeded.randi_range(0, 3)
+			var buf: Vector3i = dungeon_size - clone.get_grid_aabbi(false).size
+			var min_y: int = mini(MIN_PROCEDURAL_FLOOR_Y, buf.y)
+			var max_y: int = maxi(min_y, buf.y)
+			var rand_pos := Vector3i(
+				rng_seeded.randi_range(0, buf.x),
+				rng_seeded.randi_range(min_y, max_y),
+				rng_seeded.randi_range(0, buf.z)
+			)
+			clone.set_position_by_grid_pos(rand_pos)
+			result.append(clone)
+
+	return result
+
 
 
 ## Called via RPC from the server (and locally on the server) so all peers
@@ -176,6 +223,7 @@ func _on_dungeon_failed(generator: Node) -> void:
 		_table_registry = {}
 		_statue_door = null
 		_statue_door_opened = false
+		_statue_room_pos = Vector3.ZERO
 		_statue_look_timer = 0.0
 		rpc("remote_generate", randi())
 	# Clients reset their seed too so they accept the incoming retry broadcast.
@@ -183,6 +231,7 @@ func _on_dungeon_failed(generator: Node) -> void:
 		_generation_seed = 0
 		_statue_door = null
 		_statue_door_opened = false
+		_statue_room_pos = Vector3.ZERO
 		_statue_look_timer = 0.0
 
 
@@ -221,26 +270,30 @@ func _on_dungeon_ready(generator: Node) -> void:
 	_second_floor_y = start_pos.y + voxel_y * 0.5
 	_voxel_y = voxel_y
 
-	# Remove all procedurally placed non-corridor rooms on the bottom floor.
+	# Remove all procedurally placed non-corridor rooms on the bottom two floors (floors 0 and 1).
 	# Pre-placed rooms and corridors are kept; only random filler rooms are removed.
-	const PREPLACED_NAMES := ["StartRoom", "IntroArena", "TreasureRoom", "Stair", "Bridge", "Gauntlet"]
-	for child in generator.get_children():
-		if not (child is DungeonRoom3D):
+	const PREPLACED_NAMES := [
+		"StartRoom", "IntroArena", "TreasureRoom", "Stair", "Bridge", "Gauntlet",
+		"IntroFly", "IntroGnomes", "IntroShy", "IntroShambler", "IntroKnight", "IntroStatue", "SkullPuzzle"
+	]
+	var removed_procedural_room := false
+	for room_node: Node in generator.find_children("*", "DungeonRoom3D", true, false):
+		if room_node.name.begins_with("Corridor") or room_node.name.begins_with("DeadEnd"):
 			continue
-		var rp := (child as Node3D).global_position
-		if abs(rp.y - start_pos.y) < voxel_y:
-			if child.name in PREPLACED_NAMES:
-				continue
-			# Keep corridors so rooms stay connected
-			if child.name.begins_with("Corridor"):
-				continue
-			# Keep pre-placed dead end rooms
-			if child.name.begins_with("DeadEnd"):
-				continue
-			child.queue_free()
+		if room_node is CandlePuzzleRoom:
+			continue
+		if room_node.name in PREPLACED_NAMES:
+			continue
+		var rp := (room_node as Node3D).global_position
+		# Remove procedural filler rooms on the bottom two floors
+		if abs(rp.y - start_pos.y) < voxel_y * 1.5:
+			room_node.queue_free()
+			removed_procedural_room = true
 
-	# Refresh all_rooms after removals.
-	all_rooms = generator.find_children("*", "DungeonRoom3D", true, false)
+	# Refresh all_rooms after removals if any were removed.
+	if removed_procedural_room:
+		all_rooms = generator.find_children("*", "DungeonRoom3D", true, false)
+
 	# Spawn gauntlet enemies below each room's chandelier and open each
 	# room's Door node when all enemies in that room have been killed.
 	var _gauntlet_node := generator.find_child("Gauntlet", true, false)
@@ -569,18 +622,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 						rpc("rpc_open_or_delete_door", door.get_path(), false, 60.0)
 					else:
 						rpc_open_or_delete_door(door.get_path(), false, 60.0)
-					var players := get_tree().get_nodes_in_group("player")
-					var someone_hurt := players.any(func(p: Node) -> bool:
-						return p.get(&"health") != null and (p.get(&"health") as float) < 100.0
-					)
-					if someone_hurt:
-						var potion_pos := arena_pos + Vector3(0, 0.5, 0)
-						if _item_spawner:
-							_item_spawner.spawn({"scene": ITEM_SCENES["health"], "pos": potion_pos})
-						else:
-							var potion: Node3D = load(ITEM_SCENES["health"]).instantiate()
-							add_child(potion)
-							potion.global_position = potion_pos
+					_spawn_intro_health_potion_if_hurt(arena_pos)
 				)
 		var sword_pos := arena_pos + Vector3(0, 0.5, 0)
 		if _item_spawner:
@@ -614,6 +656,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 							rpc("rpc_open_or_delete_door", door.get_path(), false, 60.0)
 						else:
 							rpc_open_or_delete_door(door.get_path(), false, 60.0)
+						_spawn_intro_health_potion_if_hurt(room_pos)
 					)
 		# Spawn a sword in the middle of the room
 		var sword_pos := room_pos + Vector3(0, 0.5, 0)
@@ -650,6 +693,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 							rpc("rpc_open_or_delete_door", gnome_door.get_path(), false, 60.0)
 						else:
 							rpc_open_or_delete_door(gnome_door.get_path(), false, 60.0)
+						_spawn_intro_health_potion_if_hurt(gnomes_pos)
 				)
 		# Spawn a sword in the middle of the room
 		var sword_pos := gnomes_pos + Vector3(0, 0.5, 0)
@@ -693,6 +737,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 						rpc("rpc_open_or_delete_door", shy_door.get_path(), false, 60.0)
 					else:
 						rpc_open_or_delete_door(shy_door.get_path(), false, 60.0)
+					_spawn_intro_health_potion_if_hurt(shy_pos)
 				)
 			
 			if shy_ref.is_node_ready():
@@ -712,6 +757,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# when a player first walks in, starting the despawn/respawn cycle.
 	var intro_statue_room := generator.find_child("IntroStatue", true, false) as Node3D
 	if intro_statue_room:
+		_statue_room_pos = intro_statue_room.global_position
 		_statue_door = intro_statue_room.get_node_or_null("Models/Walls/Back/Door_02") as Node3D
 		_statue_door_opened = false
 		_statue_look_timer = 0.0
@@ -796,6 +842,22 @@ func _rng_shuffle(array: Array, rng: RandomNumberGenerator) -> void:
 		array[j] = tmp
 
 
+## Spawns a health potion at the intro room center if any player took damage.
+func _spawn_intro_health_potion_if_hurt(room_pos: Vector3) -> void:
+	var players := get_tree().get_nodes_in_group("player")
+	var someone_hurt := players.any(func(p: Node) -> bool:
+		return p.get(&"health") != null and (p.get(&"health") as float) < 100.0
+	)
+	if someone_hurt:
+		var potion_pos := room_pos + Vector3(0, 0.5, 0)
+		if _item_spawner:
+			_item_spawner.spawn({"scene": ITEM_SCENES["health"], "pos": potion_pos})
+		else:
+			var potion: Node3D = load(ITEM_SCENES["health"]).instantiate()
+			add_child(potion)
+			potion.global_position = potion_pos
+
+
 ## Spawn function called by NPCSpawner on all peers.
 func _do_spawn_npc(data: Dictionary) -> Node:
 	var packed := load(data["scene"]) as PackedScene
@@ -870,6 +932,8 @@ func _process(delta: float) -> void:
 						rpc("rpc_open_or_delete_door", _statue_door.get_path(), false, 60.0)
 					else:
 						rpc_open_or_delete_door(_statue_door.get_path(), false, 60.0)
+					if _statue_room_pos != Vector3.ZERO:
+						_spawn_intro_health_potion_if_hurt(_statue_room_pos)
 			else:
 				_statue_look_timer = maxf(_statue_look_timer - delta * 2.0, 0.0)
 

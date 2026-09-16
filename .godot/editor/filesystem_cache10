@@ -150,14 +150,14 @@ shy_Character_Monster_04.png::CompressedTexture2D::7181381470346393237::17742578
 statue.glb::PackedScene::1510593441703868854::1771731956::1771731956::1::::<><><>0<>0<>5dd412a273fd5c932fa7aa0da5bca03c<>res://.godot/imported/statue.glb-6b76dd46a8db68f4ff4ee3a5e41af431.scn::uid://ctiqsadfr5e2q::::res://assets/entities/statue_Character_Monster.png
 statue_asset.tscn::PackedScene::5388983664721488496::1771747524::0::1::::<><><>0<>0<><>::uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb
 statue_Character_Monster.png::CompressedTexture2D::6123948039601339926::1771731956::1771731956::1::::<><><>0<>0<>4cc58f44abd0c873683c7bc5d154a863<>res://.godot/imported/statue_Character_Monster.png-921413577eb5e2972b1f59aab82df13b.s3tc.ctex::
-::res://assets/items/::1789592219
+::res://assets/items/::1789592896
 axe.tscn::PackedScene::8932074124412475625::1776578422::0::1::::<><><>0<>0<><>::uid://bmlfruh6i6jy7::::res://assets/items assets/axe.glb<>uid://co8bhh042ynal::::res://scripts/items/axe.gd
 bat.tscn::PackedScene::1444874965088193290::1776765830::0::1::::<><><>0<>0<><>::uid://dnaa5r00sen4i::::res://scripts/items/bat.gd<>uid://o01njqhk0f7u::::res://assets/items assets/axe.glb
 Gem_key1.tscn::PackedScene::6435825200265319035::1777480383::0::1::::<><><>0<>0<><>::uid://bo30ng3hsuvks::::res://assets/items assets/blue_gem.glb<>uid://bqju4qfcqj8gm::::res://scripts/items/gem_key1.gd
 Gem_key2.tscn::PackedScene::1968555365126842756::1777486811::0::1::::<><><>0<>0<><>::uid://xu1ueblnsxlj::::res://scripts/items/gem_key2.gd<>uid://mlb0gm6b2e3j::::res://assets/items assets/green_gem.glb
 Gem_key3.tscn::PackedScene::6304456720891540129::1777486833::0::1::::<><><>0<>0<><>::uid://bd5kbrr5kfs5r::::res://assets/items assets/yellow_gem.glb<>uid://d1l26gkscjgsn::::res://scripts/items/gem_key3.gd
 Gem_key4.tscn::PackedScene::7695516082604151474::1777486956::0::1::::<><><>0<>0<><>::uid://c4rm51cax36c6::::res://assets/items assets/red_gem.glb<>uid://c8w8vqba8pl1t::::res://scripts/items/gem_key4.gd
-gold.tscn::PackedScene::6407126776392413734::1789592219::0::1::::<><><>0<>0<><>::uid://csfcmutdg7kat::::res://scripts/items/gold.gd<>uid://c54mvflbcgsfv::::res://assets/items assets/gold1.glb<>uid://dpioiv65rmnmf::::res://assets/items assets/gold2.glb<>uid://cmv0814s50wt1::::res://assets/items assets/gold3.glb
+gold.tscn::PackedScene::6407126776392413734::1789592896::0::1::::<><><>0<>0<><>::uid://csfcmutdg7kat::::res://scripts/items/gold.gd<>uid://c54mvflbcgsfv::::res://assets/items assets/gold1.glb<>uid://dpioiv65rmnmf::::res://assets/items assets/gold2.glb<>uid://cmv0814s50wt1::::res://assets/items assets/gold3.glb
 health.tscn::PackedScene::1367903231968309377::1776660575::0::1::::<><><>0<>0<><>::uid://brxc7lsdw8lpi::::res://scripts/items/health.gd<>uid://binumxdf5knpu::::res://assets/items assets/health.glb
 projectile.tscn::PackedScene::5921567088140244708::1776483815::0::1::::<><><>0<>0<><>::
 shovel.tscn::PackedScene::7361508600567735026::1777047514::0::1::::<><><>0<>0<><>::uid://4ohdemwq642m::::res://scripts/items/shovel.gd<>uid://cuf724ak5uca::::res://assets/items assets/mace.glb
@@ -495,7 +495,7 @@ table_item_spawn.gd::GDScript::8351178420905279132::1781249381::0::1::::TableIte
 dungeon_optimizer.gd::GDScript::9157797051449046666::1779008384::0::1::::<>Node<><>0<>0<><>::
 game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0<><>::
 level1_spawner.gd::GDScript::3714450241364899252::1789536721::0::1::::<>Node3D<><>0<>0<><>::
-player.gd::GDScript::7860289825015925474::1789592707::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::7860289825015925474::1789593729::0::1::::<>CharacterBody3D<><>0<>0<><>::
 settings_manager.gd::GDScript::8170435877026185281::1783231002::0::1::::<>Node<><>0<>0<><>::
 ::res://scripts/items/::1789399492
 axe.gd::GDScript::5823683269390956943::1789592855::0::1::::Axe<>RigidBody3D<><>0<>0<><>::
@@ -535,7 +535,7 @@ voice_chat.gd::GDScript::7875564697396658570::1779318512::0::1::::VoiceChat<>Nod
 ::res://scripts/npc/::1789398641
 charger.gd::GDScript::1646150627938634418::1789397519::0::1::::<>CharacterBody3D<><>0<>0<><>::
 EnemyDeathLingerComponent.gd::GDScript::8940946792397853270::1789391649::0::1::::EnemyDeathLingerComponent<>RefCounted<><>0<>0<><>::
-EnemyLocomotionComponent.gd::GDScript::441470401969985677::1789592696::0::1::::EnemyLocomotionComponent<>RefCounted<><>0<>0<><>::
+EnemyLocomotionComponent.gd::GDScript::441470401969985677::1789593706::0::1::::EnemyLocomotionComponent<>RefCounted<><>0<>0<><>::
 EnemyPerceptionMemoryComponent.gd::GDScript::4902680277644045211::1781679272::0::1::::EnemyPerceptionMemoryComponent<>RefCounted<><>0<>0<><>::
 fly.gd::GDScript::8100500379503402940::1785393028::0::1::::<>CharacterBody3D<><>0<>0<><>::
 gnome.gd::GDScript::733313282094775466::1785393028::0::1::::<>CharacterBody3D<><>0<>0<><>::

@@ -12,7 +12,7 @@ radius = 0.7104492
 [node name="Gold" type="RigidBody3D" unique_id=2016877817]
 script = ExtResource("1_script")
 held_item_scale = 2.0
-viewmodel_scale = 0.2
+viewmodel_scale = 0.68
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1080298490]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48217773, 0)

@@ -58,6 +58,7 @@ const HOTBAR_SELECTED_SCALE = 1.18
 const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 const VOICE_CHAT_SCRIPT: Script = preload("res://scripts/multiplayer/voice_chat.gd")
+const ENEMY_LOCOMOTION_SCRIPT := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
 const ROOM_TITLE_AREA_SCRIPT: Script = preload("res://scripts/rooms/room_title_area.gd")
@@ -940,6 +941,7 @@ func _physics_process(delta):
 	var pre_landing_vert_speed: float = -velocity.y
 
 	move_and_slide()
+	ENEMY_LOCOMOTION_SCRIPT.push_rigid_bodies(self, 3.0)
 	if tired_jump_active and is_on_floor():
 		tired_jump_active = false
 	if was_in_air and is_on_floor():
@@ -1067,7 +1069,8 @@ func is_movement_locked_by_other(locker: Node) -> bool:
 func _is_wall_collision_with_character() -> bool:
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
-		if collision.get_collider() is CharacterBody3D:
+		var collider := collision.get_collider()
+		if collider is CharacterBody3D or collider is RigidBody3D:
 			var normal := collision.get_normal()
 			if absf(normal.y) < 0.5:
 				return true

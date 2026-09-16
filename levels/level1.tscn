@@ -161,6 +161,12 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, -
 [node name="SkullPuzzle" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=1594414824 instance=ExtResource("20_53hnx")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -70, -25, 45)
 
+[node name="DeadEnd15" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=521426471 instance=ExtResource("13_a5s8o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -26, -30)
+
+[node name="Stair2" parent="NavigationRegion3D/DungeonGenerator3D" unique_id=442438374 instance=ExtResource("2_045es")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -25.000006, -20, -40)
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=488104464]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, -89.3973, 113.895, 0)
 visible = false
