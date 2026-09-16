@@ -5,6 +5,7 @@ const HEALTH_ITEM_ICON: Texture2D = preload("res://assets/ui/health.png")
 const HEALTH_MODEL_SCENE: PackedScene = preload("res://assets/items assets/health.glb")
 static var melee_shared = preload("res://scripts/items/MeleeItemSharedComponent.gd").new()
 const HealParticleEffect = preload("res://scripts/items/HealParticleEffect.gd")
+const HEAL_SOUND: AudioStream = preload("res://sounds/Interactions/heal.mp3")
 
 const HEALTH_RESTORE_AMOUNT := 30.0
 const ITEM_DROP_FORWARD_DISTANCE := 1.0
@@ -14,8 +15,8 @@ const ITEM_DROP_UPWARD_SPEED := 0.5
 const HEALTH_PHYSICS_COLLISION_LAYER := 3
 const HEALTH_PHYSICS_COLLISION_MASK := 3
 const HEALTH_PHYSICS_MASS := 0.1
-const HEALTH_PHYSICS_LINEAR_DAMP := 0.2
-const HEALTH_PHYSICS_ANGULAR_DAMP := 0.4
+const HEALTH_PHYSICS_LINEAR_DAMP := 2.5
+const HEALTH_PHYSICS_ANGULAR_DAMP := 3.0
 const HEALTH_ATTACHMENT_NODE_NAME := "RightHandHealthAttachment"
 
 static var equip_key_was_down: bool = false
@@ -28,6 +29,9 @@ static var equip_key_was_down: bool = false
 @export var viewmodel_position: Vector3 = Vector3(0.25, -0.18, -0.35)
 @export var viewmodel_rotation_degrees: Vector3 = Vector3(0.0, -15.0, 0.0)
 @export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.06
+
+@export_group("Audio")
+@export_range(-80.0, 24.0, 0.5, "suffix:dB") var heal_volume_db: float = -6.0 # 50% decrease (-6.0 dB)
 
 const VIEWMODEL_BOB_FREQ := 2.0
 const VIEWMODEL_BOB_AMP_Y := 0.012
@@ -81,6 +85,22 @@ func get_hotbar_icon_modulate(alpha: float) -> Color:
 	return Color(1.0, 1.0, 1.0, alpha)
 
 
+## Plays the heal sound effect in 3D world space at the target position.
+static func play_heal_sound(scene_tree: SceneTree, world_position: Vector3, volume_db: float = 0.0) -> void:
+	if scene_tree == null:
+		return
+	var root := scene_tree.current_scene
+	if root == null:
+		return
+	var audio_player := AudioStreamPlayer3D.new()
+	audio_player.stream = HEAL_SOUND
+	audio_player.volume_db = volume_db
+	root.add_child(audio_player)
+	audio_player.global_position = world_position
+	audio_player.finished.connect(audio_player.queue_free)
+	audio_player.play()
+
+
 func can_start_primary_action() -> bool:
 	return inventory_slot_index >= 0 and is_equipped_in_hand()
 
@@ -102,9 +122,11 @@ func begin_primary_action(player: Node) -> bool:
 		player.call("_update_health_ui")
 
 	if player.has_method("trigger_heal_effect"):
-		player.call("trigger_heal_effect")
+		player.call("trigger_heal_effect", heal_volume_db)
 	else:
 		HealParticleEffect.spawn(player)
+		var sound_pos := (player as Node3D).global_position if player is Node3D else global_position
+		play_heal_sound(get_tree(), sound_pos, heal_volume_db)
 
 	_hide_viewmodel()
 
@@ -219,10 +241,11 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinti
 
 
 func _configure_item_physics() -> void:
-	mass = HEALTH_PHYSICS_MASS
-	linear_damp = HEALTH_PHYSICS_LINEAR_DAMP
-	angular_damp = HEALTH_PHYSICS_ANGULAR_DAMP
-	can_sleep = true
+	melee_shared.configure_item_physics(self, HEALTH_PHYSICS_MASS, HEALTH_PHYSICS_LINEAR_DAMP, HEALTH_PHYSICS_ANGULAR_DAMP)
+
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	melee_shared.limit_body_velocity_and_recover(state)
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:

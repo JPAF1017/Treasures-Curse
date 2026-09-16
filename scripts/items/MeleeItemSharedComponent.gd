@@ -54,6 +54,37 @@ func find_item_rigidbody_from_node(node: Node, scene_path: String, base_name: St
 	return null
 
 
+func configure_item_physics(
+	body: RigidBody3D,
+	mass_value: float,
+	linear_damp_value: float = 2.5,
+	angular_damp_value: float = 3.0
+) -> void:
+	if body == null:
+		return
+	body.mass = mass_value
+	body.linear_damp = linear_damp_value
+	body.angular_damp = angular_damp_value
+	body.can_sleep = true
+	body.continuous_cd = true
+
+
+func limit_body_velocity_and_recover(state: PhysicsDirectBodyState3D, fallback_y: float = -34.0, max_speed: float = 8.0) -> void:
+	if state == null:
+		return
+	# Strict velocity cap prevents tunnelling through static colliders like walls.
+	if state.linear_velocity.length_squared() > max_speed * max_speed:
+		state.linear_velocity = state.linear_velocity.limit_length(max_speed)
+	# Safety check: if an item ever drops through geometry into the void below -45.0,
+	# recover it to the ground level so players never get softlocked.
+	if state.transform.origin.y < -45.0:
+		state.linear_velocity = Vector3.ZERO
+		state.angular_velocity = Vector3.ZERO
+		var t := state.transform
+		t.origin.y = fallback_y
+		state.transform = t
+
+
 func set_item_physics_enabled(
 	body: RigidBody3D,
 	enabled: bool,
@@ -67,10 +98,10 @@ func set_item_physics_enabled(
 	body.freeze = not enabled
 	body.sleeping = not enabled
 	body.can_sleep = true
-	body.continuous_cd = enabled
+	body.continuous_cd = true
 	body.mass = mass_value
-	body.linear_damp = linear_damp_value
-	body.angular_damp = angular_damp_value
+	body.linear_damp = maxf(linear_damp_value, 2.5)
+	body.angular_damp = maxf(angular_damp_value, 3.0)
 	body.linear_velocity = Vector3.ZERO
 	body.angular_velocity = Vector3.ZERO
 	body.collision_layer = 0 if not enabled else collision_layer_when_enabled

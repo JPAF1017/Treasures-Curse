@@ -58,7 +58,6 @@ const HOTBAR_SELECTED_SCALE = 1.18
 const HOTBAR_DEFAULT_SCALE = 1.0
 const HOTBAR_ITEM_LABEL_FONT_PATH = "res://assets/ui/dungeon-mode.ttf"
 const VOICE_CHAT_SCRIPT: Script = preload("res://scripts/multiplayer/voice_chat.gd")
-const ENEMY_LOCOMOTION_SCRIPT := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SHOVEL_ITEM_SCRIPT: Script = preload("res://scripts/items/shovel.gd")
 const HEALTH_ITEM_SCRIPT: Script = preload("res://scripts/items/health.gd")
 const ROOM_TITLE_AREA_SCRIPT: Script = preload("res://scripts/rooms/room_title_area.gd")
@@ -88,6 +87,7 @@ const CHASE_SHY_SOUND_PATH := "res://sounds/player/chase3.mp3"
 const SWING_SOUND_PATH := "res://sounds/player/swing.mp3"
 const HEARTBEAT_SOUND_PATH := "res://sounds/Interactions/heartbeat.mp3"
 const HEAVY_BREATHING_SOUND_PATH := "res://sounds/Interactions/heavybreathing.mp3"
+const HEAL_SOUND_PATH := "res://sounds/Interactions/heal.mp3"
 const LOW_HEALTH_THRESHOLD_RATIO := 0.25
 const STEP_ANIM_FPS := 30.0
 # Trigger frames for each animation (a step sound fires each time the position crosses one)
@@ -115,6 +115,7 @@ const STEP_FRAMES: Dictionary = {
 @export_group("Vitals Audio")
 @export_range(-40.0, 10.0, 0.5, "suffix:dB") var low_health_heartbeat_volume_db: float = 0.0
 @export_range(-40.0, 10.0, 0.1, "suffix:dB") var heavy_breathing_volume_db: float = -15.1
+@export_range(-40.0, 10.0, 0.5, "suffix:dB") var heal_volume_db: float = -6.0 # 50% decrease (-6.0 dB)
 #------------------------------------------------------
 var speed
 var t_bob = 0.0
@@ -203,6 +204,8 @@ var _cel_rect: ColorRect = null
 
 var _heartbeat_player: AudioStreamPlayer = null
 var _heavy_breathing_player: AudioStreamPlayer = null
+var _heal_player: AudioStreamPlayer = null
+var _heal_sound_stream: AudioStream = null
 
 var _game_started: bool = false
 var cutscene_active: bool = false
@@ -371,6 +374,8 @@ func _ready():
 			_heartbeat_player.volume_db = -80.0
 		if _heavy_breathing_player != null:
 			_heavy_breathing_player.volume_db = -80.0
+		if _heal_player != null:
+			_heal_player.volume_db = -80.0
 		_configure_vision_area()
 		if visual_root:
 			visual_root.rotation.y = head.rotation.y + deg_to_rad(visual_yaw_offset_degrees)
@@ -935,7 +940,6 @@ func _physics_process(delta):
 	var pre_landing_vert_speed: float = -velocity.y
 
 	move_and_slide()
-	ENEMY_LOCOMOTION_SCRIPT.push_rigid_bodies(self, 2.5)
 	if tired_jump_active and is_on_floor():
 		tired_jump_active = false
 	if was_in_air and is_on_floor():
@@ -1182,6 +1186,21 @@ func _setup_vitals_audio() -> void:
 	_heavy_breathing_player.volume_db = -80.0
 	add_child(_heavy_breathing_player)
 
+	_setup_heal_audio()
+
+func _setup_heal_audio() -> void:
+	if _heal_player != null and is_instance_valid(_heal_player):
+		return
+	_heal_player = AudioStreamPlayer.new()
+	_heal_player.name = "HealPlayer"
+	_heal_player.bus = "Master"
+	var poly := AudioStreamPolyphonic.new()
+	poly.polyphony = 4
+	_heal_player.stream = poly
+	add_child(_heal_player)
+	_heal_player.play()
+	_heal_sound_stream = load(HEAL_SOUND_PATH)
+
 func _update_vitals_audio(delta: float) -> void:
 	if not is_multiplayer_authority() or is_dead:
 		if _heartbeat_player != null and _heartbeat_player.playing:
@@ -1375,9 +1394,29 @@ func _show_heal_tint() -> void:
 	heal_tint_tween = create_tween()
 	heal_tint_tween.tween_property(heal_tint_rect, "color:a", 0.0, HEAL_TINT_FADE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
-func trigger_heal_effect() -> void:
+func trigger_heal_effect(volume_override: Variant = null) -> void:
 	HealParticleEffect.spawn(self)
 	_show_heal_tint()
+	var vol: float = heal_volume_db
+	if volume_override != null and (typeof(volume_override) == TYPE_FLOAT or typeof(volume_override) == TYPE_INT):
+		vol = float(volume_override)
+	_play_heal_sound(vol)
+
+func _play_heal_sound(vol: float = 0.0) -> void:
+	if not is_multiplayer_authority():
+		return
+	if _heal_player == null or not is_instance_valid(_heal_player):
+		_setup_heal_audio()
+	if _heal_sound_stream == null:
+		_heal_sound_stream = load(HEAL_SOUND_PATH)
+	if _heal_player != null and _heal_sound_stream != null:
+		var playback: AudioStreamPlaybackPolyphonic = _heal_player.get_stream_playback()
+		if playback != null:
+			playback.play_stream(_heal_sound_stream, 0.0, vol)
+		else:
+			_heal_player.stream = _heal_sound_stream
+			_heal_player.volume_db = vol
+			_heal_player.play()
 
 func _setup_hotbar_ui() -> void:
 	hotbar_font = load(HOTBAR_ITEM_LABEL_FONT_PATH) as FontFile

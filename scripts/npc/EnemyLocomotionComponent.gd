@@ -43,5 +43,11 @@ static func push_rigid_bodies(body: CharacterBody3D, push_force: float = 2.0) ->
 					continue
 			
 			var mass := rigid.mass if rigid.mass > 0.0 else 0.1
-			var impulse_magnitude := clampf(push_force * mass, 0.1, 10.0)
-			rigid.apply_central_impulse(push_dir * impulse_magnitude)
+			var max_push_speed := clampf(body.velocity.length(), 0.5, 1.5)
+			var current_speed := rigid.linear_velocity.dot(push_dir)
+			if current_speed < max_push_speed:
+				var needed_speed := max_push_speed - maxf(current_speed, 0.0)
+				var impulse_magnitude := clampf(needed_speed * mass * 0.5, 0.01, 0.5)
+				rigid.apply_central_impulse(push_dir * impulse_magnitude)
+			if rigid.linear_velocity.length_squared() > 4.0:
+				rigid.linear_velocity = rigid.linear_velocity.limit_length(2.0)

@@ -12,8 +12,8 @@ const ITEM_DROP_UPWARD_SPEED := 0.5
 const GEM_KEY2_PHYSICS_COLLISION_LAYER := 3
 const GEM_KEY2_PHYSICS_COLLISION_MASK := 3
 const GEM_KEY2_PHYSICS_MASS := 0.1
-const GEM_KEY2_PHYSICS_LINEAR_DAMP := 0.2
-const GEM_KEY2_PHYSICS_ANGULAR_DAMP := 0.4
+const GEM_KEY2_PHYSICS_LINEAR_DAMP := 2.5
+const GEM_KEY2_PHYSICS_ANGULAR_DAMP := 3.0
 const GEM_KEY2_ATTACHMENT_NODE_NAME := "RightHandGemKey2Attachment"
 
 const VIEWMODEL_BOB_FREQ := 2.0
@@ -204,10 +204,11 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinti
 
 
 func _configure_item_physics() -> void:
-	mass = GEM_KEY2_PHYSICS_MASS
-	linear_damp = GEM_KEY2_PHYSICS_LINEAR_DAMP
-	angular_damp = GEM_KEY2_PHYSICS_ANGULAR_DAMP
-	can_sleep = true
+	melee_shared.configure_item_physics(self, GEM_KEY2_PHYSICS_MASS, GEM_KEY2_PHYSICS_LINEAR_DAMP, GEM_KEY2_PHYSICS_ANGULAR_DAMP)
+
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	melee_shared.limit_body_velocity_and_recover(state)
 
 
 func _set_item_physics_enabled(enabled: bool) -> void:

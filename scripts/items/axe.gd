@@ -42,8 +42,8 @@ const SWING_MOMENTUM_SPEED := 30.0
 const AXE_PHYSICS_COLLISION_LAYER := 3
 const AXE_PHYSICS_COLLISION_MASK := 3
 const AXE_PHYSICS_MASS := 0.1
-const AXE_PHYSICS_LINEAR_DAMP := 0.2
-const AXE_PHYSICS_ANGULAR_DAMP := 0.4
+const AXE_PHYSICS_LINEAR_DAMP := 2.5
+const AXE_PHYSICS_ANGULAR_DAMP := 3.0
 
 static var equip_key_was_down: bool = false
 
@@ -530,10 +530,11 @@ func _set_item_physics_enabled(enabled: bool) -> void:
 
 
 func _configure_item_physics() -> void:
-	mass = AXE_PHYSICS_MASS
-	linear_damp = AXE_PHYSICS_LINEAR_DAMP
-	angular_damp = AXE_PHYSICS_ANGULAR_DAMP
-	can_sleep = true
+	melee_shared.configure_item_physics(self, AXE_PHYSICS_MASS, AXE_PHYSICS_LINEAR_DAMP, AXE_PHYSICS_ANGULAR_DAMP)
+
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	melee_shared.limit_body_velocity_and_recover(state)
 
 
 func _set_item_visuals_visible(visibility: bool) -> void:
