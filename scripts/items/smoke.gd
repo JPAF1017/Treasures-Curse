@@ -29,8 +29,8 @@ static var equip_key_was_down: bool = false
 @export var held_item_rotation_degrees: Vector3 = Vector3(92.0, 300.0, 276.0)
 @export_range(0.01, 2.0, 0.01) var held_item_scale: float = 0.200
 
-@export var viewmodel_position: Vector3 = Vector3(-0.25, -0.18, -0.35)
-@export var viewmodel_rotation_degrees: Vector3 = Vector3(0.0, 15.0, 0.0)
+@export var viewmodel_position: Vector3 = Vector3(0.25, -0.18, -0.35)
+@export var viewmodel_rotation_degrees: Vector3 = Vector3(0.0, -15.0, 0.0)
 @export_range(0.01, 2.0, 0.01) var viewmodel_scale: float = 0.06
 
 const VIEWMODEL_BOB_FREQ := 2.0
