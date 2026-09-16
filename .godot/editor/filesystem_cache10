@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1789529460
+::res://::1789574747
 AGENTS.md::TextFile::-1::1789421533::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1779345796::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::584922753877357018::1777213248::1777213249::1::::<><><>0<>0<>cae14fdf34577903ea8282ebd52773bb<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
@@ -150,7 +150,7 @@ shy_Character_Monster_04.png::CompressedTexture2D::7181381470346393237::17742578
 statue.glb::PackedScene::1510593441703868854::1771731956::1771731956::1::::<><><>0<>0<>5dd412a273fd5c932fa7aa0da5bca03c<>res://.godot/imported/statue.glb-6b76dd46a8db68f4ff4ee3a5e41af431.scn::uid://ctiqsadfr5e2q::::res://assets/entities/statue_Character_Monster.png
 statue_asset.tscn::PackedScene::5388983664721488496::1771747524::0::1::::<><><>0<>0<><>::uid://vr0iu2dcb2hu::::res://assets/entities/statue.glb
 statue_Character_Monster.png::CompressedTexture2D::6123948039601339926::1771731956::1771731956::1::::<><><>0<>0<>4cc58f44abd0c873683c7bc5d154a863<>res://.godot/imported/statue_Character_Monster.png-921413577eb5e2972b1f59aab82df13b.s3tc.ctex::
-::res://assets/items/::1789534425
+::res://assets/items/::1789549146
 axe.tscn::PackedScene::8932074124412475625::1776578422::0::1::::<><><>0<>0<><>::uid://bmlfruh6i6jy7::::res://assets/items assets/axe.glb<>uid://co8bhh042ynal::::res://scripts/items/axe.gd
 bat.tscn::PackedScene::1444874965088193290::1776765830::0::1::::<><><>0<>0<><>::uid://dnaa5r00sen4i::::res://scripts/items/bat.gd<>uid://o01njqhk0f7u::::res://assets/items assets/axe.glb
 Gem_key1.tscn::PackedScene::6435825200265319035::1777480383::0::1::::<><><>0<>0<><>::uid://bo30ng3hsuvks::::res://assets/items assets/blue_gem.glb<>uid://bqju4qfcqj8gm::::res://scripts/items/gem_key1.gd
@@ -168,7 +168,9 @@ smoke_outer.gdshader::Shader::3816609527725199355::1789534425::0::1::::<><><>0<>
 smoke_overlay.gdshader::Shader::3604435434101178103::1789534425::0::1::::<><><>0<>0<><>::
 smoke_ring.gdshader::Shader::6575844316335550020::1776670339::0::1::::<><><>0<>0<><>::
 sword.tscn::PackedScene::5200962671222061136::1783155001::0::1::::<><><>0<>0<><>::uid://dh8evklftqc12::::res://scripts/items/sword.gd<>uid://c056vwytpco7e::::res://assets/items assets/sword.glb
-torch.tscn::PackedScene::6657805204347901354::1785392082::0::1::::<><><>0<>0<><>::uid://dr76mb584vij3::::res://scripts/items/torch.gd<>uid://3adgm2lodnwe::::res://assets/base assets/ps1psx_wooden_torch.glb<>uid://cvp45jmoq8e5j::::res://assets/room assets/fire_particle.tscn
+torch.tscn::PackedScene::6657805204347901354::1789542427::0::1::::<><><>0<>0<><>::uid://dr76mb584vij3::::res://scripts/items/torch.gd<>uid://3adgm2lodnwe::::res://assets/base assets/ps1psx_wooden_torch.glb<>uid://cvp45jmoq8e5j::::res://assets/room assets/fire_particle.tscn
+torch_fire_particle.tscn::PackedScene::-1::1789549208::0::1::::<><><>0<>0<><>::uid://cglkgqjnadm8::::res://assets/base assets/fire_01.png<>uid://di6sbcly2wvmy::::res://assets/base assets/smoke_01.png
+torch_viewmodel.tscn::PackedScene::-1::1789549226::0::1::::<><><>0<>0<><>::uid://3adgm2lodnwe::::res://assets/base assets/ps1psx_wooden_torch.glb<>res://assets/items/torch_fire_particle.tscn
 ::res://assets/items assets/::1783398800
 axe.glb::PackedScene::1035855609676062256::1776764841::1776764841::1::::<><><>0<>0<>3c5751ed9e19ecde85d2eeb1139e02e6<>res://.godot/imported/axe.glb-a925616b067e46062e370197227014e6.scn::uid://cqbqgsg6374oo::::res://assets/items assets/axe_T_PSX_Axe.png
 axe_T_PSX_Axe.png::CompressedTexture2D::5898910386132809214::1776764841::1776764842::1::::<><><>0<>0<>17b85a5b178ccc4264ffff0d1314a5d7<>res://.godot/imported/axe_T_PSX_Axe.png-c908af2896ddd56fda087727b1a7ded9.s3tc.ctex::
@@ -487,6 +489,7 @@ candle_puzzle_table4.tscn::PackedScene::3725988710139766608::1776877139::0::1:::
 item_hold_check.gd::GDScript::4027256373182890907::1779321570::0::1::::<>Area3D<><>0<>0<><>::
 skull_key.tscn::PackedScene::2406437424341086205::1776950538::0::1::::<><><>0<>0<><>::uid://b8hgvq1xxcs6i::::res://assets/items assets/skull.glb<>uid://dvisex0mou1wl::::res://scripts/items/skull_key.gd
 table_item_spawn.gd::GDScript::8351178420905279132::1781249381::0::1::::TableItemSpawn<>Area3D<><>0<>0<><>::
+::res://scenes/::1789550420
 ::res://scripts/::1783398804
 dungeon_optimizer.gd::GDScript::9157797051449046666::1779008384::0::1::::<>Node<><>0<>0<><>::
 game_stats.gd::GDScript::7933062881721716622::1777487512::0::1::::<>Node<><>0<>0<><>::
@@ -524,7 +527,7 @@ smoke_effect.gd::GDScript::1212536031321311876::1778210946::0::1::::<>Node3D<><>
 SparksEffect.gd::GDScript::8071442193031798702::1783232821::0::1::::SparksEffect<>RefCounted<><>0<>0<><>::
 StatueCrumbleEffect.gd::GDScript::4466628560207265700::1789398826::0::1::::StatueCrumbleEffect<>RefCounted<><>0<>0<><>::
 sword.gd::GDScript::7718989334552120743::1789391032::0::1::::Sword<>RigidBody3D<><>0<>0<><>::
-torch.gd::GDScript::8420436237764825990::1789540113::0::1::::<>RigidBody3D<><>0<>0<><>::
+torch.gd::GDScript::8420436237764825990::1789576073::0::1::::<>RigidBody3D<><>0<>0<><>::
 ::res://scripts/multiplayer/::1783398803
 player_spawner.gd::GDScript::1079798882681583705::1777306048::0::1::::PlayerSpawner<>Node<><>0<>0<><>::
 voice_chat.gd::GDScript::7875564697396658570::1779318512::0::1::::VoiceChat<>Node3D<><>0<>0<><>::

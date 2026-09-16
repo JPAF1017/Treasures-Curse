@@ -338,12 +338,28 @@ func refresh_inventory_state(player: Node, selected_slot_index: int, _is_sprinti
 		is_burning = true
 	else:
 		_detach_from_hand(player)
-		_hide_viewmodel()
-		var is_solo := _is_single_player_active(player)
+		var is_selected_torch := _has_selected_torch(player, selected_slot_index)
 		var is_primary := _is_primary_passive_torch(player)
-		var keep_passive: bool = is_solo and is_primary
-		_apply_torch_light(player, keep_passive)
-		is_burning = keep_passive
+		var keep_visible: bool = selected_slot_index >= 0 and (not is_selected_torch) and is_primary
+		if keep_visible:
+			_show_viewmodel(player)
+			_apply_torch_light(player, true)
+			is_burning = true
+		else:
+			_hide_viewmodel()
+			_apply_torch_light(player, false)
+			is_burning = false
+
+
+func _has_selected_torch(player: Node, selected_slot_index: int) -> bool:
+	if player == null:
+		return false
+	var models = player.get("hotbar_item_models")
+	if models is Array and selected_slot_index >= 0 and selected_slot_index < models.size():
+		var sel = models[selected_slot_index]
+		if sel != null and is_instance_valid(sel) and sel.get_script() == get_script():
+			return true
+	return false
 
 
 func _is_single_player_active(player: Node) -> bool:
@@ -522,6 +538,9 @@ func _get_player_camera(player: Node) -> Camera3D:
 func _show_viewmodel(player: Node) -> void:
 	if viewmodel_instance and is_instance_valid(viewmodel_instance):
 		viewmodel_instance.visible = true
+		_current_player = player
+		if _current_camera == null or not is_instance_valid(_current_camera):
+			_current_camera = _get_player_camera(player)
 		return
 
 	var camera := _get_player_camera(player)
