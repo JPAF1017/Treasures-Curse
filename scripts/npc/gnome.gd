@@ -117,6 +117,27 @@ func _ready() -> void:
 	_play_walk_animation()
 	_setup_damage_debug()
 	add_to_group("gnome")
+	_apply_pixel_shading(self)
+
+const _ENEMY_SHADER: Shader = preload("res://assets/shaders/enemy_pixel.gdshader")
+
+func _apply_pixel_shading(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in mi.get_surface_override_material_count():
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std := mat as StandardMaterial3D
+				if std.albedo_texture != null:
+					var sm := ShaderMaterial.new()
+					sm.shader = _ENEMY_SHADER
+					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					sm.set_shader_parameter("brightness", 1.40)
+					sm.set_shader_parameter("shadow_lift", 0.40)
+					sm.set_shader_parameter("saturation", 1.40)
+					mi.set_surface_override_material(i, sm)
+	for child in node.get_children():
+		_apply_pixel_shading(child)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:

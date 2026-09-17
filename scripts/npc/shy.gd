@@ -31,6 +31,9 @@ const NAV_LOG_INTERVAL = 0.25
 @export var run_turn_speed: float = 6.0
 @export var attack_animation_speed: float = 1.3
 @export var debug_memory_logs: bool = true
+@export var sight_trigger_enabled: bool = true
+
+signal triggered(player: CharacterBody3D)
 
 enum State {
 	WANDER,
@@ -76,7 +79,7 @@ var triggered_step_frames: Array[int] = []
 var _skeleton: Skeleton3D = null
 var _head_bone_idx: int = -1
 
-const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+const _PIXEL_SHADER: Shader = preload("res://assets/shaders/enemy_pixel.gdshader")
 
 func _ready() -> void:
 	top_level = true
@@ -380,6 +383,9 @@ func _is_any_breath_playing() -> bool:
 	return false
 
 func _on_seen_area_entered(area: Area3D) -> void:
+	if not sight_trigger_enabled:
+		return
+
 	if not area.is_in_group("player_vision"):
 		return
 
@@ -390,7 +396,15 @@ func _on_seen_area_entered(area: Area3D) -> void:
 	if player_node == null:
 		return
 
-	target_player = player_node
+	trigger_aggro(player_node)
+
+func trigger_aggro(player: CharacterBody3D) -> void:
+	if current_state != State.WANDER:
+		return
+	if player == null or not is_instance_valid(player):
+		return
+
+	target_player = player
 	los_lost_timer = 0.0
 	last_visible_target_position = target_player.global_position
 	trail_sample_timer = 0.0
@@ -400,6 +414,7 @@ func _on_seen_area_entered(area: Area3D) -> void:
 
 func _start_screaming() -> void:
 	current_state = State.SCREAMING
+	triggered.emit(target_player)
 	attack_count = 0
 	velocity.x = 0.0
 	velocity.z = 0.0
@@ -518,10 +533,9 @@ func _find_player_from_vision_area(area: Area3D) -> CharacterBody3D:
 
 func _on_attack_range_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D and body.is_in_group("player"):
-		target_player = body
 		is_player_in_attack_range = true
-		print("Player entered shy attack range")
-		if current_state != State.SCREAMING and attack_cooldown_timer <= 0.0:
+		if current_state == State.CHASING and attack_cooldown_timer <= 0.0:
+			target_player = body
 			_start_attacking()
 
 func _on_attack_range_body_exited(body: Node3D) -> void:
@@ -581,6 +595,12 @@ func _apply_pixel_shading(node: Node) -> void:
 					var sm := ShaderMaterial.new()
 					sm.shader = _PIXEL_SHADER
 					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					sm.set_shader_parameter("albedo_tint", std.albedo_color)
+					sm.set_shader_parameter("brightness", 1.45)
+					sm.set_shader_parameter("shadow_lift", 0.40)
+					sm.set_shader_parameter("saturation", 1.25)
+					sm.set_shader_parameter("contrast", 1.05)
+					sm.set_shader_parameter("highlight_knee", 0.58)
 					mi.set_surface_override_material(i, sm)
 				else:
 					var override := std.duplicate() as StandardMaterial3D

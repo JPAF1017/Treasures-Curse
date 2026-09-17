@@ -1,4 +1,56 @@
+class_name Level1Spawner
 extends Node3D
+
+# Threshold Y for transitioning to 3rd floor (Grid Y >= 2).
+# Bottom two floors (1st layer at Y ~ -35, 2nd layer at Y ~ -25) are below this threshold.
+static var third_floor_threshold_y: float = -15.0
+static var instance: Level1Spawner = null
+static var _gauntlet_node_cached: Node3D = null
+
+static func is_in_first_two_layers(pos: Vector3) -> bool:
+	return pos.y < third_floor_threshold_y
+
+static func get_gauntlet_node() -> Node3D:
+	if is_instance_valid(_gauntlet_node_cached):
+		return _gauntlet_node_cached
+	var tree: SceneTree = null
+	if is_instance_valid(instance) and instance.is_inside_tree():
+		tree = instance.get_tree()
+	elif Engine.get_main_loop() is SceneTree:
+		tree = Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		var node := tree.root.find_child("Gauntlet", true, false) as Node3D
+		if is_instance_valid(node):
+			_gauntlet_node_cached = node
+			return _gauntlet_node_cached
+	return null
+
+static func is_position_in_gauntlet(pos: Vector3) -> bool:
+	var gauntlet := get_gauntlet_node()
+	if is_instance_valid(gauntlet):
+		var local_pos := gauntlet.to_local(pos)
+		return absf(local_pos.x) <= 45.0 and absf(local_pos.z) <= 45.0 and local_pos.y >= -10.5 and local_pos.y <= 11.0
+	return false
+
+static func is_player_in_gauntlet(player: Node) -> bool:
+	if not is_instance_valid(player):
+		return false
+	if player is Node3D:
+		return is_position_in_gauntlet((player as Node3D).global_position)
+	return false
+
+static func are_all_players_in_gauntlet(tree: SceneTree) -> bool:
+	if tree == null:
+		return false
+	var players := tree.get_nodes_in_group("player").filter(
+		func(p: Node) -> bool: return is_instance_valid(p) and not (p.get("is_dead") == true)
+	)
+	if players.is_empty():
+		return false
+	for p in players:
+		if not is_player_in_gauntlet(p):
+			return false
+	return true
 
 # Stored so retries (on dungeon failure) use the same RPC path.
 var _generation_seed: int = 0
@@ -88,6 +140,16 @@ var _statue_room_pos: Vector3 = Vector3.ZERO
 var _statue_look_timer: float = 0.0
 const STATUE_DOOR_LOOK_DURATION: float = 3.0
 
+# IntroShy 3-second room trigger state
+var _intro_shy_room: Node3D = null
+var _intro_shy_ref: Node3D = null
+var _intro_shy_door: Node3D = null
+var _intro_shy_door_opened: bool = false
+var _intro_shy_room_pos: Vector3 = Vector3.ZERO
+var _intro_shy_triggered: bool = false
+var _intro_shy_player_timers: Dictionary = {}
+const INTRO_SHY_ROOM_TRIGGER_DURATION: float = 3.0
+
 # Enemies that must stay inside their intro room.
 # Each entry: { "enemy": Node3D, "center": Vector3, "half_xz": float }
 var _confined_enemies: Array = []
@@ -98,11 +160,22 @@ const TORCH_SPAWN_COOLDOWN_TIME := 15.0
 # Key: player (Node3D), Value: Dictionary with {"torch": Node3D, "timer": float, "cooldown": float}
 var _player_spawned_torches: Dictionary = {}
 
+# ---- Gauntlet infinite item spawning state (server only) ----
+var _gauntlet_item_spawners: Array[Dictionary] = []
+var _dungeon_active: bool = false
+
 
 func _enter_tree() -> void:
+	instance = self
 	var generator := _find_dungeon_generator(self)
 	if generator:
 		generator.set("custom_get_rooms_function", _custom_get_rooms.bind(generator))
+
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
+	_gauntlet_node_cached = null
 
 
 func _ready() -> void:
@@ -212,6 +285,9 @@ func _apply_table_registry(registry: Dictionary) -> void:
 
 
 func _on_dungeon_failed(generator: Node) -> void:
+	_dungeon_active = false
+	_gauntlet_node_cached = null
+	_gauntlet_item_spawners.clear()
 	push_warning("[level1_spawner] Dungeon generation failed on current seed — retrying with a new random seed.")
 	if not multiplayer.has_multiplayer_peer():
 		# Singleplayer: retry immediately with a new random seed.
@@ -225,6 +301,13 @@ func _on_dungeon_failed(generator: Node) -> void:
 		_statue_door_opened = false
 		_statue_room_pos = Vector3.ZERO
 		_statue_look_timer = 0.0
+		_intro_shy_room = null
+		_intro_shy_ref = null
+		_intro_shy_door = null
+		_intro_shy_door_opened = false
+		_intro_shy_room_pos = Vector3.ZERO
+		_intro_shy_triggered = false
+		_intro_shy_player_timers.clear()
 		rpc("remote_generate", randi())
 	# Clients reset their seed too so they accept the incoming retry broadcast.
 	else:
@@ -233,6 +316,13 @@ func _on_dungeon_failed(generator: Node) -> void:
 		_statue_door_opened = false
 		_statue_room_pos = Vector3.ZERO
 		_statue_look_timer = 0.0
+		_intro_shy_room = null
+		_intro_shy_ref = null
+		_intro_shy_door = null
+		_intro_shy_door_opened = false
+		_intro_shy_room_pos = Vector3.ZERO
+		_intro_shy_triggered = false
+		_intro_shy_player_timers.clear()
 
 
 func _find_dungeon_generator(node: Node) -> Node:
@@ -246,6 +336,7 @@ func _find_dungeon_generator(node: Node) -> Node:
 
 
 func _on_dungeon_ready(generator: Node) -> void:
+	_dungeon_active = true
 	var rng := RandomNumberGenerator.new()
 	# Seed from _generation_seed so NPC/item placement is identical on all peers.
 	# In singleplayer _generation_seed is 0, so fall back to randomize().
@@ -269,6 +360,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# Store floor geometry for the deferred statue spawn (available on all peers).
 	_second_floor_y = start_pos.y + voxel_y * 0.5
 	_voxel_y = voxel_y
+	third_floor_threshold_y = start_pos.y + voxel_y * 2.0
 
 	# Remove all procedurally placed non-corridor rooms on the bottom two floors (floors 0 and 1).
 	# Pre-placed rooms and corridors are kept; only random filler rooms are removed.
@@ -298,6 +390,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	# room's Door node when all enemies in that room have been killed.
 	var _gauntlet_node := generator.find_child("Gauntlet", true, false)
 	if is_instance_valid(_gauntlet_node):
+		_gauntlet_node_cached = _gauntlet_node as Node3D
 		var _g := _gauntlet_node as Node
 
 		# Spawn an NPC and return the live node reference.
@@ -362,6 +455,9 @@ func _on_dungeon_ready(generator: Node) -> void:
 				var _n3 := _spawn_npc.call(KNIGHT_SCENE, Vector3(_cx3 + offset_val, _fy3, _cz3)) as Node3D
 				if _n3: _r3.append(_n3)
 		_watch_room.call(_r3, _g.get_node_or_null("Models/Room3/Door") as Node3D)
+
+		if not multiplayer.has_multiplayer_peer() or multiplayer.is_server():
+			_setup_gauntlet_item_spawners(_gauntlet_node)
 
 	# Sort rooms by a deterministic key so find_children order doesn't affect placement.
 	all_rooms.sort_custom(func(a: Node, b: Node) -> bool:
@@ -707,8 +803,7 @@ func _on_dungeon_ready(generator: Node) -> void:
 	_spawn_intro_room.call("IntroKnight",   KNIGHT_SCENE)
 	_spawn_intro_room.call("IntroShambler", SHAMBLER_SCENE)
 
-	# IntroShy: spawn 1 shy; door opens the first time the player looks at it.
-	# The shy is not killed — the sight event alone unlocks the exit.
+	# IntroShy: spawn 1 shy; triggers strictly only when a player is inside the room for 3 seconds.
 	var intro_shy := generator.find_child("IntroShy", true, false) as Node3D
 	if intro_shy:
 		var shy_pos := intro_shy.global_position
@@ -720,30 +815,29 @@ func _on_dungeon_ready(generator: Node) -> void:
 			shy_ref = SHY_SCENE.instantiate()
 			add_child(shy_ref)
 			shy_ref.global_position = shy_pos + Vector3(0, 1.0, 0)
+		_intro_shy_room = intro_shy
+		_intro_shy_ref = shy_ref
+		_intro_shy_door = shy_door
+		_intro_shy_door_opened = false
+		_intro_shy_room_pos = shy_pos
+		_intro_shy_triggered = false
+		_intro_shy_player_timers.clear()
+
 		if shy_ref and shy_door:
+			shy_ref.set("sight_trigger_enabled", false)
 			_confined_enemies.append({"enemy": shy_ref, "center": shy_pos, "half_xz": 13.0})
-			# Wait until _ready() has run so the Seen area node is resolved,
-			# or set it up immediately if the node is already ready.
-			var setup_seen_area := func() -> void:
-				var seen_area := shy_ref.get_node_or_null("Seen") as Area3D
-				if seen_area == null:
-					return
-				var _door_opened := [false]
-				seen_area.area_entered.connect(func(area: Area3D) -> void:
-					if _door_opened[0] or not area.is_in_group("player_vision"):
-						return
-					_door_opened[0] = true
-					if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
-						rpc("rpc_open_or_delete_door", shy_door.get_path(), false, 60.0)
-					else:
-						rpc_open_or_delete_door(shy_door.get_path(), false, 60.0)
-					_spawn_intro_health_potion_if_hurt(shy_pos)
-				)
+			var setup_shy := func() -> void:
+				shy_ref.set("sight_trigger_enabled", false)
+				if shy_ref.has_signal("triggered"):
+					shy_ref.connect("triggered", func(_p: Node) -> void:
+						_intro_shy_triggered = true
+						_open_intro_shy_door()
+					)
 			
 			if shy_ref.is_node_ready():
-				setup_seen_area.call()
+				setup_shy.call()
 			else:
-				shy_ref.ready.connect(setup_seen_area, CONNECT_ONE_SHOT)
+				shy_ref.ready.connect(setup_shy, CONNECT_ONE_SHOT)
 
 	# Notify the multiplayer player spawner so it places a character for each client.
 	var player_spawner := get_node_or_null("PlayerSpawner")
@@ -885,6 +979,96 @@ func _do_spawn_item(data: Dictionary) -> Node:
 
 
 # ---------------------------------------------------------------------------
+# Gauntlet infinite item spawners (server only)
+# ---------------------------------------------------------------------------
+
+## Sets up the infinite item spawners in the small side rooms of the Gauntlet.
+func _setup_gauntlet_item_spawners(gauntlet_node: Node) -> void:
+	_gauntlet_item_spawners.clear()
+	if not is_instance_valid(gauntlet_node):
+		return
+
+	for area: Node in gauntlet_node.find_children("*", "Area3D", true, false):
+		var item_key := area.name.to_lower()
+		var pool: Array[String] = []
+		if item_key == "health":
+			pool = [ITEM_SCENES["health"], ITEM_SCENES["torch"]]
+		elif ITEM_SCENES.has(item_key):
+			pool = [ITEM_SCENES[item_key]]
+		else:
+			continue
+
+		var col := area.get_node_or_null("CollisionShape3D") as Node3D
+		var spawn_pos := col.global_position if col else (area as Node3D).global_position
+		var spawner_data := {
+			"pool": pool,
+			"pos": spawn_pos,
+			"item": null,
+			"respawning": false,
+		}
+		_gauntlet_item_spawners.append(spawner_data)
+		_spawn_gauntlet_item(spawner_data)
+
+
+func _spawn_gauntlet_item(spawner_data: Dictionary) -> void:
+	if not is_inside_tree() or not _dungeon_active:
+		return
+	var pool: Array = spawner_data.get("pool", [])
+	if pool.is_empty():
+		return
+	var scene_path: String = pool[randi() % pool.size()]
+	var spawn_pos: Vector3 = spawner_data["pos"]
+	var item_node: Node3D = null
+	if _item_spawner:
+		item_node = _item_spawner.spawn({"scene": scene_path, "pos": spawn_pos}) as Node3D
+	else:
+		var packed := load(scene_path) as PackedScene
+		if packed:
+			item_node = packed.instantiate() as Node3D
+			add_child(item_node)
+			item_node.global_position = spawn_pos
+
+	spawner_data["item"] = item_node
+	spawner_data["respawning"] = false
+
+	if is_instance_valid(item_node):
+		item_node.tree_exiting.connect(func() -> void:
+			_trigger_gauntlet_item_respawn(spawner_data)
+		, CONNECT_ONE_SHOT)
+
+
+func _trigger_gauntlet_item_respawn(spawner_data: Dictionary) -> void:
+	if spawner_data.get("respawning", false):
+		return
+	spawner_data["respawning"] = true
+	spawner_data["item"] = null
+	if not is_inside_tree() or not _dungeon_active:
+		return
+	var timer := get_tree().create_timer(0.5)
+	if timer:
+		await timer.timeout
+	if not is_inside_tree() or not _dungeon_active:
+		return
+	_spawn_gauntlet_item(spawner_data)
+
+
+func _process_gauntlet_item_spawners() -> void:
+	for spawner_data in _gauntlet_item_spawners:
+		if spawner_data.get("respawning", false):
+			continue
+		var item: Node3D = spawner_data.get("item")
+		var need_respawn := false
+		if item == null or not is_instance_valid(item) or item.is_queued_for_deletion():
+			need_respawn = true
+		elif item.get_parent() != self:
+			need_respawn = true
+		elif item.get("inventory_slot_index") != null and (item.get("inventory_slot_index") as int) >= 0:
+			need_respawn = true
+		if need_respawn:
+			_trigger_gauntlet_item_respawn(spawner_data)
+
+
+# ---------------------------------------------------------------------------
 # Deferred statue spawn — triggered when any player reaches the 2nd floor.
 # Server-only logic; MultiplayerSpawner replicates the statue to all clients.
 # ---------------------------------------------------------------------------
@@ -895,6 +1079,7 @@ func _process(delta: float) -> void:
 		return
 
 	_process_player_torches(delta)
+	_process_gauntlet_item_spawners()
 
 	if _second_floor_y == INF:
 		return
@@ -917,8 +1102,38 @@ func _process(delta: float) -> void:
 				center.z + clampf(dz, -half, half)
 			)
 
+	# --- IntroShy 3-second room presence trigger ---
+	if not _intro_shy_triggered and is_instance_valid(_intro_shy_ref):
+		for p in _intro_shy_player_timers.keys():
+			if not is_instance_valid(p) or p.get("is_dead"):
+				_intro_shy_player_timers.erase(p)
+
+		var triggered_player: CharacterBody3D = null
+		for node in get_tree().get_nodes_in_group("player"):
+			var player := node as CharacterBody3D
+			if not is_instance_valid(player) or player.get("is_dead"):
+				continue
+			if _is_player_in_intro_shy_room(player):
+				var current_time: float = _intro_shy_player_timers.get(player, 0.0) + delta
+				_intro_shy_player_timers[player] = current_time
+				if current_time >= INTRO_SHY_ROOM_TRIGGER_DURATION:
+					triggered_player = player
+					break
+			else:
+				_intro_shy_player_timers.erase(player)
+
+		if triggered_player != null:
+			_intro_shy_player_timers.clear()
+			_trigger_intro_shy(triggered_player)
+
 	# --- Active-statue lifecycle: sighting detection → 1-min → despawn ---
 	if _statue_node != null and is_instance_valid(_statue_node):
+		var statue_target: Node = _statue_node.get("player")
+		if is_position_in_gauntlet(_statue_node.global_position) or are_all_players_in_gauntlet(get_tree()) or (is_instance_valid(statue_target) and is_player_in_gauntlet(statue_target)):
+			print("[StatueSpawn] Despawning statue: target player or statue is inside Gauntlet.")
+			_despawn_statue()
+			return
+
 		var statue_seen_now := _is_statue_seen_by_any_player()
 
 		# Check 3-second gaze to open the IntroStatue door
@@ -965,7 +1180,7 @@ func _process(delta: float) -> void:
 ## Picks a target player and attempts to spawn the statue in a spot hidden from all players.
 func _try_spawn_statue() -> void:
 	var players: Array = get_tree().get_nodes_in_group("player").filter(
-		func(p: Node) -> bool: return is_instance_valid(p)
+		func(p: Node) -> bool: return is_instance_valid(p) and not is_player_in_gauntlet(p)
 	)
 	if players.is_empty():
 		return
@@ -991,6 +1206,9 @@ func _try_spawn_statue() -> void:
 ## Returns a world position directly behind `target` (±STATUE_SPAWN_ARC_HALF_DEG) that is
 ## not visible to any player and not on the top floor. Returns Vector3.ZERO on failure.
 func _find_hidden_spawn_near(center: Vector3, target: Node3D = null) -> Vector3:
+	if is_position_in_gauntlet(center) or (target != null and is_player_in_gauntlet(target)):
+		return Vector3.ZERO
+
 	var space_state := get_world_3d().direct_space_state
 	var players: Array = get_tree().get_nodes_in_group("player")
 
@@ -1013,6 +1231,8 @@ func _find_hidden_spawn_near(center: Vector3, target: Node3D = null) -> Vector3:
 		var dir := backward.rotated(Vector3.UP, deg_to_rad(angle_offset))
 		for dist in distances:
 			var candidate := center + Vector3(dir.x * dist, 0.0, dir.z * dist)
+			if is_position_in_gauntlet(candidate):
+				continue
 			# Reject candidates inside or behind a wall.
 			var wall_query := PhysicsRayQueryParameters3D.create(
 				center + Vector3(0, 1.0, 0),
@@ -1274,3 +1494,56 @@ func rpc_open_or_delete_door(door_path: NodePath, should_delete: bool, target_ro
 					concrete_player.stop()
 					concrete_player.queue_free()
 				)
+
+
+func _open_intro_shy_door() -> void:
+	if _intro_shy_door_opened:
+		return
+	_intro_shy_door_opened = true
+	if is_instance_valid(_intro_shy_door):
+		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+			rpc("rpc_open_or_delete_door", _intro_shy_door.get_path(), false, 60.0)
+		else:
+			rpc_open_or_delete_door(_intro_shy_door.get_path(), false, 60.0)
+	if _intro_shy_room_pos != Vector3.ZERO:
+		_spawn_intro_health_potion_if_hurt(_intro_shy_room_pos)
+
+
+func _is_player_in_intro_shy_room(player: Node3D) -> bool:
+	if not is_instance_valid(player) or not is_instance_valid(_intro_shy_room):
+		return false
+	var local_pos := _intro_shy_room.to_local(player.global_position)
+	# Floor is at local y = -10.0; player standing height is -10.0 to -8.2.
+	# Room height is 20m (-10.0 to +10.0). Exclude anything above or below floor of IntroShy.
+	if local_pos.y < -10.5 or local_pos.y > -2.0:
+		return false
+	# Room width is 30m (local X -15.0 to +15.0). -13.0 to +13.0 keeps player inside side walls.
+	if absf(local_pos.x) >= 13.0:
+		return false
+	# Front entrance is at local z = -15.0; exit doorway is at local z = +15.0.
+	# Requiring -13.0 to +13.0 guarantees the player is well inside the room (at least 2m past the door)
+	# and strictly NOT in the front corridor, doorway, or exit tunnel.
+	if local_pos.z <= -13.0 or local_pos.z >= 13.0:
+		return false
+	return true
+
+
+func _trigger_intro_shy(player: CharacterBody3D) -> void:
+	if _intro_shy_triggered:
+		return
+	_intro_shy_triggered = true
+	if is_instance_valid(_intro_shy_ref) and is_instance_valid(player):
+		print("[IntroShy] Player inside room for 3 seconds — triggering shy monster.")
+		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+			rpc("rpc_trigger_shy", _intro_shy_ref.get_path(), player.get_path())
+		else:
+			rpc_trigger_shy(_intro_shy_ref.get_path(), player.get_path())
+	_open_intro_shy_door()
+
+
+@rpc("authority", "call_local", "reliable")
+func rpc_trigger_shy(shy_path: NodePath, player_path: NodePath) -> void:
+	var shy := get_node_or_null(shy_path)
+	var player := get_node_or_null(player_path) as CharacterBody3D
+	if shy and shy.has_method("trigger_aggro") and player:
+		shy.call("trigger_aggro", player)

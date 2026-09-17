@@ -130,11 +130,14 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
-	if is_burning and not SettingsManager.unlimited_torch:
-		usable_time_left -= delta
-		if usable_time_left <= 0.0:
-			_delete_torch()
-			return
+	if is_burning:
+		if is_infinite_torch():
+			usable_time_left = MAX_USABLE_TIME
+		else:
+			usable_time_left -= delta
+			if usable_time_left <= 0.0:
+				_delete_torch()
+				return
 
 	if viewmodel_instance and is_instance_valid(viewmodel_instance) and viewmodel_instance.visible:
 		_update_viewmodel_dynamics(delta)
@@ -220,6 +223,8 @@ func get_hotbar_icon_modulate(alpha: float) -> Color:
 
 
 func get_hotbar_durability_percent() -> float:
+	if is_infinite_torch():
+		return 1.0
 	return clampf(usable_time_left / MAX_USABLE_TIME, 0.0, 1.0)
 
 
@@ -239,6 +244,39 @@ func update_primary_action(_player: Node, _delta: float) -> bool:
 	return false
 
 
+func get_holding_player() -> Node:
+	if _current_player and is_instance_valid(_current_player):
+		return _current_player
+	var p := get_parent()
+	while p:
+		if p.is_in_group("player"):
+			return p
+		p = p.get_parent()
+	return null
+
+
+func is_held_by_player() -> bool:
+	return inventory_slot_index >= 0 and get_holding_player() != null
+
+
+const LEVEL1_SPAWNER_SCRIPT := preload("res://scripts/level1_spawner.gd")
+
+func is_player_in_infinite_torch_zone() -> bool:
+	var player := get_holding_player()
+	if player == null:
+		return false
+	var player_pos: Vector3 = player.global_position
+	if LEVEL1_SPAWNER_SCRIPT != null:
+		return LEVEL1_SPAWNER_SCRIPT.is_in_first_two_layers(player_pos)
+	return player_pos.y < -15.0
+
+
+func is_infinite_torch() -> bool:
+	if SettingsManager.unlimited_torch:
+		return true
+	return is_held_by_player() and is_player_in_infinite_torch_zone()
+
+
 func is_equipped_in_hand() -> bool:
 	if inventory_slot_index < 0:
 		return false
@@ -255,6 +293,7 @@ func pick_up_into_hotbar(player: Node, slot_index: int) -> bool:
 		return false
 
 	inventory_slot_index = slot_index
+	_current_player = player
 	var old_parent := get_parent()
 	if old_parent:
 		old_parent.remove_child(self)

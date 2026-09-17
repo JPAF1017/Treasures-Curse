@@ -3,6 +3,7 @@ extends CharacterBody3D
 const EnemyLocomotion := preload("res://scripts/npc/EnemyLocomotionComponent.gd")
 const SmokeAggro := preload("res://scripts/npc/SmokeAggroComponent.gd")
 const StatueCrumbleEffect := preload("res://scripts/items/StatueCrumbleEffect.gd")
+const Level1SpawnerScript := preload("res://scripts/level1_spawner.gd")
 
 # Movement constants
 const WALK_SPEED = 10.0
@@ -61,7 +62,7 @@ var sound_triggered_frame1: bool = false
 var sound_triggered_frame51: bool = false
 var prev_anim_position: float = 0.0
 
-const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+const _PIXEL_SHADER: Shader = preload("res://assets/shaders/enemy_pixel.gdshader")
 
 func _ready():
 	top_level = true
@@ -89,6 +90,12 @@ func _apply_pixel_shading(node: Node) -> void:
 					var sm := ShaderMaterial.new()
 					sm.shader = _PIXEL_SHADER
 					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					sm.set_shader_parameter("albedo_tint", std.albedo_color)
+					sm.set_shader_parameter("brightness", 1.45)
+					sm.set_shader_parameter("shadow_lift", 0.25)
+					sm.set_shader_parameter("saturation", 0.90)
+					sm.set_shader_parameter("contrast", 1.02)
+					sm.set_shader_parameter("highlight_knee", 0.55)
 					mi.set_surface_override_material(i, sm)
 				else:
 					var override := std.duplicate() as StandardMaterial3D
@@ -297,6 +304,15 @@ func _physics_process(delta):
 
 	was_trying_to_move = false
 	
+	# If statue or target player is inside Gauntlet, statue cannot pursue or appear inside
+	if Level1SpawnerScript.is_position_in_gauntlet(global_position) or (player and is_instance_valid(player) and Level1SpawnerScript.is_position_in_gauntlet(player.global_position)):
+		velocity.x = 0
+		velocity.z = 0
+		_set_idle_pose()
+		is_moving = false
+		move_and_slide()
+		return
+	
 	# Chase player if found and in range
 	if player and is_instance_valid(player) and not SmokeAggro.is_inside_smoke(self):
 		var distance_to_player = global_position.distance_to(player.global_position)
@@ -463,6 +479,8 @@ func _process_attack(delta: float) -> void:
 		return
 	if not has_been_seen:
 		return
+	if Level1SpawnerScript.is_position_in_gauntlet(global_position) or (player and is_instance_valid(player) and Level1SpawnerScript.is_position_in_gauntlet(player.global_position)):
+		return
 	if attack_area == null or _is_player_looking_at_statue():
 		return
 	for body in attack_area.get_overlapping_bodies():
@@ -493,6 +511,8 @@ func _apply_damage_to_player(target: CharacterBody3D, damage: float) -> void:
 func _update_head_tracking():
 	"""Make the statue's head look at the player (works even when frozen)"""
 	if not skeleton or head_bone_id == -1 or not player or not is_instance_valid(player):
+		return
+	if Level1SpawnerScript.is_position_in_gauntlet(global_position) or Level1SpawnerScript.is_position_in_gauntlet(player.global_position):
 		return
 	
 	# Get rest pose - we'll preserve position and scale

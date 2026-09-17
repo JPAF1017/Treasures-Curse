@@ -160,6 +160,8 @@ func _ready():
 	idle_sound_timer = randf_range(2.0, 3.0)
 	growl_sound_player = get_node_or_null("Sounds/GrowlSound") as AudioStreamPlayer3D
 
+const _ENEMY_SHADER: Shader = preload("res://assets/shaders/enemy_pixel.gdshader")
+
 func _fix_glb_metallic(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
@@ -167,7 +169,15 @@ func _fix_glb_metallic(node: Node) -> void:
 			var mat: Material = mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
-				if std_mat.metallic > 0.0:
+				if std_mat.albedo_texture != null:
+					var sm := ShaderMaterial.new()
+					sm.shader = _ENEMY_SHADER
+					sm.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+					sm.set_shader_parameter("brightness", 1.35)
+					sm.set_shader_parameter("shadow_lift", 0.35)
+					sm.set_shader_parameter("saturation", 1.35)
+					mesh_inst.set_surface_override_material(i, sm)
+				elif std_mat.metallic > 0.0:
 					var fixed := std_mat.duplicate() as StandardMaterial3D
 					fixed.metallic = 0.0
 					fixed.metallic_specular = 0.5

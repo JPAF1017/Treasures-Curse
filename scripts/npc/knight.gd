@@ -163,7 +163,7 @@ var smash_sound_player: AudioStreamPlayer3D = null
 var smash_sounds: Array = []
 var smash_sound_played_this_attack: bool = false
 
-const _PIXEL_SHADER: Shader = preload("res://assets/room assets/floor_pixel.gdshader")
+const _PIXEL_SHADER: Shader = preload("res://assets/shaders/enemy_pixel.gdshader")
 
 func _ready() -> void:
 	top_level = true
@@ -728,6 +728,10 @@ func _apply_pixel_shading(node: Node) -> void:
 					var sm := ShaderMaterial.new()
 					sm.shader = _PIXEL_SHADER
 					sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					sm.set_shader_parameter("brightness", 1.40)
+					sm.set_shader_parameter("shadow_lift", 0.35)
+					sm.set_shader_parameter("saturation", 1.40)
+					sm.set_shader_parameter("contrast", 1.10)
 					mi.set_surface_override_material(i, sm)
 				else:
 					var override := std.duplicate() as StandardMaterial3D
